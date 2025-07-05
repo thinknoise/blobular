@@ -1,20 +1,16 @@
-// BlobDisplay.tsx
-
 import type { BlobEvent } from "../AudioBlobularPlayer/types";
+import BlobLine from "./BlobLine";
 import "./BlobDisplay.css";
 
 type BlobDisplayProps = {
-  events: BlobEvent[];
+  events: (BlobEvent | null)[];
 };
 
 const BlobDisplay = ({ events }: BlobDisplayProps) => {
   return (
     <div className="blob-display">
       {events.map((e, i) => (
-        <div key={i}>
-          Blob {e.blobIndex} | Time: {e.scheduledTime.toFixed(2)} | Dur:{" "}
-          {e.duration.toFixed(2)} | Rate: {e.playbackRate.toFixed(2)}
-        </div>
+        <BlobLine key={i} event={e} index={i} />
       ))}
     </div>
   );

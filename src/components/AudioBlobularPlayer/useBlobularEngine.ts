@@ -7,7 +7,9 @@ export const useBlobularEngine = (numBlobs: number = 4) => {
   const isPlayingRef = useRef(false);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
 
-  const [blobEvents, setBlobEvents] = useState<BlobEvent[]>([]);
+  const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
+    Array(numBlobs).fill(null)
+  );
 
   const blobRefs = useRef(
     Array.from({ length: numBlobs }, () => ({
@@ -30,7 +32,7 @@ export const useBlobularEngine = (numBlobs: number = 4) => {
       const blob = blobRefs.current[blobIndex];
 
       while (blob.nextBlobTime < ctx.currentTime + scheduleAheadTime) {
-        const randomDuration = Math.random() * 3 + 0.8;
+        const randomDuration = Math.random() * 13 + 0.8;
         const randomPlaybackRate = Math.random() * 0.2 + 0.9;
 
         const event: BlobEvent = {
@@ -41,7 +43,11 @@ export const useBlobularEngine = (numBlobs: number = 4) => {
           timestamp: Date.now(),
         };
 
-        setBlobEvents((prev) => [event, ...prev.slice(0, 49)]);
+        setBlobEvents((prev) => {
+          const updated = [...prev];
+          updated[blobIndex] = event; // Replace blob at its index
+          return updated;
+        });
 
         playBlobAtTime(
           ctx,
