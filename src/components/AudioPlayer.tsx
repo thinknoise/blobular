@@ -100,7 +100,10 @@ const AudioGranularPlayer = () => {
 
     if (!audioBufferRef.current) {
       // const response = await fetch("/audio/Deutsche4.wav");
-      const response = await fetch("/audio/LongHorn.wav");
+      // const response = await fetch("/audio/LongHorn.wav");
+      const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
+      const response = await fetch(url);
+
       const arrayBuffer = await response.arrayBuffer();
       audioBufferRef.current =
         await audioCtxRef.current.decodeAudioData(arrayBuffer);
@@ -118,8 +121,8 @@ const AudioGranularPlayer = () => {
 
   return (
     <div>
-      <button onClick={startGranular}>Start Granular</button>
-      <button onClick={stopGranular}>Stop Granular</button>
+      <button onClick={startGranular}>Start</button>
+      <button onClick={stopGranular}>Stop</button>
     </div>
   );
 };
