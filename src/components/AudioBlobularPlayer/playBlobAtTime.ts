@@ -3,7 +3,9 @@ export const playBlobAtTime = (
   buffer: AudioBuffer,
   time: number,
   duration: number,
-  playbackRate: number
+  playbackRate: number,
+  gain: number,
+  compressor: DynamicsCompressorNode
 ) => {
   const source = ctx.createBufferSource();
   source.buffer = buffer;
@@ -13,14 +15,14 @@ export const playBlobAtTime = (
   gainNode.gain.setValueAtTime(0, time);
 
   source.connect(gainNode);
-  gainNode.connect(ctx.destination);
+  gainNode.connect(compressor); // ✅ route to compressor instead of ctx.destination
 
   const fadeDuration = 0.3;
   const maxOffset = Math.max(0, buffer.duration - duration);
   const randomOffset = Math.random() * maxOffset;
 
-  gainNode.gain.linearRampToValueAtTime(0.8, time + fadeDuration);
-  gainNode.gain.setValueAtTime(0.8, time + duration - fadeDuration);
+  gainNode.gain.linearRampToValueAtTime(gain, time + fadeDuration);
+  gainNode.gain.setValueAtTime(gain, time + duration - fadeDuration);
   gainNode.gain.linearRampToValueAtTime(0, time + duration);
 
   source.start(time, randomOffset, duration);
