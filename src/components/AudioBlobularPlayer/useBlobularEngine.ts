@@ -41,7 +41,7 @@ export const useBlobularEngine = (numBlobs: number = 4) => {
           timestamp: Date.now(),
         };
 
-        setBlobEvents((prev) => [...prev.slice(-50), event]); // keep last 50
+        setBlobEvents((prev) => [event, ...prev.slice(0, 49)]);
 
         playBlobAtTime(
           ctx,
