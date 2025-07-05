@@ -29,16 +29,16 @@ const AudioGranularPlayer = () => {
     source.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    const fadeDuration = 0.8; // 500ms fade
+    const fadeDuration = 0.3; // 500ms fade
 
     const maxOffset = Math.max(0, buffer.duration - duration);
     const randomOffset = Math.random() * maxOffset;
 
     // Fade in
-    gainNode.gain.linearRampToValueAtTime(0.5, time + fadeDuration);
+    gainNode.gain.linearRampToValueAtTime(0.8, time + fadeDuration);
 
     // Fade out
-    gainNode.gain.setValueAtTime(0.5, time + duration - fadeDuration);
+    gainNode.gain.setValueAtTime(0.8, time + duration - fadeDuration);
     gainNode.gain.linearRampToValueAtTime(0, time + duration);
 
     source.start(time, randomOffset, duration);
@@ -79,8 +79,12 @@ const AudioGranularPlayer = () => {
         randomPlaybackRate
       );
 
-      const grainInterval = 0.1; // 100ms between grains
-      nextGrainTimeRef.current += grainInterval;
+      // Schedule next grain
+      // this sets the next grain to be played after the current time
+      // plus a random duration of the grain.
+      // This ensures that grains are spaced out and not played too closely together
+      // You can adjust the random duration to control the spacing between grains
+      nextGrainTimeRef.current += randomDuration - 0.3;
     }
 
     requestAnimationFrame(scheduler);
@@ -95,7 +99,8 @@ const AudioGranularPlayer = () => {
     }
 
     if (!audioBufferRef.current) {
-      const response = await fetch("/audio/Deutsche4.wav");
+      // const response = await fetch("/audio/Deutsche4.wav");
+      const response = await fetch("/audio/LongHorn.wav");
       const arrayBuffer = await response.arrayBuffer();
       audioBufferRef.current =
         await audioCtxRef.current.decodeAudioData(arrayBuffer);
