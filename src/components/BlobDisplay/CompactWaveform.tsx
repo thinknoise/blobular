@@ -44,7 +44,7 @@ const CompactWaveform: FC<CompactWaveformProps> = ({
       ref={canvasRef}
       width={width}
       height={height}
-      style={{ margin: "-40px", width: "100%", height: "auto" }}
+      style={{ margin: "-40px", width: "100%", height: "380px" }}
     />
   );
 };

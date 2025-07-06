@@ -25,7 +25,7 @@ const AudioBlobularPlayer = () => {
   );
 
   return (
-    <div>
+    <div className="audio-blobular-player">
       <button onClick={start}>Start</button>
       <button onClick={stop}>Stop</button>
 
