@@ -77,6 +77,9 @@ export const useBlobularEngine = (
         // 4) ensure fade never exceeds half the play time
         const fadeTime = Math.min(randomFade, actualPlayTime / 2);
 
+        const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
+        const randomOffset = Math.random() * maxOffset;
+
         const gain = 0.8; // or scale down if needed
 
         const event: BlobEvent = {
@@ -85,6 +88,7 @@ export const useBlobularEngine = (
           duration: randomDuration,
           playbackRate: randomPlaybackRate,
           timestamp: Date.now(),
+          offset: randomOffset,
         };
 
         setBlobEvents((prev) => {
@@ -101,7 +105,8 @@ export const useBlobularEngine = (
           randomPlaybackRate,
           gain,
           compressor, // ✅ pass compressor node
-          fadeTime
+          fadeTime,
+          randomOffset
         );
 
         blob.nextBlobTime += randomDuration - fadeTime;

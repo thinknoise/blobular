@@ -6,7 +6,8 @@ export const playBlobAtTime = (
   playbackRate: number,
   gain: number,
   compressor: DynamicsCompressorNode,
-  fadeTime: number
+  fadeTime: number,
+  randomOffset: number = 0
 ) => {
   const source = ctx.createBufferSource();
   source.buffer = buffer;
@@ -34,8 +35,6 @@ export const playBlobAtTime = (
   gainNode.connect(compressor);
 
   // schedule playback of buffer slice (duration is buffer-time)
-  const maxOffset = Math.max(0, buffer.duration - duration);
-  const randomOffset = Math.random() * maxOffset;
   source.start(time, randomOffset, duration);
   // no explicit stop: source auto-stops after playing the buffer slice
 

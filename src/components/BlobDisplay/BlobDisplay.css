@@ -1,4 +1,8 @@
 .blob-display {
+  /* hide the display by default
+      for debugging purposes - wiley
+  */
+  /* display: none; */
   font-family: monospace;
   max-height: 300px;
   overflow-y: auto;
@@ -24,6 +28,6 @@
   }
 
   to {
-    opacity: 0;
+    opacity: 0.5;
   }
 }

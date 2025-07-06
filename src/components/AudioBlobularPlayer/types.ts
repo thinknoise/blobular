@@ -4,4 +4,5 @@ export type BlobEvent = {
   duration: number;
   playbackRate: number;
   timestamp: number;
+  offset: number;
 };

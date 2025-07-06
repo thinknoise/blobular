@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useBlobularEngine } from "./useBlobularEngine";
-import { BlobDisplay, BlobControls } from "../BlobDisplay";
-import CompactWaveform from "../BlobDisplay/CompactWaveform";
+import {
+  BlobDisplay,
+  BlobControls,
+  BlobPanel,
+  CompactWaveform,
+} from "../BlobDisplay";
+import "./AudioBlobularPlayer.css"; // Ensure you have styles for the player
 
 const AudioBlobularPlayer = () => {
   const [durationRange, setDurationRange] = useState<[number, number]>([
@@ -34,13 +39,19 @@ const AudioBlobularPlayer = () => {
       />
 
       <BlobDisplay events={blobEvents} />
-      {buffer && (
-        <CompactWaveform
-          buffer={buffer}
-          width={480} // whatever you need
-          height={300}
+      <div className="blobular-visualizer">
+        <BlobPanel
+          blobEvents={blobEvents}
+          bufferDuration={buffer ? buffer.duration : 0}
         />
-      )}
+        {buffer && (
+          <CompactWaveform
+            buffer={buffer}
+            width={400} // whatever you need
+            height={300}
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -31,7 +31,7 @@ const CompactWaveform: FC<CompactWaveformProps> = ({
     const waveform = getWaveformData(buffer, width);
 
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#868686";
 
     waveform.forEach((amp, i) => {
       const y = amp * height;
