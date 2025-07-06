@@ -5,7 +5,8 @@ export const playBlobAtTime = (
   duration: number, // desired slice length in buffer-time
   playbackRate: number,
   gain: number,
-  compressor: DynamicsCompressorNode
+  compressor: DynamicsCompressorNode,
+  fadeTime: number
 ) => {
   const source = ctx.createBufferSource();
   source.buffer = buffer;
@@ -16,9 +17,6 @@ export const playBlobAtTime = (
 
   // Real-world duration = requested duration ÷ speed
   const actualPlayTime = duration / playbackRate;
-
-  // Use up to 5ms, or half the actual play time, for fades
-  const fadeTime = Math.min(0.5, actualPlayTime / 2);
 
   // Clear any old automation
   gainNode.gain.cancelScheduledValues(time);

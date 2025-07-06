@@ -9,11 +9,13 @@ const AudioBlobularPlayer = () => {
   const [playbackRateRange, setPlaybackRateRange] = useState<[number, number]>([
     0.9, 1.4,
   ]);
+  const [fadeRange, setFadeRange] = useState<[number, number]>([0.1, 1.0]);
 
   const { start, stop, blobEvents } = useBlobularEngine(
     4,
     durationRange,
-    playbackRateRange
+    playbackRateRange,
+    fadeRange
   );
 
   return (
@@ -26,6 +28,8 @@ const AudioBlobularPlayer = () => {
         setDurationRange={setDurationRange}
         playbackRateRange={playbackRateRange}
         setPlaybackRateRange={setPlaybackRateRange}
+        fadeRange={fadeRange}
+        setFadeRange={setFadeRange}
       />
 
       <BlobDisplay events={blobEvents} />

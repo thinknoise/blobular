@@ -5,7 +5,8 @@ import type { BlobEvent } from "./types";
 export const useBlobularEngine = (
   numBlobs: number = 4,
   durationRange: [number, number],
-  playbackRateRange: [number, number]
+  playbackRateRange: [number, number],
+  fadeRange: [number, number]
 ) => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
@@ -14,6 +15,8 @@ export const useBlobularEngine = (
 
   const durationRangeRef = useRef<[number, number]>(durationRange);
   const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
+
+  const fadeRangeRef = useRef<[number, number]>(fadeRange);
 
   const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
     Array(numBlobs).fill(null)
@@ -33,6 +36,10 @@ export const useBlobularEngine = (
   useEffect(() => {
     playbackRateRangeRef.current = playbackRateRange;
   }, [playbackRateRange]);
+
+  useEffect(() => {
+    fadeRangeRef.current = fadeRange;
+  }, [fadeRange]);
 
   const createScheduler = (blobIndex: number) => {
     const scheduler = () => {
@@ -60,6 +67,15 @@ export const useBlobularEngine = (
         const randomPlaybackRate =
           Math.random() * (maxRate - minRate) + minRate;
 
+        const actualPlayTime = randomDuration / randomPlaybackRate;
+
+        // 3) pick a random fade within user’s range
+        const [minFade, maxFade] = fadeRangeRef.current;
+        const randomFade = Math.random() * (maxFade - minFade) + minFade;
+
+        // 4) ensure fade never exceeds half the play time
+        const fadeTime = Math.min(randomFade, actualPlayTime / 2);
+
         const gain = 0.8; // or scale down if needed
 
         const event: BlobEvent = {
@@ -83,10 +99,11 @@ export const useBlobularEngine = (
           randomDuration,
           randomPlaybackRate,
           gain,
-          compressor // ✅ pass compressor node
+          compressor, // ✅ pass compressor node
+          fadeTime
         );
 
-        blob.nextBlobTime += randomDuration - 0.3;
+        blob.nextBlobTime += randomDuration - fadeTime;
       }
 
       requestAnimationFrame(scheduler);

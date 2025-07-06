@@ -1,11 +1,22 @@
 import BlobRangeSlider from "./BlobRangeSlider";
 import "./BlobControls.css";
 
+type BlobControlsProps = {
+  durationRange: [number, number];
+  setDurationRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+  playbackRateRange: [number, number];
+  setPlaybackRateRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+  fadeRange: [number, number];
+  setFadeRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+};
+
 const BlobControls = ({
   durationRange,
   setDurationRange,
   playbackRateRange,
   setPlaybackRateRange,
+  fadeRange,
+  setFadeRange,
 }: BlobControlsProps) => {
   return (
     <div className="blob-controls">
@@ -26,14 +37,17 @@ const BlobControls = ({
         max={2.0}
         step={0.05}
       />
+
+      <BlobRangeSlider
+        label="Fade in and out of Blob"
+        range={fadeRange}
+        setRange={setFadeRange}
+        min={0.1}
+        max={1.0}
+        step={0.1}
+      />
     </div>
   );
 };
 
 export default BlobControls;
-type BlobControlsProps = {
-  durationRange: [number, number];
-  setDurationRange: React.Dispatch<React.SetStateAction<[number, number]>>;
-  playbackRateRange: [number, number];
-  setPlaybackRateRange: React.Dispatch<React.SetStateAction<[number, number]>>;
-};
