@@ -1,4 +1,5 @@
 import BlobRangeSlider from "./BlobRangeSlider";
+import "./BlobControls.css";
 
 const BlobControls = ({
   durationRange,

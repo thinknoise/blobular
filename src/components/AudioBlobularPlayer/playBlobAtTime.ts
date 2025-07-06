@@ -2,7 +2,7 @@ export const playBlobAtTime = (
   ctx: AudioContext,
   buffer: AudioBuffer,
   time: number,
-  duration: number,
+  duration: number, // desired slice length in buffer-time
   playbackRate: number,
   gain: number,
   compressor: DynamicsCompressorNode
@@ -12,20 +12,34 @@ export const playBlobAtTime = (
   source.playbackRate.value = playbackRate;
 
   const gainNode = ctx.createGain();
-  gainNode.gain.setValueAtTime(0, time);
+  const epsilon = 0.0001;
+
+  // Real-world duration = requested duration ÷ speed
+  const actualPlayTime = duration / playbackRate;
+
+  // Use up to 5ms, or half the actual play time, for fades
+  const fadeTime = Math.min(0.5, actualPlayTime / 2);
+
+  // Clear any old automation
+  gainNode.gain.cancelScheduledValues(time);
+
+  // 1) Fade-in from epsilon → gain over fadeTime
+  gainNode.gain.setValueAtTime(epsilon, time);
+  gainNode.gain.exponentialRampToValueAtTime(gain, time + fadeTime);
+
+  // 2) Release start and fade-out back to epsilon
+  const releaseStart = time + actualPlayTime - fadeTime;
+  gainNode.gain.setValueAtTime(gain, releaseStart);
+  gainNode.gain.exponentialRampToValueAtTime(epsilon, time + actualPlayTime);
 
   source.connect(gainNode);
-  gainNode.connect(compressor); // ✅ route to compressor instead of ctx.destination
+  gainNode.connect(compressor);
 
-  const fadeDuration = 0.3;
+  // schedule playback of buffer slice (duration is buffer-time)
   const maxOffset = Math.max(0, buffer.duration - duration);
   const randomOffset = Math.random() * maxOffset;
-
-  gainNode.gain.linearRampToValueAtTime(gain, time + fadeDuration);
-  gainNode.gain.setValueAtTime(gain, time + duration - fadeDuration);
-  gainNode.gain.linearRampToValueAtTime(0, time + duration);
-
   source.start(time, randomOffset, duration);
+  // no explicit stop: source auto-stops after playing the buffer slice
 
   source.onended = () => {
     source.disconnect();
