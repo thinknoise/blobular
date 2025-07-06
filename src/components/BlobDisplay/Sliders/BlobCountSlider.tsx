@@ -1,5 +1,4 @@
 // src/components/BlobControls/BlobCountSlider.tsx
-import React from "react";
 import "./BlobCountSlider.css";
 
 type BlobCountSliderProps = {
