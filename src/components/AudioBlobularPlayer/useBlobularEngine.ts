@@ -14,6 +14,12 @@ export const useBlobularEngine = (
   const audioBufferRef = useRef<AudioBuffer | null>(null);
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
 
+  const blobRefs = useRef(
+    Array.from({ length: numBlobs }, () => ({
+      nextBlobTime: 0,
+    }))
+  );
+
   const durationRangeRef = useRef<[number, number]>(durationRange);
   const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
 
@@ -23,13 +29,15 @@ export const useBlobularEngine = (
     Array(numBlobs).fill(null)
   );
 
-  const blobRefs = useRef(
-    Array.from({ length: numBlobs }, () => ({
-      nextBlobTime: 0,
-    }))
-  );
-
   // keep refs up-to-date with the latest slider values
+
+  useEffect(() => {
+    blobRefs.current = Array.from({ length: numBlobs }, () => ({
+      nextBlobTime: 0,
+    }));
+    setBlobEvents(Array(numBlobs).fill(null));
+  }, [numBlobs]);
+
   useEffect(() => {
     durationRangeRef.current = durationRange;
   }, [durationRange]);

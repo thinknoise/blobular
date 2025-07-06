@@ -9,6 +9,8 @@ import {
 import "./AudioBlobularPlayer.css"; // Ensure you have styles for the player
 
 const AudioBlobularPlayer = () => {
+  const [numBlobs, setNumBlobs] = useState(8); // You can adjust this if needed
+
   const [durationRange, setDurationRange] = useState<[number, number]>([
     0.8, 8.8,
   ]);
@@ -18,7 +20,7 @@ const AudioBlobularPlayer = () => {
   const [fadeRange, setFadeRange] = useState<[number, number]>([0.1, 1.0]);
 
   const { start, stop, blobEvents, buffer } = useBlobularEngine(
-    8,
+    numBlobs,
     durationRange,
     playbackRateRange,
     fadeRange
@@ -36,6 +38,8 @@ const AudioBlobularPlayer = () => {
         setPlaybackRateRange={setPlaybackRateRange}
         fadeRange={fadeRange}
         setFadeRange={setFadeRange}
+        numBlobs={numBlobs}
+        setNumBlobs={setNumBlobs}
       />
 
       <BlobDisplay events={blobEvents} />

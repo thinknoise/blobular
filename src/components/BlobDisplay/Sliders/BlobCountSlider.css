@@ -1,0 +1,17 @@
+/* src/components/BlobControls/BlobCountSlider.css */
+.blob-count-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: sans-serif;
+}
+
+.blob-count-label {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.blob-count-range {
+  flex-grow: 1;
+  cursor: pointer;
+}

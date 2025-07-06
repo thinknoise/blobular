@@ -1,5 +1,6 @@
-import BlobRangeSlider from "./BlobRangeSlider";
+import BlobRangeSlider from "./Sliders/BlobRangeSlider";
 import "./BlobControls.css";
+import BlobCountSlider from "./Sliders/BlobCountSlider";
 
 type BlobControlsProps = {
   durationRange: [number, number];
@@ -8,6 +9,8 @@ type BlobControlsProps = {
   setPlaybackRateRange: React.Dispatch<React.SetStateAction<[number, number]>>;
   fadeRange: [number, number];
   setFadeRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+  numBlobs: number;
+  setNumBlobs: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const BlobControls = ({
@@ -17,9 +20,21 @@ const BlobControls = ({
   setPlaybackRateRange,
   fadeRange,
   setFadeRange,
+  numBlobs,
+  setNumBlobs,
 }: BlobControlsProps) => {
   return (
     <div className="blob-controls">
+      {setNumBlobs && (
+        <BlobCountSlider
+          label="Number of Blobs"
+          value={numBlobs}
+          setValue={setNumBlobs}
+          min={1}
+          max={16}
+          step={1}
+        />
+      )}{" "}
       <BlobRangeSlider
         label="Duration Range (secs)"
         range={durationRange}
@@ -28,7 +43,6 @@ const BlobControls = ({
         max={10}
         step={0.1}
       />
-
       <BlobRangeSlider
         label="Fade in/Out (secs)"
         range={fadeRange}
@@ -37,7 +51,6 @@ const BlobControls = ({
         max={3.0}
         step={0.1}
       />
-
       <BlobRangeSlider
         label="Playback/Pitch (sample rate)"
         range={playbackRateRange}

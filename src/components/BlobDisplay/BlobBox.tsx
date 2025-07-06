@@ -64,7 +64,7 @@ const BlobBox = ({ event, index, bufferDuration }: BlobBoxProps) => {
       {index}
     </div>
   ) : (
-    <div className="blob-box inactive"> – </div>
+    <div className="blob-box inactive"></div>
   );
 };
 
