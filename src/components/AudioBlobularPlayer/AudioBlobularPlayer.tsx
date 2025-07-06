@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useBlobularEngine } from "./useBlobularEngine";
 import { BlobDisplay, BlobControls } from "../BlobDisplay";
+import CompactWaveform from "../BlobDisplay/CompactWaveform";
 
 const AudioBlobularPlayer = () => {
   const [durationRange, setDurationRange] = useState<[number, number]>([
@@ -11,7 +12,7 @@ const AudioBlobularPlayer = () => {
   ]);
   const [fadeRange, setFadeRange] = useState<[number, number]>([0.1, 1.0]);
 
-  const { start, stop, blobEvents } = useBlobularEngine(
+  const { start, stop, blobEvents, buffer } = useBlobularEngine(
     8,
     durationRange,
     playbackRateRange,
@@ -33,6 +34,13 @@ const AudioBlobularPlayer = () => {
       />
 
       <BlobDisplay events={blobEvents} />
+      {buffer && (
+        <CompactWaveform
+          buffer={buffer}
+          width={480} // whatever you need
+          height={300}
+        />
+      )}
     </div>
   );
 };

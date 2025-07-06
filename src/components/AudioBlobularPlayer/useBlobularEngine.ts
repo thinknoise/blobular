@@ -12,6 +12,7 @@ export const useBlobularEngine = (
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
   const isPlayingRef = useRef(false);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
 
   const durationRangeRef = useRef<[number, number]>(durationRange);
   const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
@@ -135,11 +136,12 @@ export const useBlobularEngine = (
 
     if (!audioBufferRef.current) {
       const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      audioBufferRef.current = await ctx.decodeAudioData(arrayBuffer);
+      const resp = await fetch(url);
+      const abuf = await resp.arrayBuffer();
+      const decoded = await ctx.decodeAudioData(abuf);
+      audioBufferRef.current = decoded;
+      setBuffer(decoded); // ← store it in state
     }
-
     isPlayingRef.current = true;
 
     blobRefs.current.forEach((blob, index) => {
@@ -153,5 +155,5 @@ export const useBlobularEngine = (
     isPlayingRef.current = false;
   };
 
-  return { start, stop, blobEvents };
+  return { start, stop, blobEvents, buffer };
 };
