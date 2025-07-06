@@ -3,7 +3,7 @@ import { playBlobAtTime } from "./playBlobAtTime";
 import type { BlobEvent } from "./types";
 
 export const useBlobularEngine = (
-  numBlobs: number = 4,
+  numBlobs: number = 8,
   durationRange: [number, number],
   playbackRateRange: [number, number],
   fadeRange: [number, number]

@@ -12,7 +12,7 @@ const AudioBlobularPlayer = () => {
   const [fadeRange, setFadeRange] = useState<[number, number]>([0.1, 1.0]);
 
   const { start, stop, blobEvents } = useBlobularEngine(
-    4,
+    8,
     durationRange,
     playbackRateRange,
     fadeRange
