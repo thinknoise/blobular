@@ -4,7 +4,7 @@ import "./BlobRangeSlider.css";
 type BlobRangeSliderProps = {
   label: string;
   range: [number, number];
-  setRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+  setRange: (val: [number, number]) => void;
   min: number;
   max: number;
   step: number;
@@ -19,14 +19,13 @@ const BlobRangeSlider = ({
   step,
 }: BlobRangeSliderProps) => {
   const handleChange = (values: number[]) => {
+    // values always [thumb0, thumb1]
     setRange([values[0], values[1]]);
   };
 
   return (
     <div className="blob-range-slider">
-      <label>
-        {label}: {range[0].toFixed(2)} – {range[1].toFixed(2)}
-      </label>
+      <label className="slider-label">{label}</label>
       <Slider.Root
         className="SliderRoot"
         min={min}
@@ -38,8 +37,13 @@ const BlobRangeSlider = ({
         <Slider.Track className="SliderTrack">
           <Slider.Range className="SliderRange" />
         </Slider.Track>
-        <Slider.Thumb className="SliderThumb" />
-        <Slider.Thumb className="SliderThumb" />
+        {range.map((val, idx) => (
+          <Slider.Thumb
+            key={idx}
+            className="SliderThumb"
+            data-value={val.toFixed(2)}
+          />
+        ))}
       </Slider.Root>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { playBlobAtTime } from "./playBlobAtTime";
 import type { BlobEvent } from "./types";
 
@@ -12,6 +12,9 @@ export const useBlobularEngine = (
   const isPlayingRef = useRef(false);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
 
+  const durationRangeRef = useRef<[number, number]>(durationRange);
+  const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
+
   const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
     Array(numBlobs).fill(null)
   );
@@ -21,6 +24,15 @@ export const useBlobularEngine = (
       nextBlobTime: 0,
     }))
   );
+
+  // keep refs up-to-date with the latest slider values
+  useEffect(() => {
+    durationRangeRef.current = durationRange;
+  }, [durationRange]);
+
+  useEffect(() => {
+    playbackRateRangeRef.current = playbackRateRange;
+  }, [playbackRateRange]);
 
   const createScheduler = (blobIndex: number) => {
     const scheduler = () => {
@@ -41,13 +53,13 @@ export const useBlobularEngine = (
 
       while (blob.nextBlobTime < ctx.currentTime + scheduleAheadTime) {
         // Randomize duration and playback rate
-        const randomDuration =
-          Math.random() * (durationRange[1] - durationRange[0]) +
-          durationRange[0];
+        const [minDur, maxDur] = durationRangeRef.current;
+        const randomDuration = Math.random() * (maxDur - minDur) + minDur;
 
+        const [minRate, maxRate] = playbackRateRangeRef.current;
         const randomPlaybackRate =
-          Math.random() * (playbackRateRange[1] - playbackRateRange[0]) +
-          playbackRateRange[0];
+          Math.random() * (maxRate - minRate) + minRate;
+
         const gain = 0.8; // or scale down if needed
 
         const event: BlobEvent = {
