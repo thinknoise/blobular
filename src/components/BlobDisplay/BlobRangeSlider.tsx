@@ -1,0 +1,52 @@
+import * as Slider from "@radix-ui/react-slider";
+import "./BlobRangeSlider.css";
+
+type BlobRangeSliderProps = {
+  label: string;
+  range: [number, number];
+  setRange: (val: [number, number]) => void;
+  min: number;
+  max: number;
+  step: number;
+};
+
+const BlobRangeSlider = ({
+  label,
+  range,
+  setRange,
+  min,
+  max,
+  step,
+}: BlobRangeSliderProps) => {
+  const handleChange = (values: number[]) => {
+    // values always [thumb0, thumb1]
+    setRange([values[0], values[1]]);
+  };
+
+  return (
+    <div className="blob-range-slider">
+      <label className="slider-label">{label}</label>
+      <Slider.Root
+        className="SliderRoot"
+        min={min}
+        max={max}
+        step={step}
+        value={range}
+        onValueChange={handleChange}
+      >
+        <Slider.Track className="SliderTrack">
+          <Slider.Range className="SliderRange" />
+        </Slider.Track>
+        {range.map((val, idx) => (
+          <Slider.Thumb
+            key={idx}
+            className="SliderThumb"
+            data-value={val.toFixed(2)}
+          />
+        ))}
+      </Slider.Root>
+    </div>
+  );
+};
+
+export default BlobRangeSlider;

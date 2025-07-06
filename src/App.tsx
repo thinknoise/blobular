@@ -1,11 +1,11 @@
 // src/App.tsx
-import AudioPlayer from "./components/AudioPlayer";
+import AudioBlobularPlayer from "./components/AudioBlobularPlayer";
 import "./App.css";
 function App() {
   return (
     <div className="app-blobular">
       <h1>Blobular</h1>
-      <AudioPlayer />
+      <AudioBlobularPlayer />
     </div>
   );
 }
