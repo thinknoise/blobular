@@ -21,7 +21,7 @@ const BlobControls = ({
   return (
     <div className="blob-controls">
       <BlobRangeSlider
-        label="Duration Range (s)"
+        label="Duration Range (secs)"
         range={durationRange}
         setRange={setDurationRange}
         min={0.1}
@@ -30,7 +30,7 @@ const BlobControls = ({
       />
 
       <BlobRangeSlider
-        label="Fade in and out of Blob"
+        label="Fade in/Out (secs)"
         range={fadeRange}
         setRange={setFadeRange}
         min={0.1}
@@ -39,11 +39,11 @@ const BlobControls = ({
       />
 
       <BlobRangeSlider
-        label="Playback Rate Range"
+        label="Playback/Pitch (sample rate)"
         range={playbackRateRange}
         setRange={setPlaybackRateRange}
         min={0.5}
-        max={2.0}
+        max={4.0}
         step={0.05}
       />
     </div>
