@@ -31,18 +31,6 @@ const AudioBlobularPlayer = () => {
       <button onClick={start}>Start</button>
       <button onClick={stop}>Stop</button>
 
-      <BlobControls
-        durationRange={durationRange}
-        setDurationRange={setDurationRange}
-        playbackRateRange={playbackRateRange}
-        setPlaybackRateRange={setPlaybackRateRange}
-        fadeRange={fadeRange}
-        setFadeRange={setFadeRange}
-        numBlobs={numBlobs}
-        setNumBlobs={setNumBlobs}
-      />
-
-      <BlobDisplay events={blobEvents} />
       <div className="blobular-visualizer">
         <BlobPanel
           blobEvents={blobEvents}
@@ -56,6 +44,19 @@ const AudioBlobularPlayer = () => {
           />
         )}
       </div>
+
+      <BlobControls
+        durationRange={durationRange}
+        setDurationRange={setDurationRange}
+        playbackRateRange={playbackRateRange}
+        setPlaybackRateRange={setPlaybackRateRange}
+        fadeRange={fadeRange}
+        setFadeRange={setFadeRange}
+        numBlobs={numBlobs}
+        setNumBlobs={setNumBlobs}
+      />
+
+      <BlobDisplay events={blobEvents} />
     </div>
   );
 };

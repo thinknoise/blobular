@@ -36,6 +36,10 @@ export const useBlobularEngine = (
       nextBlobTime: 0,
     }));
     setBlobEvents(Array(numBlobs).fill(null));
+    if (isPlayingRef.current) {
+      stop();
+      start();
+    }
   }, [numBlobs]);
 
   useEffect(() => {

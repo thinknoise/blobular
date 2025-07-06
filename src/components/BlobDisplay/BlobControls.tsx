@@ -31,7 +31,7 @@ const BlobControls = ({
           value={numBlobs}
           setValue={setNumBlobs}
           min={1}
-          max={16}
+          max={12}
           step={1}
         />
       )}{" "}
