@@ -4,6 +4,7 @@
 export const SCALE_DEGREE_SETS = {
   Major: [0, 2, 4, 5, 7, 9, 11] as const,
   Minor: [0, 2, 3, 5, 7, 8, 10] as const,
+  Chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const,
   Blues: [0, 3, 5, 6, 7, 10] as const,
   JazzMinor: [0, 2, 3, 5, 7, 9, 10] as const,
   Mixolydian: [0, 2, 4, 5, 7, 9, 10] as const,
@@ -47,3 +48,5 @@ export const ALL_SCALES: { name: ScaleName; degrees: ReadonlySet<number> }[] = (
   name,
   degrees: SCALE_DEGREE_MAP[name],
 }));
+
+// console.log("SCALE_DEGREE_MAP", SCALE_DEGREE_MAP, ALL_SCALES);

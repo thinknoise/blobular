@@ -28,7 +28,8 @@ const AudioBlobularPlayer = () => {
     numBlobs,
     durationRange,
     playbackRateRange,
-    fadeRange
+    fadeRange,
+    selectedScale
   );
 
   return (

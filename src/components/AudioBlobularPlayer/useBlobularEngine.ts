@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { playBlobAtTime } from "./playBlobAtTime";
 import type { BlobEvent } from "./types";
+import { ALL_SCALES, type ScaleName } from "../constants/scales";
 
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(
   minRate: number,
   maxRate: number,
-  degrees: Set<number> = MAJOR_DEGREES
+  degrees: ReadonlySet<number> = MAJOR_DEGREES
 ): number {
   // convert rates to semitone bounds
   const minSemi = Math.ceil(12 * Math.log2(minRate));
@@ -33,7 +34,8 @@ export const useBlobularEngine = (
   numBlobs: number = 8,
   durationRange: [number, number],
   playbackRateRange: [number, number],
-  fadeRange: [number, number]
+  fadeRange: [number, number],
+  selectedScale: ScaleName = "Major" // default scale
 ) => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
@@ -51,6 +53,8 @@ export const useBlobularEngine = (
   const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
 
   const fadeRangeRef = useRef<[number, number]>(fadeRange);
+
+  const scaleRef = useRef<ScaleName>(selectedScale);
 
   const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
     Array(numBlobs).fill(null)
@@ -81,6 +85,10 @@ export const useBlobularEngine = (
     fadeRangeRef.current = fadeRange;
   }, [fadeRange]);
 
+  useEffect(() => {
+    scaleRef.current = selectedScale;
+  }, [selectedScale]);
+
   const createScheduler = (blobIndex: number) => {
     const scheduler = () => {
       if (
@@ -104,12 +112,14 @@ export const useBlobularEngine = (
         const randomDuration = Math.random() * (maxDur - minDur) + minDur;
 
         const [minRate, maxRate] = playbackRateRangeRef.current;
-        // const randomPlaybackRate =
-        //   Math.random() * (maxRate - minRate) + minRate;
+        const degrees = ALL_SCALES.find(
+          (s) => s.name === (scaleRef.current as ScaleName)
+        )?.degrees;
+
         const randomPlaybackRate = getRandomScalePlaybackRate(
           minRate,
           maxRate,
-          MAJOR_DEGREES
+          degrees
         );
 
         const actualPlayTime = randomDuration / randomPlaybackRate;
