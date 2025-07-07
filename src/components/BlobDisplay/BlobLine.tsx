@@ -33,7 +33,7 @@ const BlobLine = ({ event, index }: BlobLineProps) => {
         animationDuration: `${event.duration}s`,
       }}
     >
-      🟢 Blob {event.blobIndex} | Time: {event.scheduledTime.toFixed(2)} | Dur:{" "}
+      {event.blobIndex} | startAt: {event.offset.toFixed(2)} | Dur:{" "}
       {event.duration.toFixed(2)} | Rate: {event.playbackRate.toFixed(2)}
     </div>
   ) : (

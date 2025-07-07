@@ -1,26 +1,47 @@
 import { useEffect, useRef, useState } from "react";
 import { playBlobAtTime } from "./playBlobAtTime";
 import type { BlobEvent } from "./types";
+import { ALL_SCALES, type ScaleName } from "../constants/scales";
+
+// ← helper for random major-scale note between minRate…maxRate
+const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
+function getRandomScalePlaybackRate(
+  minRate: number,
+  maxRate: number,
+  degrees: ReadonlySet<number> = MAJOR_DEGREES
+): number {
+  // convert rates to semitone bounds
+  const minSemi = Math.ceil(12 * Math.log2(minRate));
+  const maxSemi = Math.floor(12 * Math.log2(maxRate));
+
+  // collect all semitones in range that lie on a major-scale degree
+  const candidates: number[] = [];
+  for (let n = minSemi; n <= maxSemi; n++) {
+    const mod12 = ((n % 12) + 12) % 12;
+    if (degrees.has(mod12)) candidates.push(n);
+  }
+
+  // pick one at random (fallback to 0 semis if nothing matches)
+  const semi = candidates.length
+    ? candidates[Math.floor(Math.random() * candidates.length)]
+    : 0;
+
+  // convert back to rate
+  return 2 ** (semi / 12);
+}
 
 export const useBlobularEngine = (
   numBlobs: number = 8,
   durationRange: [number, number],
   playbackRateRange: [number, number],
-  fadeRange: [number, number]
+  fadeRange: [number, number],
+  selectedScale: ScaleName = "Major" // default scale
 ) => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
   const isPlayingRef = useRef(false);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
-
-  const durationRangeRef = useRef<[number, number]>(durationRange);
-  const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
-
-  const fadeRangeRef = useRef<[number, number]>(fadeRange);
-
-  const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
-    Array(numBlobs).fill(null)
-  );
+  const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
 
   const blobRefs = useRef(
     Array.from({ length: numBlobs }, () => ({
@@ -28,7 +49,35 @@ export const useBlobularEngine = (
     }))
   );
 
+  const durationRangeRef = useRef<[number, number]>(durationRange);
+  const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
+
+  const fadeRangeRef = useRef<[number, number]>(fadeRange);
+
+  const scaleRef = useRef<ScaleName>(selectedScale);
+
+  const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
+    Array(numBlobs).fill(null)
+  );
+
   // keep refs up-to-date with the latest slider values
+  useEffect(() => {
+    blobRefs.current = Array.from({ length: numBlobs }, () => ({
+      nextBlobTime: 0,
+    }));
+    setBlobEvents(Array(numBlobs).fill(null));
+    if (isPlayingRef.current) {
+      stop();
+      start();
+    } else {
+      // If not playing, just reset the blobRefs and events
+      blobRefs.current.forEach((blob) => {
+        blob.nextBlobTime = 0;
+      });
+      setBlobEvents(Array(numBlobs).fill(null));
+    }
+  }, [numBlobs]);
+
   useEffect(() => {
     durationRangeRef.current = durationRange;
   }, [durationRange]);
@@ -40,6 +89,10 @@ export const useBlobularEngine = (
   useEffect(() => {
     fadeRangeRef.current = fadeRange;
   }, [fadeRange]);
+
+  useEffect(() => {
+    scaleRef.current = selectedScale;
+  }, [selectedScale]);
 
   const createScheduler = (blobIndex: number) => {
     const scheduler = () => {
@@ -58,14 +111,24 @@ export const useBlobularEngine = (
       const scheduleAheadTime = 0.1;
       const blob = blobRefs.current[blobIndex];
 
-      while (blob.nextBlobTime < ctx.currentTime + scheduleAheadTime) {
+      while (
+        blob?.nextBlobTime &&
+        blob.nextBlobTime < ctx.currentTime + scheduleAheadTime
+      ) {
         // Randomize duration and playback rate
         const [minDur, maxDur] = durationRangeRef.current;
         const randomDuration = Math.random() * (maxDur - minDur) + minDur;
 
         const [minRate, maxRate] = playbackRateRangeRef.current;
-        const randomPlaybackRate =
-          Math.random() * (maxRate - minRate) + minRate;
+        const degrees = ALL_SCALES.find(
+          (s) => s.name === (scaleRef.current as ScaleName)
+        )?.degrees;
+
+        const randomPlaybackRate = getRandomScalePlaybackRate(
+          minRate,
+          maxRate,
+          degrees
+        );
 
         const actualPlayTime = randomDuration / randomPlaybackRate;
 
@@ -76,6 +139,16 @@ export const useBlobularEngine = (
         // 4) ensure fade never exceeds half the play time
         const fadeTime = Math.min(randomFade, actualPlayTime / 2);
 
+        // 5) pan placement
+        const coinFlip = Math.random() < 0.5;
+        const pan = {
+          start: coinFlip ? -1 : 1, // start at left or right
+          rampTo: coinFlip ? 1 : -1, // flip the pan direction
+        };
+
+        const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
+        const randomOffset = Math.random() * maxOffset;
+
         const gain = 0.8; // or scale down if needed
 
         const event: BlobEvent = {
@@ -83,7 +156,10 @@ export const useBlobularEngine = (
           scheduledTime: blob.nextBlobTime,
           duration: randomDuration,
           playbackRate: randomPlaybackRate,
+          fadeTime,
+          pan,
           timestamp: Date.now(),
+          offset: randomOffset,
         };
 
         setBlobEvents((prev) => {
@@ -100,7 +176,9 @@ export const useBlobularEngine = (
           randomPlaybackRate,
           gain,
           compressor, // ✅ pass compressor node
-          fadeTime
+          fadeTime,
+          pan,
+          randomOffset
         );
 
         blob.nextBlobTime += randomDuration - fadeTime;
@@ -135,11 +213,12 @@ export const useBlobularEngine = (
 
     if (!audioBufferRef.current) {
       const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      audioBufferRef.current = await ctx.decodeAudioData(arrayBuffer);
+      const resp = await fetch(url);
+      const abuf = await resp.arrayBuffer();
+      const decoded = await ctx.decodeAudioData(abuf);
+      audioBufferRef.current = decoded;
+      setBuffer(decoded); // ← store it in state
     }
-
     isPlayingRef.current = true;
 
     blobRefs.current.forEach((blob, index) => {
@@ -153,5 +232,5 @@ export const useBlobularEngine = (
     isPlayingRef.current = false;
   };
 
-  return { start, stop, blobEvents };
+  return { start, stop, blobEvents, buffer };
 };
