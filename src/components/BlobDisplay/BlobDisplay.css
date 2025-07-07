@@ -24,10 +24,12 @@
 
 @keyframes fadeOutOpacity {
   from {
-    opacity: 1;
+    opacity: 0.58;
+    background-color: rgb(255, 255, 0);
   }
 
   to {
-    opacity: 0.1;
+    opacity: 0.01;
+    background-color: blue;
   }
 }

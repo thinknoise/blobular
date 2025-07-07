@@ -6,6 +6,7 @@ import {
   BlobPanel,
   CompactWaveform,
 } from "../BlobDisplay";
+import { ALL_SCALES, type ScaleName } from "../constants/scales";
 import "./AudioBlobularPlayer.css"; // Ensure you have styles for the player
 
 const AudioBlobularPlayer = () => {
@@ -17,6 +18,10 @@ const AudioBlobularPlayer = () => {
   const [playbackRateRange, setPlaybackRateRange] = useState<[number, number]>([
     0.9, 1.4,
   ]);
+  const [selectedScale, setSelectedScale] = useState<ScaleName>(
+    ALL_SCALES[0].name
+  );
+
   const [fadeRange, setFadeRange] = useState<[number, number]>([0.1, 1.0]);
 
   const { start, stop, blobEvents, buffer } = useBlobularEngine(
@@ -54,6 +59,8 @@ const AudioBlobularPlayer = () => {
         setFadeRange={setFadeRange}
         numBlobs={numBlobs}
         setNumBlobs={setNumBlobs}
+        selectedScale={selectedScale}
+        setSelectedScale={setSelectedScale}
       />
 
       <BlobDisplay events={blobEvents} />

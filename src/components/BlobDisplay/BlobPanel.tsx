@@ -1,7 +1,7 @@
 // src/components/BlobPanel.tsx
 import type { BlobEvent } from "../AudioBlobularPlayer/types";
-import "./BlobPanel.css";
 import BlobBox from "./BlobBox";
+import "./BlobBox.css";
 
 type BlobPanelProps = {
   blobEvents: (BlobEvent | null)[];

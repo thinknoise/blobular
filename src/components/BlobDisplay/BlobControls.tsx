@@ -1,6 +1,6 @@
-import BlobRangeSlider from "./Sliders/BlobRangeSlider";
+import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "./Selectors";
 import "./BlobControls.css";
-import BlobCountSlider from "./Sliders/BlobCountSlider";
+import type { ScaleName } from "../constants/scales";
 
 type BlobControlsProps = {
   durationRange: [number, number];
@@ -11,6 +11,8 @@ type BlobControlsProps = {
   setFadeRange: React.Dispatch<React.SetStateAction<[number, number]>>;
   numBlobs: number;
   setNumBlobs: React.Dispatch<React.SetStateAction<number>>;
+  selectedScale: ScaleName; // Optional, if you want to handle scale selection
+  setSelectedScale: React.Dispatch<React.SetStateAction<ScaleName>>;
 };
 
 const BlobControls = ({
@@ -22,6 +24,8 @@ const BlobControls = ({
   setFadeRange,
   numBlobs,
   setNumBlobs,
+  selectedScale,
+  setSelectedScale,
 }: BlobControlsProps) => {
   return (
     <div className="blob-controls">
@@ -52,13 +56,14 @@ const BlobControls = ({
         step={0.1}
       />
       <BlobRangeSlider
-        label="Playback/Pitch (sample rate)"
+        label="Playback/Pitch (sample rate %)"
         range={playbackRateRange}
         setRange={setPlaybackRateRange}
         min={0.5}
         max={4.0}
         step={0.05}
       />
+      <ScaleSelect value={selectedScale} onChange={setSelectedScale} />
     </div>
   );
 };

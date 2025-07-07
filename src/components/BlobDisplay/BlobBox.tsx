@@ -1,7 +1,7 @@
 // src/components/BlobPanel/BlobBox.tsx
 import { useRef, useEffect } from "react";
 import type { BlobEvent } from "../AudioBlobularPlayer/types";
-import "./BlobPanel.css";
+import "./BlobBox.css";
 
 type BlobBoxProps = {
   event: BlobEvent | null;
@@ -9,7 +9,7 @@ type BlobBoxProps = {
   bufferDuration: number;
 };
 
-const BlobBox = ({ event, index, bufferDuration }: BlobBoxProps) => {
+const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const BlobBox = ({ event, index, bufferDuration }: BlobBoxProps) => {
   // compute positioning
 
   // width of your panel in px
-  const PANEL_WIDTH = 800; // todo: need to match your CSS width which should be set in BlobPanel.css
+  const PANEL_WIDTH = 800; // todo: need to match your CSS width which should be set in BlobBox.css
 
   // raw values
   const rawOffset = event?.offset ?? 0;
@@ -61,7 +61,7 @@ const BlobBox = ({ event, index, bufferDuration }: BlobBoxProps) => {
         width: `${width}%`,
       }}
     >
-      {index}
+      {event.blobIndex + 1}
     </div>
   ) : (
     <div className="blob-box inactive"></div>

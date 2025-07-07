@@ -2,6 +2,33 @@ import { useEffect, useRef, useState } from "react";
 import { playBlobAtTime } from "./playBlobAtTime";
 import type { BlobEvent } from "./types";
 
+// ← helper for random major-scale note between minRate…maxRate
+const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
+function getRandomScalePlaybackRate(
+  minRate: number,
+  maxRate: number,
+  degrees: Set<number> = MAJOR_DEGREES
+): number {
+  // convert rates to semitone bounds
+  const minSemi = Math.ceil(12 * Math.log2(minRate));
+  const maxSemi = Math.floor(12 * Math.log2(maxRate));
+
+  // collect all semitones in range that lie on a major-scale degree
+  const candidates: number[] = [];
+  for (let n = minSemi; n <= maxSemi; n++) {
+    const mod12 = ((n % 12) + 12) % 12;
+    if (degrees.has(mod12)) candidates.push(n);
+  }
+
+  // pick one at random (fallback to 0 semis if nothing matches)
+  const semi = candidates.length
+    ? candidates[Math.floor(Math.random() * candidates.length)]
+    : 0;
+
+  // convert back to rate
+  return 2 ** (semi / 12);
+}
+
 export const useBlobularEngine = (
   numBlobs: number = 8,
   durationRange: [number, number],
@@ -77,8 +104,13 @@ export const useBlobularEngine = (
         const randomDuration = Math.random() * (maxDur - minDur) + minDur;
 
         const [minRate, maxRate] = playbackRateRangeRef.current;
-        const randomPlaybackRate =
-          Math.random() * (maxRate - minRate) + minRate;
+        // const randomPlaybackRate =
+        //   Math.random() * (maxRate - minRate) + minRate;
+        const randomPlaybackRate = getRandomScalePlaybackRate(
+          minRate,
+          maxRate,
+          MAJOR_DEGREES
+        );
 
         const actualPlayTime = randomDuration / randomPlaybackRate;
 
