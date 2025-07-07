@@ -7,6 +7,8 @@ export const playBlobAtTime = (
   gain: number,
   compressor: DynamicsCompressorNode,
   fadeTime: number, // max desired fade (in seconds)
+  panPlacement: number = 0, // pan position from -1 (left) to 1 (right)
+  // where to start in the buffer
   randomOffset: number = 0 // buffer-time offset (in seconds)
 ) => {
   const source = ctx.createBufferSource();
@@ -28,6 +30,7 @@ export const playBlobAtTime = (
   const effectiveFade = Math.min(fadeTime, actualPlayTime / 2);
 
   const gainNode = ctx.createGain();
+  const panNode = ctx.createStereoPanner();
   const epsilon = 0.0001;
 
   // Clear any old automation
@@ -42,9 +45,15 @@ export const playBlobAtTime = (
   gainNode.gain.setValueAtTime(gain, releaseStart);
   gainNode.gain.exponentialRampToValueAtTime(epsilon, time + actualPlayTime);
 
-  // Wire up and schedule playback of the right buffer slice
+  // 3) Pan the sound
+  panNode.pan.cancelScheduledValues(time);
+  panNode.pan.setValueAtTime(panPlacement, time);
+  panNode.pan.linearRampToValueAtTime(panPlacement, time + actualPlayTime);
+
+  // Wire/Chain up and schedule playback of the right buffer slice
   source.connect(gainNode);
-  gainNode.connect(compressor);
+  gainNode.connect(panNode);
+  panNode.connect(compressor);
   source.start(time, randomOffset, sliceDuration);
 
   source.onended = () => {

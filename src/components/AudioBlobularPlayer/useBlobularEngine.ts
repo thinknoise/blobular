@@ -139,6 +139,9 @@ export const useBlobularEngine = (
         // 4) ensure fade never exceeds half the play time
         const fadeTime = Math.min(randomFade, actualPlayTime / 2);
 
+        // 5) pan placement
+        const panPlacement = Math.random() * 2 - 1; // random pan from -1 (left) to 1 (right)
+
         const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
         const randomOffset = Math.random() * maxOffset;
 
@@ -168,6 +171,7 @@ export const useBlobularEngine = (
           gain,
           compressor, // ✅ pass compressor node
           fadeTime,
+          panPlacement,
           randomOffset
         );
 
