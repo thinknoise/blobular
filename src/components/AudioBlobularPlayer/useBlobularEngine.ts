@@ -140,7 +140,11 @@ export const useBlobularEngine = (
         const fadeTime = Math.min(randomFade, actualPlayTime / 2);
 
         // 5) pan placement
-        const panPlacement = Math.random() * 2 - 1; // random pan from -1 (left) to 1 (right)
+        const coinFlip = Math.random() < 0.5;
+        const pan = {
+          start: coinFlip ? -1 : 1, // start at left or right
+          rampTo: coinFlip ? 1 : -1, // flip the pan direction
+        };
 
         const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
         const randomOffset = Math.random() * maxOffset;
@@ -152,6 +156,8 @@ export const useBlobularEngine = (
           scheduledTime: blob.nextBlobTime,
           duration: randomDuration,
           playbackRate: randomPlaybackRate,
+          fadeTime,
+          pan,
           timestamp: Date.now(),
           offset: randomOffset,
         };
@@ -171,7 +177,7 @@ export const useBlobularEngine = (
           gain,
           compressor, // ✅ pass compressor node
           fadeTime,
-          panPlacement,
+          pan,
           randomOffset
         );
 

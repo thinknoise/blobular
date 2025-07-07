@@ -7,7 +7,7 @@ export const playBlobAtTime = (
   gain: number,
   compressor: DynamicsCompressorNode,
   fadeTime: number, // max desired fade (in seconds)
-  panPlacement: number = 0, // pan position from -1 (left) to 1 (right)
+  panShape: { start: number; rampTo: number }, // pan position from -1 (left) to 1 (right)
   // where to start in the buffer
   randomOffset: number = 0 // buffer-time offset (in seconds)
 ) => {
@@ -47,8 +47,8 @@ export const playBlobAtTime = (
 
   // 3) Pan the sound
   panNode.pan.cancelScheduledValues(time);
-  panNode.pan.setValueAtTime(panPlacement, time);
-  panNode.pan.linearRampToValueAtTime(panPlacement, time + actualPlayTime);
+  panNode.pan.setValueAtTime(panShape.start, time);
+  panNode.pan.linearRampToValueAtTime(panShape.rampTo, time + actualPlayTime);
 
   // Wire/Chain up and schedule playback of the right buffer slice
   source.connect(gainNode);

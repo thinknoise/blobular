@@ -59,6 +59,7 @@ const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
         bottom: `${(event.playbackRate ?? 0) * 30}px`,
         left: `${left}px`,
         width: `${width}%`,
+        borderRadius: `${(event.fadeTime ?? 0) * width}px`,
       }}
     >
       {event.blobIndex + 1}
