@@ -61,7 +61,6 @@ export const useBlobularEngine = (
   );
 
   // keep refs up-to-date with the latest slider values
-
   useEffect(() => {
     blobRefs.current = Array.from({ length: numBlobs }, () => ({
       nextBlobTime: 0,
@@ -70,6 +69,12 @@ export const useBlobularEngine = (
     if (isPlayingRef.current) {
       stop();
       start();
+    } else {
+      // If not playing, just reset the blobRefs and events
+      blobRefs.current.forEach((blob) => {
+        blob.nextBlobTime = 0;
+      });
+      setBlobEvents(Array(numBlobs).fill(null));
     }
   }, [numBlobs]);
 
@@ -106,7 +111,10 @@ export const useBlobularEngine = (
       const scheduleAheadTime = 0.1;
       const blob = blobRefs.current[blobIndex];
 
-      while (blob.nextBlobTime < ctx.currentTime + scheduleAheadTime) {
+      while (
+        blob?.nextBlobTime &&
+        blob.nextBlobTime < ctx.currentTime + scheduleAheadTime
+      ) {
         // Randomize duration and playback rate
         const [minDur, maxDur] = durationRangeRef.current;
         const randomDuration = Math.random() * (maxDur - minDur) + minDur;
