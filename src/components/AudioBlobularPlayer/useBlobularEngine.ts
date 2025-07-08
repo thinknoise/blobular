@@ -76,6 +76,7 @@ export const useBlobularEngine = (
       });
       setBlobEvents(Array(numBlobs).fill(null));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numBlobs]);
 
   useEffect(() => {
