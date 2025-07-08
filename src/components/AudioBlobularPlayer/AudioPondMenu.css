@@ -1,0 +1,27 @@
+.audio-pond-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px;
+  background-color: #352525;
+  box-shadow: 0 8px 18px #bebebee6;
+  z-index: 1000;
+  border-radius: 0 0 14px 0;
+  padding: 10px;
+  margin: 0;
+  font-size: smaller;
+}
+
+.audio-list {
+  list-style: none;
+  padding: 0;
+}
+
+.audio-list li {
+  display: flex;
+  padding: 8px 0;
+}
+
+.audio-list li:last-child {
+  border-bottom: none;
+}
