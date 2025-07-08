@@ -1,4 +1,4 @@
-import type { BlobEvent } from "../AudioBlobularPlayer/types";
+import type { BlobEvent } from "../../types/types";
 import BlobLine from "./BlobLine";
 import "./BlobDisplay.css";
 

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { playBlobAtTime } from "./playBlobAtTime";
-import type { BlobEvent } from "./types";
+import { playBlobAtTime } from "../utils/playBlobAtTime";
+import type { BlobEvent } from "../types/types";
 import { ALL_SCALES, type ScaleName } from "../constants/scales";
-
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useBlobularEngine } from "./useBlobularEngine";
+import { useBlobularEngine } from "../../hooks/useBlobularEngine";
 import {
   BlobDisplay,
   BlobControls,
   BlobPanel,
   CompactWaveform,
 } from "../BlobDisplay";
-import { ALL_SCALES, type ScaleName } from "../constants/scales";
+import { ALL_SCALES, type ScaleName } from "../../constants/scales";
 import "./AudioBlobularPlayer.css"; // Ensure you have styles for the player
 
 const AudioBlobularPlayer = () => {

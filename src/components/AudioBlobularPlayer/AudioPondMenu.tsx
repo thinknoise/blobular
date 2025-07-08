@@ -1,10 +1,11 @@
 // src/components/AudioPondMenu.tsx
 import React, { useEffect, useState } from "react";
-import { listAudioKeys, getAudioArrayBuffer } from "../utils/awsS3Helpers";
+import { listAudioKeys, getAudioArrayBuffer } from "../../utils/awsS3Helpers";
 import CompactWaveform from "../BlobDisplay/CompactWaveform";
 import "./AudioPondMenu.css";
 
 const AudioPondMenu: React.FC = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [buffers, setBuffers] = useState<Record<string, AudioBuffer>>({});
 
   useEffect(() => {
@@ -21,13 +22,19 @@ const AudioPondMenu: React.FC = () => {
   }, []);
 
   return (
-    <div className="audio-pond-menu">
-      <h2>Audio Pond</h2>
+    <div className={`audio-pond-menu ${menuOpen ? "open" : ""}`}>
+      <button
+        className="menu-button"
+        aria-label="Menu"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        ☰
+      </button>
       <ul className="audio-list">
         {Object.entries(buffers).map(([key, buffer]) => (
           <li key={key} className="audio-item">
-            <CompactWaveform buffer={buffer} customHeight={50} />
             <span className="audio-label">{key.replace(/^.*\//, "")}</span>
+            <CompactWaveform buffer={buffer} customHeight={50} />
           </li>
         ))}
       </ul>

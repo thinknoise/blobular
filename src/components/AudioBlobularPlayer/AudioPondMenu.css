@@ -1,20 +1,42 @@
 .audio-pond-menu {
-  position: absolute;
+  position: fixed;
   top: 0;
-  left: 0;
+  left: -325px;
   width: 300px;
   background-color: #352525;
-  box-shadow: 0 8px 18px #bebebee6;
+  box-shadow: 1px 8px 11px #000000;
   z-index: 1000;
-  border-radius: 0 0 14px 0;
+  border-radius: 0 0 13px 0;
   padding: 10px;
   margin: 0;
   font-size: smaller;
+  transition: left 0.3s ease-in-out;
+}
+
+.audio-pond-menu.open {
+  left: 0;
+}
+
+.menu-button {
+  position: absolute;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  cursor: pointer;
+  top: 0;
+  right: -68px;
+  z-index: 1001;
+}
+
+
+.menu-button:focus {
+  outline: none;
 }
 
 .audio-list {
   list-style: none;
-  padding: 0;
+  padding: 20px 0 0 0;
 }
 
 .audio-list li {
@@ -24,4 +46,22 @@
 
 .audio-list li:last-child {
   border-bottom: none;
+}
+
+.audio-item {
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.8s ease-out;
+}
+
+.audio-item:hover {
+  background-color: #4a4a4a;
+}
+
+.audio-label {
+  position: absolute;
+  top: 25px;
+  color: #000000;
+  font-weight: bold;
 }
