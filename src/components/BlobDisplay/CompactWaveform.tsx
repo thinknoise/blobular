@@ -1,51 +1,61 @@
 // src/components/CompactWaveform.tsx
 import { useRef, useEffect } from "react";
 import type { FC } from "react";
-import { getWaveformData } from "../utils/waveformUtils.ts";
+import { getWaveformData } from "../utils/waveformUtils";
+import "./CompactWaveform.css";
 
 interface CompactWaveformProps {
   /** The decoded AudioBuffer to visualize */
   buffer: AudioBuffer;
-  /** Canvas width in pixels */
-  width?: number;
-  /** Canvas height in pixels */
-  height?: number;
+  customHeight?: number; // Optional height, defaults to 100px
 }
 
 const CompactWaveform: FC<CompactWaveformProps> = ({
   buffer,
-  width = 120,
-  height = 53,
+  customHeight = null,
 }) => {
-  // Make sure our ref is typed as possibly null
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    // Use logical OR guards, not bitwise
-    if (!buffer || !canvasRef.current) return;
-
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!buffer || !canvas) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
 
-    const waveform = getWaveformData(buffer, width);
+    const drawWaveform = () => {
+      const { width, height } = parent.getBoundingClientRect();
+      canvas.width = Math.round(width);
+      canvas.height = customHeight || Math.round(height);
 
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#868686";
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const waveform = getWaveformData(buffer, canvas.width);
 
-    waveform.forEach((amp, i) => {
-      const y = amp * height;
-      ctx.fillRect(i, (height - y) / 2, 1, y);
-    });
-  }, [buffer, width, height]);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      waveform.forEach((amp, i) => {
+        const y = amp * canvas.height;
+        ctx.fillRect(i, (canvas.height - y) / 2, 1, y);
+      });
+    };
+
+    // Use ResizeObserver to handle container resizes
+    const resizeObserver = new ResizeObserver(drawWaveform);
+    resizeObserver.observe(parent);
+
+    // Initial draw
+    drawWaveform();
+
+    return () => resizeObserver.disconnect();
+  }, [buffer, customHeight]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      style={{ margin: "-40px", width: "100%", height: "380px" }}
-    />
+    <div
+      className="compact-waveform-container"
+      style={{ height: canvasRef.current?.height }}
+    >
+      <canvas ref={canvasRef} className="compact-waveform" />
+    </div>
   );
 };
 

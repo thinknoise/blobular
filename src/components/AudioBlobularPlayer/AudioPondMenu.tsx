@@ -1,29 +1,36 @@
+// src/components/AudioPondMenu.tsx
 import React, { useEffect, useState } from "react";
-import { listAudioKeys } from "../utils/awsS3Helpers";
+import { listAudioKeys, getAudioArrayBuffer } from "../utils/awsS3Helpers";
+import CompactWaveform from "../BlobDisplay/CompactWaveform";
 import "./AudioPondMenu.css";
 
 const AudioPondMenu: React.FC = () => {
-  const [audioFiles, setAudioFiles] = useState<string[]>([]);
+  const [buffers, setBuffers] = useState<Record<string, AudioBuffer>>({});
 
   useEffect(() => {
-    listAudioKeys()
-      .then((keys) => {
-        console.log("S3 keys:", keys);
-        setAudioFiles(keys);
-      })
-      .catch((err) => console.error(err));
+    listAudioKeys().then(async (keys) => {
+      // For each key, fetch & decode the buffer
+      const decodedMap: Record<string, AudioBuffer> = {};
+      for (const key of keys) {
+        const arrayBuffer = await getAudioArrayBuffer(key);
+        const audioCtx = new AudioContext();
+        decodedMap[key] = await audioCtx.decodeAudioData(arrayBuffer);
+      }
+      setBuffers(decodedMap);
+    });
   }, []);
 
   return (
     <div className="audio-pond-menu">
       <h2>Audio Pond</h2>
-      {audioFiles.length > 0 && (
-        <ul className="audio-list">
-          {audioFiles.map((file) => (
-            <li key={file}>{file}</li>
-          ))}
-        </ul>
-      )}
+      <ul className="audio-list">
+        {Object.entries(buffers).map(([key, buffer]) => (
+          <li key={key} className="audio-item">
+            <CompactWaveform buffer={buffer} customHeight={50} />
+            <span className="audio-label">{key.replace(/^.*\//, "")}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

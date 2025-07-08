@@ -5,18 +5,30 @@ import {
 } from "@aws-sdk/client-s3";
 import { s3, BUCKET } from "./awsConfig";
 
+// Only include these audio file extensions
+const AUDIO_EXTENSIONS = /\.(wav|mp3|ogg|flac|aac)$/i;
+
 /**
- * List all keys under the "audio-pond/" prefix in your S3 bucket
+ * List all audio keys under the specified prefixes in your S3 bucket
+ * @param prefixes Array of folder prefixes to list (defaults to both "audio/" and "audio-pond/")
  */
-export async function listAudioKeys(): Promise<string[]> {
-  const command = new ListObjectsV2Command({
-    Bucket: BUCKET,
-    Prefix: "audio-pond/",
-  });
-  const response = await s3.send(command);
-  return (response.Contents ?? [])
-    .map((item) => item.Key!)
-    .filter((key) => !!key);
+export async function listAudioKeys(
+  prefixes: string[] = ["audio-pond/"]
+): Promise<string[]> {
+  const results = await Promise.all(
+    prefixes.map(async (prefix) => {
+      const command = new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: prefix,
+      });
+      const response = await s3.send(command);
+      return (response.Contents ?? [])
+        .map((item) => item.Key!)
+        .filter((key) => AUDIO_EXTENSIONS.test(key));
+    })
+  );
+  // Flatten the array of arrays into a single list of valid audio keys
+  return results.flat();
 }
 
 /**

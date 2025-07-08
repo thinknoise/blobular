@@ -42,13 +42,7 @@ const AudioBlobularPlayer = () => {
           blobEvents={blobEvents}
           bufferDuration={buffer ? buffer.duration : 0}
         />
-        {buffer && (
-          <CompactWaveform
-            buffer={buffer}
-            width={400} // whatever you need
-            height={300}
-          />
-        )}
+        {buffer && <CompactWaveform buffer={buffer} />}
       </div>
 
       <BlobControls
