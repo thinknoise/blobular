@@ -42,8 +42,9 @@ const AudioPondMenu: React.FC = () => {
             key={key}
             className="audio-item"
             onClick={() => {
-              console.log(`Setting buffer for key: ${key}`);
+              console.log(`Setting buffer for key: ${key}`, buffer);
               setBlobularBuffer(buffer);
+              setMenuOpen(false); // Close menu after selection
             }}
           >
             <span className="audio-label">{key.replace(/^.*\//, "")}</span>

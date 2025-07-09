@@ -194,6 +194,19 @@ export const useBlobularEngine = (
     return scheduler;
   };
 
+  useEffect(() => {
+    // If blobularBuffer changes, update the audioBufferRef and state
+    if (blobularBuffer) {
+      // If blobularBuffer is available, set it as the audio buffer
+      audioBufferRef.current = blobularBuffer;
+      setBuffer(blobularBuffer);
+    } else {
+      // If not, reset the buffer to null
+      audioBufferRef.current = null;
+      setBuffer(null);
+    }
+  }, [blobularBuffer]);
+
   const start = async () => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = getAudioCtx();
