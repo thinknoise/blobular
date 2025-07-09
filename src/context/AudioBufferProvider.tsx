@@ -6,10 +6,12 @@ import { AudioBufferContext } from "./AudioBufferContext";
 export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [buffer, setBlobularBuffer] = useState<AudioBuffer | null>(null);
+  const [blobularBuffer, setBlobularBuffer] = useState<AudioBuffer | null>(
+    null
+  );
 
   return (
-    <AudioBufferContext.Provider value={{ buffer, setBlobularBuffer }}>
+    <AudioBufferContext.Provider value={{ blobularBuffer, setBlobularBuffer }}>
       {children}
     </AudioBufferContext.Provider>
   );

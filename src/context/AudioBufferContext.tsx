@@ -3,7 +3,7 @@
 import { createContext } from "react";
 
 export type AudioBufferContextType = {
-  buffer: AudioBuffer | null;
+  blobularBuffer: AudioBuffer | null;
   setBlobularBuffer: (buffer: AudioBuffer | null) => void;
 };
 

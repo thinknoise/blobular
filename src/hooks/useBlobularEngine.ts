@@ -37,15 +37,12 @@ export const useBlobularEngine = (
   fadeRange: [number, number],
   selectedScale: ScaleName = "Major" // default scale
 ) => {
-  const { buffer: contextBuffer } = useAudioBuffer();
+  const { blobularBuffer } = useAudioBuffer();
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
   const isPlayingRef = useRef(false);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
-  const [url, setUrl] = useState<string>(
-    `${import.meta.env.BASE_URL}audio/LongHorn.wav`
-  );
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
 
   const blobRefs = useRef(
@@ -196,16 +193,6 @@ export const useBlobularEngine = (
     return scheduler;
   };
 
-  const setNewUrl = (newUrl: string) => {
-    setUrl(newUrl);
-    audioBufferRef.current = null; // reset buffer to force reload
-    setBuffer(null); // reset state buffer
-    if (isPlayingRef.current) {
-      stop();
-      start(); // restart with new URL
-    }
-  };
-
   const start = async () => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new AudioContext();
@@ -215,7 +202,7 @@ export const useBlobularEngine = (
 
     const ctx = audioCtxRef.current;
 
-    // ✅ Initialize compressor if not already created
+    // Initialize compressor if not already created
     if (!compressorRef.current && ctx) {
       const compressor = ctx.createDynamicsCompressor();
       compressor.threshold.setValueAtTime(-24, ctx.currentTime);
@@ -227,11 +214,12 @@ export const useBlobularEngine = (
       compressorRef.current = compressor;
     }
 
-    // ✅ Use contextBuffer if available
-    if (contextBuffer) {
-      audioBufferRef.current = contextBuffer;
-      setBuffer(contextBuffer);
+    // Use blobularBuffer if available
+    if (blobularBuffer) {
+      audioBufferRef.current = blobularBuffer;
+      setBuffer(blobularBuffer);
     } else if (!audioBufferRef.current) {
+      const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
       const resp = await fetch(url);
       const abuf = await resp.arrayBuffer();
       const decoded = await ctx.decodeAudioData(abuf);
@@ -251,5 +239,5 @@ export const useBlobularEngine = (
     isPlayingRef.current = false;
   };
 
-  return { start, stop, blobEvents, buffer, setNewUrl };
+  return { start, stop, blobEvents, buffer };
 };
