@@ -44,9 +44,11 @@
   padding: 8px 0;
 }
 
-.audio-list li:last-child {
-  border-bottom: none;
+.audio-item.playing {
+  background-color: #4a4a4a;
+  color: #eebb00;
 }
+
 
 .audio-item {
   position: relative;

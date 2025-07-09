@@ -11,7 +11,7 @@ const AudioPondMenu: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [buffers, setBuffers] = useState<Record<string, AudioBuffer>>({});
 
-  const { setBlobularBuffer } = useAudioBuffer();
+  const { blobularBuffer, setBlobularBuffer } = useAudioBuffer();
 
   useEffect(() => {
     listAudioKeys().then(async (keys) => {
@@ -40,7 +40,9 @@ const AudioPondMenu: React.FC = () => {
         {Object.entries(buffers).map(([key, buffer]) => (
           <li
             key={key}
-            className="audio-item"
+            className={
+              blobularBuffer === buffer ? "audio-item playing" : "audio-item"
+            }
             onClick={() => {
               console.log(`Setting buffer for key: ${key}`, buffer);
               setBlobularBuffer(buffer);

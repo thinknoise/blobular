@@ -40,7 +40,7 @@ const BlobControls = ({
         />
       )}{" "}
       <BlobRangeSlider
-        label="Duration Range (secs)"
+        label="Duration (secs)"
         range={durationRange}
         setRange={setDurationRange}
         min={0.1}

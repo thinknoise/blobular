@@ -7,6 +7,8 @@ import {
   CompactWaveform,
 } from "../BlobDisplay";
 import { ALL_SCALES, type ScaleName } from "../../constants/scales";
+import { Play, Square } from "lucide-react"; // or any icon library you use
+
 import "./AudioBlobularPlayer.css"; // Ensure you have styles for the player
 
 const AudioBlobularPlayer = () => {
@@ -32,10 +34,27 @@ const AudioBlobularPlayer = () => {
     selectedScale
   );
 
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  function handleClick(): void {
+    if (isPlaying) {
+      stop();
+    } else {
+      start();
+    }
+    setIsPlaying(!isPlaying);
+  }
+
   return (
     <div className="audio-blobular-player">
-      <button onClick={start}>Start</button>
-      <button onClick={stop}>Stop</button>
+      <button
+        className={isPlaying ? "play-button playing" : "play-button"}
+        onClick={handleClick}
+      >
+        <span className="blobular-title-chunk">Blobul</span>
+        {isPlaying ? <Square /> : <Play />}
+        <span className="blobular-title-chunk">r</span>
+      </button>
 
       <div className="blobular-visualizer">
         <BlobPanel
