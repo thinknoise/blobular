@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { playBlobAtTime } from "../utils/playBlobAtTime";
 import type { BlobEvent } from "../types/types";
 import { ALL_SCALES, type ScaleName } from "../constants/scales";
+import { useAudioBuffer } from "../hooks/useAudioBuffer";
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(
@@ -36,10 +37,15 @@ export const useBlobularEngine = (
   fadeRange: [number, number],
   selectedScale: ScaleName = "Major" // default scale
 ) => {
+  const { buffer: contextBuffer } = useAudioBuffer();
+
   const audioCtxRef = useRef<AudioContext | null>(null);
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
   const isPlayingRef = useRef(false);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const [url, setUrl] = useState<string>(
+    `${import.meta.env.BASE_URL}audio/LongHorn.wav`
+  );
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
 
   const blobRefs = useRef(
@@ -190,6 +196,16 @@ export const useBlobularEngine = (
     return scheduler;
   };
 
+  const setNewUrl = (newUrl: string) => {
+    setUrl(newUrl);
+    audioBufferRef.current = null; // reset buffer to force reload
+    setBuffer(null); // reset state buffer
+    if (isPlayingRef.current) {
+      stop();
+      start(); // restart with new URL
+    }
+  };
+
   const start = async () => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new AudioContext();
@@ -211,8 +227,11 @@ export const useBlobularEngine = (
       compressorRef.current = compressor;
     }
 
-    if (!audioBufferRef.current) {
-      const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
+    // ✅ Use contextBuffer if available
+    if (contextBuffer) {
+      audioBufferRef.current = contextBuffer;
+      setBuffer(contextBuffer);
+    } else if (!audioBufferRef.current) {
       const resp = await fetch(url);
       const abuf = await resp.arrayBuffer();
       const decoded = await ctx.decodeAudioData(abuf);
@@ -232,5 +251,5 @@ export const useBlobularEngine = (
     isPlayingRef.current = false;
   };
 
-  return { start, stop, blobEvents, buffer };
+  return { start, stop, blobEvents, buffer, setNewUrl };
 };
