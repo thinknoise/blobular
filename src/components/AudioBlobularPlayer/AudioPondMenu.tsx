@@ -18,7 +18,7 @@ const AudioPondMenu: React.FC = () => {
       // For each key, fetch & decode the buffer
       const decodedMap: Record<string, AudioBuffer> = {};
       for (const key of keys) {
-        console.log(`Fetching audio data for key: ${key}`);
+        // console.log(`Fetching audio data for key: ${key}`);
         const arrayBuffer = await getAudioArrayBuffer(key);
         const audioCtx = getAudioCtx();
         decodedMap[key] = await audioCtx.decodeAudioData(arrayBuffer);
