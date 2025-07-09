@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { listAudioKeys, getAudioArrayBuffer } from "../../utils/awsS3Helpers";
 import CompactWaveform from "../BlobDisplay/CompactWaveform";
 import { useAudioBuffer } from "../../hooks/useAudioBuffer";
+import { getAudioCtx } from "../../utils/audioCtx";
 
 import "./AudioPondMenu.css";
 
@@ -19,7 +20,7 @@ const AudioPondMenu: React.FC = () => {
       for (const key of keys) {
         console.log(`Fetching audio data for key: ${key}`);
         const arrayBuffer = await getAudioArrayBuffer(key);
-        const audioCtx = new AudioContext();
+        const audioCtx = getAudioCtx();
         decodedMap[key] = await audioCtx.decodeAudioData(arrayBuffer);
       }
       setBuffers(decodedMap);

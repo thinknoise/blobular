@@ -3,6 +3,7 @@ import { playBlobAtTime } from "../utils/playBlobAtTime";
 import type { BlobEvent } from "../types/types";
 import { ALL_SCALES, type ScaleName } from "../constants/scales";
 import { useAudioBuffer } from "../hooks/useAudioBuffer";
+import { getAudioCtx } from "../utils/audioCtx";
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(
@@ -178,7 +179,7 @@ export const useBlobularEngine = (
           randomDuration,
           randomPlaybackRate,
           gain,
-          compressor, // ✅ pass compressor node
+          compressor, // pass compressor node
           fadeTime,
           pan,
           randomOffset
@@ -195,7 +196,7 @@ export const useBlobularEngine = (
 
   const start = async () => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext();
+      audioCtxRef.current = getAudioCtx();
     } else if (audioCtxRef.current.state === "suspended") {
       await audioCtxRef.current.resume();
     }
