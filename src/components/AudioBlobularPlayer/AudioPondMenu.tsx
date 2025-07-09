@@ -6,6 +6,7 @@ import { useAudioBuffer } from "../../hooks/useAudioBuffer";
 import { getAudioCtx } from "../../utils/audioCtx";
 
 import "./AudioPondMenu.css";
+import ButtonUpload from "./AudioPond/ButtonUpload";
 
 const AudioPondMenu: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,8 +28,14 @@ const AudioPondMenu: React.FC = () => {
     });
   }, []);
 
+  const handleUploadComplete = (key: string) => {
+    console.log("Uploaded file key:", key);
+    // Update your registry or UI state here
+  };
+
   return (
     <div className={`audio-pond-menu ${menuOpen ? "open" : ""}`}>
+      <ButtonUpload onUpload={handleUploadComplete} />
       <button
         className="menu-button"
         aria-label="Menu"

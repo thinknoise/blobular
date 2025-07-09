@@ -210,8 +210,6 @@ export const useBlobularEngine = (
   const start = async () => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = getAudioCtx();
-    } else if (audioCtxRef.current.state === "suspended") {
-      await audioCtxRef.current.resume();
     }
 
     const ctx = audioCtxRef.current;
