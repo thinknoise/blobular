@@ -1,8 +1,11 @@
 // src/components/ButtonUpload.tsx
 
 import { useRef } from "react";
+import { CloudArrowUp } from "phosphor-react";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3, BUCKET } from "../../../utils/awsConfig";
+import IconButton from "@mui/material/IconButton";
+import "./ButtonUpload.css"; // Ensure you have styles for the upload button
 
 type ButtonUploadProps = {
   onUpload?: (key: string) => void;
@@ -32,7 +35,7 @@ export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
 
       await s3.send(command);
       console.log("✅ Uploaded to S3:", key);
-      alert("Upload complete!");
+      // alert("Upload complete!");
 
       onUpload?.(key);
     } catch (err) {
@@ -42,10 +45,11 @@ export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
   };
 
   return (
-    <>
-      <button className="upload-button" onClick={handleClick}>
-        Upload Audio
-      </button>
+    <div className="button-upload-container">
+      <IconButton onClick={handleClick} className="upload-button">
+        <CloudArrowUp fontSize={32} color="white" label="Upload" />
+      </IconButton>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -53,6 +57,6 @@ export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
-    </>
+    </div>
   );
 }

@@ -21,13 +21,6 @@
   left: 0;
 }
 
-.menu-scrollarea {
-  height: calc(100% - 50px);
-  overflow-y: scroll;
-  padding-right: 10px;
-  box-sizing: border-box;
-}
-
 .menu-button {
   position: absolute;
   background: #352525;
@@ -42,7 +35,6 @@
   right: -46px;
   z-index: 1001;
 }
-
 
 .menu-button:focus {
   outline: none;

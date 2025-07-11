@@ -7,6 +7,9 @@ import RecordedItem from "./RecordedItem";
 
 import { MicIcon } from "./AudioPond/IconMic";
 import "./AudioRecordMenu.css"; // Ensure you have styles for the recording menu
+import { useAudioPond } from "../../hooks/useAudioPond";
+import { listAudioKeys } from "../../utils/awsS3Helpers";
+import ButtonUpload from "./AudioPond/ButtonUpload";
 
 interface AudioRecordMenuProps {
   toggleMenu: () => void;
@@ -21,6 +24,8 @@ const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
   const audioContext = getAudioCtx();
   const { isRecording, startRecording, stopRecording } =
     useRecording(audioContext);
+
+  const { fetchAudioKeysAndBuffers } = useAudioPond();
 
   interface Recording {
     url: string;
@@ -54,9 +59,11 @@ const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
 
       await s3.send(command);
       console.log("✅ Uploaded recording to S3:", key);
-      alert("Upload complete!");
+      // alert("Upload complete!");
+      listAudioKeys(); // Refresh the audio pond list after upload
+      fetchAudioKeysAndBuffers(); // Refresh the audio pond list after upload
       toggleMenu(); // Close the menu after upload
-      setRecordings((prev) => prev.filter((rec) => rec.blob !== blob)); // Remove the recording from the list
+      // setRecordings((prev) => prev.filter((rec) => rec.blob !== blob)); // Remove the recording from the list
       if (setPondMenuOpen) {
         setPondMenuOpen(true); // Open the pond menu after upload
       }
@@ -74,6 +81,13 @@ const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
       console.log("Recording saved:", key);
     }
   };
+  const handleUploadComplete = (key: string) => {
+    console.log("Uploaded file key:", key);
+    // Update your registry or UI state here
+    listAudioKeys(); // Refresh the audio pond list after upload
+
+    fetchAudioKeysAndBuffers(); // Refresh the list after upload
+  };
 
   return (
     <div className={`audio-record-menu ${isOpen ? "open" : ""}`}>
@@ -84,6 +98,10 @@ const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
       >
         <MicIcon size={21} color={"#ffffff"} />
       </button>
+      <ButtonUpload onUpload={handleUploadComplete} />
+      <div className="recording-status">
+        {isRecording ? "Recording..." : "Click to record"}
+      </div>
       <button
         onClick={handleRecordClick}
         className={`record-button ${isRecording ? "recording" : ""}`}
