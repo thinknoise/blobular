@@ -1,0 +1,42 @@
+.recorded-item {
+  position: relative;
+  padding: 16px;
+  background-color: #282c34;
+  color: white;
+}
+
+.recorded-play-button,
+.recorded-save-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background-color: transparent;
+  border: none;
+  color: white;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.recorded-save-button {
+  top: 8px;
+  height: 32px;
+}
+
+.play-recorded:hover,
+.recorded-play-button.playing {
+  color: #eebb00;
+}
+
+.recorded-play-button:focus,
+.recorded-save-button:focus {
+  outline: none;
+}
+
+.recorded-play-button .lucide,
+.recorded-save-button .lucide {
+  stroke-width: 2px;
+  width: 24px;
+  height: 24px;
+  vertical-align: baseline;
+}

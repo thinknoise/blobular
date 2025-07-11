@@ -1,8 +1,8 @@
 // src/App.tsx
 import packageJson from "../package.json";
 import AudioBlobularPlayer from "./components/AudioBlobularPlayer";
-import AudioPondMenu from "./components/AudioBlobularPlayer/AudioPondMenu";
 import { AudioBufferProvider } from "./context/AudioBufferProvider";
+import AudioMenu from "./components/AudioMenu/AudioMenu";
 import "./App.css";
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
       <div className="version-text">v{packageJson.version}</div>
       <div className="app-blobular">
         <AudioBlobularPlayer />
-        <AudioPondMenu />
+        <AudioMenu />
       </div>
     </AudioBufferProvider>
   );
