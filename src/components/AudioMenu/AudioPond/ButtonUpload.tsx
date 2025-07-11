@@ -47,7 +47,7 @@ export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
   return (
     <div className="button-upload-container">
       <IconButton onClick={handleClick} className="upload-button">
-        <CloudArrowUp fontSize={32} color="white" label="Upload" />
+        <CloudArrowUp fontSize={32} color="white" />
       </IconButton>
 
       <input

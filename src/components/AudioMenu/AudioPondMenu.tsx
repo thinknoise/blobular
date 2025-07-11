@@ -1,5 +1,5 @@
 // src/components/AudioPondMenu.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import CompactWaveform from "../BlobDisplay/CompactWaveform";
 import { useAudioBuffer } from "../../hooks/useAudioBuffer";
 
@@ -7,21 +7,17 @@ import { useAudioPond } from "../../hooks/useAudioPond";
 import { listAudioKeys } from "../../utils/awsS3Helpers";
 
 import "./AudioPondMenu.css";
+import RecordUpload from "./AudioPond/RecordUpload";
 
-interface AudioPondMenuProps {
-  toggleMenu: () => void;
-  isOpen: boolean;
-  closeThisMenu?: () => void;
-}
-
-const AudioPondMenu: React.FC<AudioPondMenuProps> = ({
-  toggleMenu,
-  isOpen,
-  closeThisMenu,
-}) => {
+const AudioPondMenu: React.FC = () => {
   const { blobularBuffer, setBlobularBuffer } = useAudioBuffer();
 
   const { buffers, fetchAudioKeysAndBuffers } = useAudioPond();
+  const [pondMenuOpen, setPondMenuOpen] = useState(false);
+
+  const togglePondMenu = () => {
+    setPondMenuOpen(!pondMenuOpen);
+  };
 
   useEffect(() => {
     listAudioKeys();
@@ -29,11 +25,16 @@ const AudioPondMenu: React.FC<AudioPondMenuProps> = ({
   }, []);
 
   return (
-    <div className={`audio-pond-menu ${isOpen ? "open" : ""}`}>
-      <button className="menu-button" aria-label="Menu" onClick={toggleMenu}>
+    <div className={`audio-pond-menu ${pondMenuOpen ? "open" : ""}`}>
+      <button
+        className="menu-button"
+        aria-label="Menu"
+        onClick={togglePondMenu}
+      >
         ☰
       </button>
       <ul className="audio-list">
+        <RecordUpload />
         {Object.entries(buffers).map(([key, status]) => (
           <li
             key={key}
@@ -46,9 +47,7 @@ const AudioPondMenu: React.FC<AudioPondMenuProps> = ({
               if (status.buffer) {
                 console.log(`Setting buffer for key: ${key}`, status.buffer);
                 setBlobularBuffer(status.buffer);
-                if (closeThisMenu) {
-                  closeThisMenu(); // Close menu after selection
-                }
+                setPondMenuOpen(false); // Close the menu when an audio is selected
               }
             }}
           >

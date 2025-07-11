@@ -2,7 +2,7 @@
 import packageJson from "../package.json";
 import AudioBlobularPlayer from "./components/AudioBlobularPlayer";
 import { AudioBufferProvider } from "./context/AudioBufferProvider";
-import AudioMenu from "./components/AudioMenu/AudioMenu";
+import AudioPondMenu from "./components/AudioMenu/AudioPondMenu";
 import "./App.css";
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
       <div className="version-text">v{packageJson.version}</div>
       <div className="app-blobular">
         <AudioBlobularPlayer />
-        <AudioMenu />
+        <AudioPondMenu />
       </div>
     </AudioBufferProvider>
   );

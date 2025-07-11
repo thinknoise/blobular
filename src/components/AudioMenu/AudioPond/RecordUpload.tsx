@@ -1,26 +1,18 @@
 import React, { useState } from "react";
-import { useRecording } from "../../hooks/useRecording";
-import { getAudioCtx } from "../../utils/audioCtx";
+import { useRecording } from "../../../hooks/useRecording";
+import { getAudioCtx } from "../../../utils/audioCtx";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { s3, BUCKET } from "../../utils/awsConfig";
+import { s3, BUCKET } from "../../../utils/awsConfig";
 import RecordedItem from "./RecordedItem";
 
-import { MicIcon } from "./AudioPond/IconMic";
-import "./AudioRecordMenu.css"; // Ensure you have styles for the recording menu
-import { useAudioPond } from "../../hooks/useAudioPond";
-import { listAudioKeys } from "../../utils/awsS3Helpers";
-import ButtonUpload from "./AudioPond/ButtonUpload";
+import { useAudioPond } from "../../../hooks/useAudioPond";
+import { listAudioKeys } from "../../../utils/awsS3Helpers";
+import ButtonUpload from "./ButtonUpload";
 
-interface AudioRecordMenuProps {
-  toggleMenu: () => void;
-  isOpen: boolean;
-  setPondMenuOpen?: (value: boolean) => void; // Optional prop to control pond menu state
-}
-const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
-  toggleMenu,
-  isOpen,
-  setPondMenuOpen,
-}) => {
+import { MicIcon } from "./IconMic";
+import "./RecordUpload.css";
+
+const AudioRecordMenu: React.FC = () => {
   const audioContext = getAudioCtx();
   const { isRecording, startRecording, stopRecording } =
     useRecording(audioContext);
@@ -62,11 +54,7 @@ const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
       // alert("Upload complete!");
       listAudioKeys(); // Refresh the audio pond list after upload
       fetchAudioKeysAndBuffers(); // Refresh the audio pond list after upload
-      toggleMenu(); // Close the menu after upload
       // setRecordings((prev) => prev.filter((rec) => rec.blob !== blob)); // Remove the recording from the list
-      if (setPondMenuOpen) {
-        setPondMenuOpen(true); // Open the pond menu after upload
-      }
       return key;
     } catch (err) {
       console.error("❌ Upload failed:", err);
@@ -90,23 +78,16 @@ const AudioRecordMenu: React.FC<AudioRecordMenuProps> = ({
   };
 
   return (
-    <div className={`audio-record-menu ${isOpen ? "open" : ""}`}>
-      <button
-        className="menu-button record-menu-button"
-        aria-label="Menu"
-        onClick={toggleMenu}
-      >
-        <MicIcon size={21} color={"#ffffff"} />
-      </button>
+    <div>
       <ButtonUpload onUpload={handleUploadComplete} />
-      <div className="recording-status">
-        {isRecording ? "Recording..." : "Click to record"}
-      </div>
       <button
         onClick={handleRecordClick}
         className={`record-button ${isRecording ? "recording" : ""}`}
       >
         <MicIcon size={32} color={isRecording ? "#ff1744" : "#3a80e3"} />
+        <div className="recording-status">
+          {isRecording ? "recording..." : "record"}
+        </div>
       </button>
       {recordings.map((rec, index) => (
         <RecordedItem key={index} recording={rec} onSave={handleSaveClick} />
