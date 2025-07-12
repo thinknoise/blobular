@@ -14,3 +14,33 @@
   height: 100%;
   display: block;
 }
+
+.play-button {
+  background-color: transparent;
+  border: none;
+  color: white;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.play-button:hover,
+.play-button.playing {
+  color: #eebb00;
+}
+
+.play-button:focus {
+  outline: none;
+}
+
+.play-button .lucide {
+  stroke-width: 5px;
+  width: 24px;
+  height: 24px;
+  vertical-align: baseline;
+}
+
+.blobular-title-chunk {
+  font-weight: bold;
+  font-size: 48px;
+}

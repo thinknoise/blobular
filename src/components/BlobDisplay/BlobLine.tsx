@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { BlobEvent } from "../AudioBlobularPlayer/types";
+import type { BlobEvent } from "../../types/types";
 import "./BlobDisplay.css";
 
 type BlobLineProps = {

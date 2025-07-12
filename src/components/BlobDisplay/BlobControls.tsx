@@ -1,6 +1,6 @@
 import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "./Selectors";
 import "./BlobControls.css";
-import type { ScaleName } from "../constants/scales";
+import type { ScaleName } from "../../constants/scales";
 
 type BlobControlsProps = {
   durationRange: [number, number];
@@ -40,7 +40,7 @@ const BlobControls = ({
         />
       )}{" "}
       <BlobRangeSlider
-        label="Duration Range (secs)"
+        label="Duration (secs)"
         range={durationRange}
         setRange={setDurationRange}
         min={0.1}
