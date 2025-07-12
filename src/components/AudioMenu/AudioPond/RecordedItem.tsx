@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import WaveformViewer from "../../AudioBlobularPlayer/WaveformViewer";
 import { CloudCogIcon, Play, Square } from "lucide-react";
-import "./RecordedItem.css"; // Ensure you have styles for the recorded item
+import "./Items.css"; // Ensure you have styles for the recorded item
 
 interface RecordedItemProps {
   recording: {
@@ -26,7 +26,7 @@ const RecordedItem: React.FC<RecordedItemProps> = ({ recording, onSave }) => {
   };
 
   return (
-    <div className="recorded-item">
+    <div className="audio-item recorded-item">
       <audio
         ref={audioRef}
         src={recording.url}
@@ -35,11 +35,11 @@ const RecordedItem: React.FC<RecordedItemProps> = ({ recording, onSave }) => {
         onPause={() => setIsPlaying(false)}
         hidden
       />
-      <button className="recorded-play-button" onClick={togglePlay}>
+      <button className="icon-button play-button" onClick={togglePlay}>
         {isPlaying ? <Square /> : <Play />}
       </button>
       <button
-        className="recorded-save-button"
+        className="icon-button save-button"
         onClick={() => onSave(recording.blob)}
       >
         <CloudCogIcon size={32} />

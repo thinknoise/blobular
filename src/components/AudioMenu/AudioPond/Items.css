@@ -1,3 +1,36 @@
+.audio-item {
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.3s ease-out;
+  margin: 16px;
+  border: #4a4a4a 2px solid;
+  background-color: #282c34;
+  color: white;
+
+}
+
+.audio-item:hover {
+  background-color: #4a4a4a;
+}
+
+.audio-label {
+  position: absolute;
+  bottom: 8px;
+  color: #ffffff;
+}
+
+.loading-spinner {
+  font-size: 12px;
+  color: #888;
+  display: block;
+}
+
+.error-text {
+  color: #c00;
+  font-size: 12px;
+}
+
 .recorded-item {
   position: relative;
   padding: 16px;
@@ -5,8 +38,6 @@
   color: white;
 }
 
-.recorded-play-button,
-.recorded-save-button,
 .icon-button {
   position: absolute;
   right: 8px;
@@ -19,13 +50,12 @@
   z-index: 10;
 }
 
-.recorded-save-button,
 .icon-button {
   top: 8px;
   height: 32px;
 }
 
-.pond-play-button {
+.play-button {
   top: auto;
   bottom: 8px;
 }
@@ -43,19 +73,14 @@
 }
 
 .play-recorded:hover,
-.recorded-play-button.playing,
 .icon-button.playing {
   color: #eebb00;
 }
 
-.recorded-play-button:focus,
-.recorded-save-button:focus,
 .icon-button:focus {
   outline: none;
 }
 
-.recorded-play-button .lucide,
-.recorded-save-button .lucide,
 .icon-button .lucide {
   stroke-width: 2px;
   width: 24px;

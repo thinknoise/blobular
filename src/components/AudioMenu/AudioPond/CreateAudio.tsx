@@ -32,7 +32,11 @@ const CreateAudio: React.FC<CreateAudioProps> = ({
         onClick={handleRecordClick}
         className={`record-button ${isRecording ? "recording" : ""}`}
       >
-        <MicIcon size={32} color={isRecording ? "#ff1744" : "#3a80e3"} />
+        <MicIcon
+          size={32}
+          color={isRecording ? "#ff1744" : "#3a80e3"}
+          style={{ marginTop: "-8px" }}
+        />
         <div className="recording-status">
           {isRecording ? "recording..." : "record"}
         </div>

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import CompactWaveform from "../../BlobDisplay/CompactWaveform";
 import { AudioLines, Play, Square, X } from "lucide-react";
-import "./RecordedItem.css"; // Ensure you have styles for the PondItem
+import "./Items.css"; // Ensure you have styles for the PondItem
 
 interface PondItemProps {
   keyName: string;
@@ -24,18 +24,31 @@ const PondItem: React.FC<PondItemProps> = ({
 }) => {
   const filename = keyName.replace(/^.*\//, "");
   const [audioContext] = useState(() => new AudioContext());
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const playBuffer = () => {
     if (!status.buffer) return;
+
+    if (isPlaying && sourceRef.current) {
+      sourceRef.current.stop();
+      setIsPlaying(false);
+      console.log(`Stopped playing buffer for key: ${keyName}`);
+      return;
+    }
+
     const source = audioContext.createBufferSource();
     source.buffer = status.buffer;
     source.connect(audioContext.destination);
-    source.start();
-    setIsPlaying(true);
+
     source.onended = () => {
       setIsPlaying(false);
+      sourceRef.current = null;
     };
+
+    source.start();
+    sourceRef.current = source;
+    setIsPlaying(true);
     console.log(`Playing buffer for key: ${keyName}`);
   };
 
@@ -48,7 +61,7 @@ const PondItem: React.FC<PondItemProps> = ({
         <AudioLines />
       </button>
 
-      <button className="icon-button pond-play-button" onClick={playBuffer}>
+      <button className="icon-button play-button" onClick={playBuffer}>
         {isPlaying ? <Square /> : <Play />}
       </button>
 
