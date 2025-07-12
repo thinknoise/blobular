@@ -2,6 +2,7 @@ import {
   ListObjectsV2Command,
   GetObjectCommand,
   PutObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { s3, BUCKET } from "./awsConfig";
 
@@ -73,4 +74,17 @@ export async function uploadAudio(key: string, blob: Blob): Promise<void> {
     ContentType: blob.type,
   });
   await s3.send(command);
+}
+
+/**
+ * Delete an audio file from S3 at the given key
+ */
+export async function deleteAudio(key: string): Promise<void> {
+  console.log(`Deleting from S3: ${key}`);
+  const command = new DeleteObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+  });
+  await s3.send(command);
+  audioArrayBufferCache.delete(key); // ✅ remove from local cache if it exists
 }

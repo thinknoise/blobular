@@ -45,21 +45,15 @@
   padding: 20px 0 0 0;
   margin: 100px 0 0 0;
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
+  height: calc(100vh - 180px);
   list-style: none;
-  padding: 20px 0 0 0;
 }
 
 .audio-list li {
   display: flex;
   padding: 8px 0;
 }
-
-.audio-item.playing {
-  background-color: #4a4a4a;
-  color: #eebb00;
-}
-
 
 .audio-item {
   position: relative;
@@ -74,9 +68,8 @@
 
 .audio-label {
   position: absolute;
-  top: 0px;
+  bottom: 0px;
   color: #ffffff;
-  font-weight: bold;
 }
 
 .loading-spinner {

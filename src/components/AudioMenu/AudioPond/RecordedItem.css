@@ -6,7 +6,8 @@
 }
 
 .recorded-play-button,
-.recorded-save-button {
+.recorded-save-button,
+.icon-button {
   position: absolute;
   right: 8px;
   bottom: 8px;
@@ -18,23 +19,44 @@
   z-index: 10;
 }
 
-.recorded-save-button {
+.recorded-save-button,
+.icon-button {
   top: 8px;
   height: 32px;
 }
 
+.pond-play-button {
+  top: auto;
+  bottom: 8px;
+}
+
+.delete-button {
+  position: absolute;
+  right: auto;
+  left: 8px;
+  top: 8px;
+  background-color: transparent;
+  border: none;
+  color: white;
+  padding: 0;
+  cursor: pointer;
+}
+
 .play-recorded:hover,
-.recorded-play-button.playing {
+.recorded-play-button.playing,
+.icon-button.playing {
   color: #eebb00;
 }
 
 .recorded-play-button:focus,
-.recorded-save-button:focus {
+.recorded-save-button:focus,
+.icon-button:focus {
   outline: none;
 }
 
 .recorded-play-button .lucide,
-.recorded-save-button .lucide {
+.recorded-save-button .lucide,
+.icon-button .lucide {
   stroke-width: 2px;
   width: 24px;
   height: 24px;

@@ -106,7 +106,6 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
       view.setUint8(offset + i, str.charCodeAt(i));
     }
   }
-
   return {
     isRecording,
     startRecording,
