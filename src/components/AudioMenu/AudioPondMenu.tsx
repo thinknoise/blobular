@@ -5,6 +5,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAudioCtx } from "../../utils/audioCtx";
 import { s3, BUCKET } from "../../utils/awsConfig";
 import { deleteAudio, listAudioKeys } from "../../utils/awsS3Helpers";
+import { getDisplayTitle, setPageTitle } from "../../utils/getDisplayTitle";
 
 import { useAudioBuffer } from "../../hooks/useAudioBuffer";
 import { useAudioPond } from "../../hooks/useAudioPond";
@@ -51,13 +52,16 @@ const AudioPondMenu: React.FC = () => {
   // based on URL param or first available buffer
   useEffect(() => {
     const bufferKey = getBufferKeyFromUrl();
+
     // If URL param is present and valid, use it
     if (bufferKey && buffers[bufferKey]?.buffer) {
       if (blobularBuffer !== buffers[bufferKey].buffer) {
         console.log("Setting blobularBuffer from URL param:", bufferKey);
         setBlobularBuffer(buffers[bufferKey].buffer);
+        const displayTitle = getDisplayTitle(bufferKey);
+        setPageTitle(displayTitle);
       }
-      return; // Prevent fallback logic
+      return;
     }
 
     // Otherwise, fall back to first available buffer
@@ -118,11 +122,14 @@ const AudioPondMenu: React.FC = () => {
   const handleSelection = (buffer: AudioBuffer | null, key?: string) => {
     if (buffer) {
       setBlobularBuffer(buffer);
+
       if (key) {
         const params = new URLSearchParams(window.location.search);
         params.set("buffer", key);
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState(null, "", newUrl);
+        const displayTitle = getDisplayTitle(key);
+        setPageTitle(displayTitle);
       }
       setPondMenuOpen(false);
     }
