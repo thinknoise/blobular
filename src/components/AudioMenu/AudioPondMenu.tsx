@@ -83,6 +83,13 @@ const AudioPondMenu: React.FC = () => {
     }
   };
 
+  const handleSelection = (buffer: AudioBuffer | null) => {
+    if (buffer) {
+      setBlobularBuffer(buffer);
+      setPondMenuOpen(false);
+    }
+  };
+
   const bufferArray = Object.entries(buffers);
 
   return (
@@ -113,13 +120,7 @@ const AudioPondMenu: React.FC = () => {
               buffer: status.buffer ?? null,
             }}
             isSelected={blobularBuffer === status.buffer}
-            onSelect={() => {
-              if (status.buffer) {
-                console.log(`Setting buffer for key: ${key}`, status.buffer);
-                setBlobularBuffer(status.buffer);
-                setPondMenuOpen(false);
-              }
-            }}
+            onSelect={() => handleSelection(status.buffer ?? null)}
             onDelete={() => {
               // Implement delete functionality if needed
               console.log(`Delete audio item with key: ${key}`);

@@ -1,8 +1,8 @@
 .audio-pond-menu {
   position: fixed;
   top: 0;
-  left: -325px;
-  width: 325px;
+  left: -550px;
+  width: 550px;
   display: flex;
   flex-direction: column;
   height: 100vh;
