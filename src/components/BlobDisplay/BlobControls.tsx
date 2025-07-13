@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "./Selectors";
 import "./BlobControls.css";
 import type {
@@ -27,15 +26,6 @@ const BlobControls = ({
   numBlobs,
   selectedScale,
 }: BlobControlsProps) => {
-  useEffect(() => {
-    // Ensure the duration range is always valid
-    if (duration.range[0] < duration.min) {
-      duration.setRange([duration.min, duration.range[1]]);
-    }
-    if (duration.range[1] > duration.max) {
-      duration.setRange([duration.range[0], duration.max]);
-    }
-  }, [duration]);
   return (
     <div className="blob-controls">
       <BlobCountSlider

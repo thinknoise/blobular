@@ -30,9 +30,11 @@ const AudioBlobularPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    console.log("Buffer updated:", buffer);
-    duration.max = buffer ? buffer.duration : 10;
-    duration.range = [0.8, Math.min(8.8, duration.max)];
+    const newMax = buffer ? buffer.duration : 10;
+    const clampedEnd = Math.min(8.8, newMax);
+
+    duration.setRange([0.8, clampedEnd]);
+    duration.max = newMax;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buffer]);
 
@@ -46,7 +48,11 @@ const AudioBlobularPlayer = () => {
   }
 
   return (
-    <div className="audio-blobular-player">
+    <div
+      className={
+        isPlaying ? "audio-blobular-player playing" : "audio-blobular-player"
+      }
+    >
       <span className="blobular-title-chunk">Blobul</span>
       {isPlaying ? <Square /> : <Play />}
       <span className="blobular-title-chunk">r</span>

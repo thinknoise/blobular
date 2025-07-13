@@ -14,7 +14,8 @@
   display: block;
 }
 
-.play-button {
+.play-button,
+.audio-blobular-player {
   background-color: transparent;
   border: none;
   color: white;
@@ -32,7 +33,8 @@
   outline: none;
 }
 
-.play-button .lucide {
+.play-button .lucide,
+.audio-blobular-player .lucide {
   stroke-width: 5px;
   width: 24px;
   height: 24px;
