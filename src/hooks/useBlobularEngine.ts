@@ -36,7 +36,7 @@ export const useBlobularEngine = (
   durationRange: [number, number],
   playbackRateRange: [number, number],
   fadeRange: [number, number],
-  selectedScale: ScaleName = "Major" // default scale
+  selectedScale: ScaleName = "Fifths" // default scale
 ) => {
   const { blobularBuffer } = useAudioBuffer();
 

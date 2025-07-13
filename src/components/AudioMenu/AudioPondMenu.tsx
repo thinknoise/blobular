@@ -34,9 +34,25 @@ const AudioPondMenu: React.FC = () => {
   };
 
   useEffect(() => {
-    listAudioKeys();
     fetchAudioKeysAndBuffers();
   }, []);
+
+  const bufferArray = Object.entries(buffers);
+
+  // Ensure blobularBuffer is set from the first buffer in the pond if not already set
+  // This is to ensure that the first buffer loaded from the pond is used as the initial
+  // blobularBuffer, which is important for playback and manipulation
+  // This effect runs only once when the component mounts or when the bufferArray changes
+  // and blobularBuffer is not already set
+  useEffect(() => {
+    if (!blobularBuffer && bufferArray.length > 0) {
+      const firstBuffer = bufferArray[0][1].buffer;
+      console.log("Setting initial blobularBuffer from pond:", firstBuffer);
+      if (firstBuffer) {
+        setBlobularBuffer(firstBuffer);
+      }
+    }
+  }, [blobularBuffer, bufferArray, setBlobularBuffer]);
 
   const uploadRecording = async (blob: Blob) => {
     const key = `audio-pond/recording-${Date.now()}.wav`;
@@ -86,11 +102,9 @@ const AudioPondMenu: React.FC = () => {
   const handleSelection = (buffer: AudioBuffer | null) => {
     if (buffer) {
       setBlobularBuffer(buffer);
-      setPondMenuOpen(false);
+      setPondMenuOpen(false); // close the menu after selection
     }
   };
-
-  const bufferArray = Object.entries(buffers);
 
   return (
     <div className={`audio-pond-menu ${pondMenuOpen ? "open" : ""}`}>

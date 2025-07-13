@@ -50,7 +50,7 @@ export async function getAudioArrayBuffer(key: string): Promise<ArrayBuffer> {
     return audioArrayBufferCache.get(key)!;
   }
 
-  console.log(`Fetching from S3: ${key}`);
+  // console.log(`Fetching from S3: ${key}`);
   const command = new GetObjectCommand({
     Bucket: BUCKET,
     Key: key,

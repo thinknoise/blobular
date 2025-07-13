@@ -1,69 +1,79 @@
+import { useEffect } from "react";
 import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "./Selectors";
 import "./BlobControls.css";
+import type {
+  RangeControl,
+  CountControl,
+} from "../AudioBlobularPlayer/AudioBlobularPlayer.types";
 import type { ScaleName } from "../../constants/scales";
 
+export type ScaleControl = {
+  value: ScaleName;
+  setValue: (scale: ScaleName) => void;
+};
+
 type BlobControlsProps = {
-  durationRange: [number, number];
-  setDurationRange: React.Dispatch<React.SetStateAction<[number, number]>>;
-  playbackRateRange: [number, number];
-  setPlaybackRateRange: React.Dispatch<React.SetStateAction<[number, number]>>;
-  fadeRange: [number, number];
-  setFadeRange: React.Dispatch<React.SetStateAction<[number, number]>>;
-  numBlobs: number;
-  setNumBlobs: React.Dispatch<React.SetStateAction<number>>;
-  selectedScale: ScaleName; // Optional, if you want to handle scale selection
-  setSelectedScale: React.Dispatch<React.SetStateAction<ScaleName>>;
+  duration: RangeControl & { setRange: (range: [number, number]) => void };
+  fade: RangeControl & { setRange: (range: [number, number]) => void };
+  playbackRate: RangeControl & { setRange: (range: [number, number]) => void };
+  numBlobs: CountControl & { setValue: (val: number) => void };
+  selectedScale: ScaleControl;
 };
 
 const BlobControls = ({
-  durationRange,
-  setDurationRange,
-  playbackRateRange,
-  setPlaybackRateRange,
-  fadeRange,
-  setFadeRange,
+  duration,
+  fade,
+  playbackRate,
   numBlobs,
-  setNumBlobs,
   selectedScale,
-  setSelectedScale,
 }: BlobControlsProps) => {
+  useEffect(() => {
+    // Ensure the duration range is always valid
+    if (duration.range[0] < duration.min) {
+      duration.setRange([duration.min, duration.range[1]]);
+    }
+    if (duration.range[1] > duration.max) {
+      duration.setRange([duration.range[0], duration.max]);
+    }
+  }, [duration]);
   return (
     <div className="blob-controls">
-      {setNumBlobs && (
-        <BlobCountSlider
-          label="Number of Blobs"
-          value={numBlobs}
-          setValue={setNumBlobs}
-          min={1}
-          max={12}
-          step={1}
-        />
-      )}{" "}
+      <BlobCountSlider
+        label="Number of Blobs"
+        value={numBlobs.value}
+        setValue={numBlobs.setValue}
+        min={numBlobs.min}
+        max={numBlobs.max}
+        step={numBlobs.step}
+      />
       <BlobRangeSlider
         label="Duration (secs)"
-        range={durationRange}
-        setRange={setDurationRange}
-        min={0.1}
-        max={10}
-        step={0.1}
+        range={duration.range}
+        setRange={duration.setRange}
+        min={duration.min}
+        max={duration.max}
+        step={duration.step}
       />
       <BlobRangeSlider
         label="Fade in/Out (secs)"
-        range={fadeRange}
-        setRange={setFadeRange}
-        min={0.1}
-        max={3.0}
-        step={0.1}
+        range={fade.range}
+        setRange={fade.setRange}
+        min={fade.min}
+        max={fade.max}
+        step={fade.step}
       />
       <BlobRangeSlider
         label="Playback/Pitch (sample rate %)"
-        range={playbackRateRange}
-        setRange={setPlaybackRateRange}
-        min={0.5}
-        max={4.0}
-        step={0.05}
+        range={playbackRate.range}
+        setRange={playbackRate.setRange}
+        min={playbackRate.min}
+        max={playbackRate.max}
+        step={playbackRate.step}
       />
-      <ScaleSelect value={selectedScale} onChange={setSelectedScale} />
+      <ScaleSelect
+        value={selectedScale.value}
+        onChange={selectedScale.setValue}
+      />
     </div>
   );
 };
