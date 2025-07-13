@@ -11,11 +11,16 @@ import {
 import { useControls } from "../../hooks/useControls";
 import { Play, Square } from "lucide-react";
 
+import {
+  getDurationRangeFromUrl,
+  getInitialControlsFromUrl,
+} from "../../utils/urlHelpers";
 import "./AudioBlobularPlayer.css";
 
 const AudioBlobularPlayer = () => {
+  const initialControls = getInitialControlsFromUrl();
   const { controls, setRangeControl, setNumBlobs, setSelectedScale } =
-    useControls();
+    useControls(initialControls);
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
@@ -44,12 +49,27 @@ const AudioBlobularPlayer = () => {
         console.warn("Invalid blob number in URL, using default (8)");
       }
     }
+
+    const durationFromUrl = getDurationRangeFromUrl();
+    if (durationFromUrl) {
+      console.log("Duration from URL:", durationFromUrl);
+      setRangeControl("duration", durationFromUrl);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   useEffect(() => {
     const handleMouseUp = () => {
       const params = new URLSearchParams(window.location.search);
+
+      // Add blobs param
       params.set("blobs", numBlobs.value.toString());
+
+      // Add duration param (e.g. "1.1,2.8")
+      const [min, max] = controls.duration.range;
+      params.set("duration", `${min.toFixed(2)},${max.toFixed(2)}`);
+
+      // Update URL without reload
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       window.history.replaceState({}, "", newUrl);
     };
@@ -58,7 +78,7 @@ const AudioBlobularPlayer = () => {
     return () => {
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [numBlobs.value]);
+  }, [numBlobs.value, controls.duration.range]);
 
   useEffect(() => {
     const newMax = buffer ? buffer.duration : 10;

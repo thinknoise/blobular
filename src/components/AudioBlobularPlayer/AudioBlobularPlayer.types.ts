@@ -10,9 +10,9 @@ export type RangeControl = {
 
 export type CountControl = {
   value: number;
-  min: number;
-  max: number;
-  step: number;
+  min?: number;
+  max?: number;
+  step?: number;
 };
 
 export type ControlsState = {

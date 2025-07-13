@@ -5,7 +5,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAudioCtx } from "../../utils/audioCtx";
 import { s3, BUCKET } from "../../utils/awsConfig";
 import { deleteAudio, listAudioKeys } from "../../utils/awsS3Helpers";
-import { getDisplayTitle, setPageTitle } from "../../utils/getDisplayTitle";
+import { getDisplayTitle, setPageTitle } from "../../utils/urlHelpers";
 
 import { useAudioBuffer } from "../../hooks/useAudioBuffer";
 import { useAudioPond } from "../../hooks/useAudioPond";
