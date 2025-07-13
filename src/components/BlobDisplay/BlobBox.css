@@ -13,6 +13,7 @@
   transition: background 0.3s;
   font-size: small;
   font-weight: 900;
+  z-index: 99;
 }
 
 .blob-box:hover {
