@@ -3,7 +3,6 @@ export type Range = [number, number];
 
 export type RangeControl = {
   range: Range;
-  setRange: (range: [number, number]) => void;
   min: number;
   max: number;
   step: number;

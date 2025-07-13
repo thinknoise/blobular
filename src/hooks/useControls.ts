@@ -7,41 +7,23 @@ import type {
 
 export function useControls(initial?: Partial<ControlsState>) {
   const [controls, setControls] = useState<ControlsState>({
-    duration: initial?.duration ?? {
-      range: [0.8, 8.8],
-      setRange: (range: [number, number]) => {
-        setControls((prev) => ({
-          ...prev,
-          duration: { ...prev.duration, range },
-        }));
-      },
-      min: 0.01,
-      max: 10,
-      step: 0.01,
+    duration: {
+      range: initial?.duration?.range ?? [0.8, 8.8],
+      min: initial?.duration?.min ?? 0.01,
+      max: initial?.duration?.max ?? 10,
+      step: initial?.duration?.step ?? 0.01,
     },
-    fade: initial?.fade ?? {
-      range: [0.1, 1.0],
-      setRange: (range: [number, number]) => {
-        setControls((prev) => ({
-          ...prev,
-          fade: { ...prev.fade, range },
-        }));
-      },
-      min: 0.1,
-      max: 3.0,
-      step: 0.1,
+    fade: {
+      range: initial?.fade?.range ?? [0.1, 1.0],
+      min: initial?.fade?.min ?? 0.1,
+      max: initial?.fade?.max ?? 3.0,
+      step: initial?.fade?.step ?? 0.1,
     },
-    playbackRate: initial?.playbackRate ?? {
-      range: [0.9, 1.4],
-      setRange: (range: [number, number]) => {
-        setControls((prev) => ({
-          ...prev,
-          playbackRate: { ...prev.playbackRate, range },
-        }));
-      },
-      min: 0.25,
-      max: 4.0,
-      step: 0.05,
+    playbackRate: {
+      range: initial?.playbackRate?.range ?? [0.9, 1.4],
+      min: initial?.playbackRate?.min ?? 0.25,
+      max: initial?.playbackRate?.max ?? 4.0,
+      step: initial?.playbackRate?.step ?? 0.05,
     },
     numBlobs: initial?.numBlobs ?? {
       value: 8,
@@ -77,7 +59,22 @@ export function useControls(initial?: Partial<ControlsState>) {
   };
 
   return {
-    controls,
+    controls: {
+      duration: {
+        ...controls.duration,
+        setRange: (range: Range) => setRangeControl("duration", range),
+      },
+      fade: {
+        ...controls.fade,
+        setRange: (range: Range) => setRangeControl("fade", range),
+      },
+      playbackRate: {
+        ...controls.playbackRate,
+        setRange: (range: Range) => setRangeControl("playbackRate", range),
+      },
+      numBlobs: controls.numBlobs,
+      selectedScale: controls.selectedScale,
+    },
     setRangeControl,
     setNumBlobs,
     setSelectedScale,

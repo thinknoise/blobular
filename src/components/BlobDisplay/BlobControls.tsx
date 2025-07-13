@@ -5,6 +5,7 @@ import type {
   CountControl,
 } from "../AudioBlobularPlayer/AudioBlobularPlayer.types";
 import type { ScaleName } from "../../constants/scales";
+import { useEffect } from "react";
 
 export type ScaleControl = {
   value: ScaleName;
@@ -26,6 +27,15 @@ const BlobControls = ({
   numBlobs,
   selectedScale,
 }: BlobControlsProps) => {
+  useEffect(() => {
+    const durationStart = duration.range[0];
+    const FadeRangeTop = fade.range[1];
+
+    if (durationStart < FadeRangeTop) {
+      fade.setRange([fade.min, durationStart]);
+    }
+  }, [duration.range]);
+
   return (
     <div className="blob-controls">
       <BlobCountSlider
