@@ -56,7 +56,7 @@ const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
       ref={ref}
       className="blob-box"
       style={{
-        bottom: `${(event.playbackRate ?? 0) * 30}px`,
+        bottom: `${Math.round(12 * Math.log2(event.playbackRate ?? 1)) * 5}px`,
         left: `${left}px`,
         width: `${width}%`,
         borderRadius: `${(event.fadeTime ?? 0) * width}px`,
