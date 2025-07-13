@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { CloudArrowUp } from "phosphor-react";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { s3, BUCKET } from "../../../utils/awsConfig";
+import { s3, BUCKET } from "../../../../shared/utils/aws/awsConfig";
 import IconButton from "@mui/material/IconButton";
 import "./ButtonUpload.css"; // Ensure you have styles for the upload button
 

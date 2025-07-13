@@ -1,7 +1,7 @@
 // src/components/CompactWaveform.tsx
 import { useRef, useEffect } from "react";
 import type { FC } from "react";
-import { getWaveformData } from "../../utils/waveformUtils";
+import { getWaveformData } from "../../../../shared/utils/audio/waveformUtils";
 import "./CompactWaveform.css";
 
 interface CompactWaveformProps {

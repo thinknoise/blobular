@@ -1,9 +1,6 @@
 import { useState } from "react";
-import { ALL_SCALES, type ScaleName } from "../constants/scales";
-import type {
-  ControlsState,
-  Range,
-} from "../components/AudioBlobularPlayer/AudioBlobularPlayer.types";
+import { ALL_SCALES, type ScaleName } from "../../../shared/constants/scales";
+import type { ControlsState, Range } from "../types/AudioBlobularPlayer.types";
 
 function updateUrlFromControls(
   controls: Pick<ControlsState, "numBlobs" | "duration">

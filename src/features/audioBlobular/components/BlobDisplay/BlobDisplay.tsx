@@ -1,4 +1,4 @@
-import type { BlobEvent } from "../../types/types";
+import type { BlobEvent } from "../../../../shared/types/types";
 import BlobLine from "./BlobLine";
 import "./BlobDisplay.css";
 

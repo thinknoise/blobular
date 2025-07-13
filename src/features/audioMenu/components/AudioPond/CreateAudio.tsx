@@ -1,6 +1,6 @@
 import React from "react";
-import { useAudioPond } from "../../../hooks/useAudioPond";
-import { listAudioKeys } from "../../../utils/awsS3Helpers";
+import { useAudioPond } from "../../hooks/useAudioPond";
+import { listAudioKeys } from "../../../../shared/utils/aws/awsS3Helpers";
 import ButtonUpload from "./ButtonUpload";
 
 import { MicIcon } from "./IconMic";

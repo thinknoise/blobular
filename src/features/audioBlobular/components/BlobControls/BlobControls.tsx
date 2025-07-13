@@ -1,10 +1,10 @@
-import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "./Selectors";
+import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "../Selectors";
 import "./BlobControls.css";
 import type {
   RangeControl,
   CountControl,
-} from "../AudioBlobularPlayer/AudioBlobularPlayer.types";
-import type { ScaleName } from "../../constants/scales";
+} from "../../types/AudioBlobularPlayer.types";
+import type { ScaleName } from "../../../../shared/constants/scales";
 import { useEffect } from "react";
 
 export type ScaleControl = {
@@ -42,8 +42,8 @@ const BlobControls = ({
         label="Number of Blobs"
         value={numBlobs.value}
         setValue={numBlobs.setValue}
-        min={numBlobs.min}
-        max={numBlobs.max}
+        min={numBlobs.min ?? 1} // todo: centralize the minimum value default
+        max={numBlobs.max ?? 11}
         step={numBlobs.step}
       />
       <BlobRangeSlider

@@ -1,6 +1,9 @@
 // ScaleSelect.tsx
 
-import { ALL_SCALES, type ScaleName } from "../../../constants/scales";
+import {
+  ALL_SCALES,
+  type ScaleName,
+} from "../../../../shared/constants/scales";
 
 interface ScaleSelectProps {
   value: ScaleName;

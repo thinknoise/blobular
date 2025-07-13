@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import WaveformViewer from "../../AudioBlobularPlayer/WaveformViewer";
+import WaveformViewer from "../../../audioBlobular/components/WaveformViewer";
 import { CloudCogIcon, Play, Square } from "lucide-react";
 import "./Items.css"; // Ensure you have styles for the recorded item
 

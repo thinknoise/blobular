@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
-import type { Range } from "./AudioBlobularPlayer.types";
+import type { Range } from "../types/AudioBlobularPlayer.types";
 
-import { useBlobularEngine } from "../../hooks/useBlobularEngine";
-import {
-  // BlobDisplay,
-  BlobControls,
-  BlobPanel,
-  CompactWaveform,
-} from "../BlobDisplay";
-import { useControls } from "../../hooks/useControls";
+import { useBlobularEngine } from "../hooks/useBlobularEngine";
+import BlobPanel from "./BlobDisplay/BlobPanel";
+import BlobControls from "./BlobControls/BlobControls";
+import CompactWaveform from "./CompactWaveform/CompactWaveform";
+import { useControls } from "../hooks/useControls";
 import { Play, Square } from "lucide-react";
 
 import {
   getDurationRangeFromUrl,
   getInitialControlsFromUrl,
-} from "../../utils/urlHelpers";
+} from "../../../shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
 
 const AudioBlobularPlayer = () => {
@@ -129,7 +126,7 @@ const AudioBlobularPlayer = () => {
       <BlobControls
         duration={{
           ...controls.duration,
-          setRange: (r) => setRangeControl("duration", r),
+          setRange: (r: Range) => setRangeControl("duration", r),
         }}
         fade={{
           ...controls.fade,

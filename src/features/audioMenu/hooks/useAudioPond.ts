@@ -1,7 +1,10 @@
 // src/hooks/useAudioPond.ts
 import { useState } from "react";
-import { listAudioKeys, getAudioArrayBuffer } from "../utils/awsS3Helpers";
-import { getAudioCtx } from "../utils/audioCtx";
+import {
+  listAudioKeys,
+  getAudioArrayBuffer,
+} from "../../../shared/utils/aws/awsS3Helpers";
+import { getAudioCtx } from "../../../shared/utils/audio/audioCtx";
 
 type BufferStatus = {
   loading: boolean;
