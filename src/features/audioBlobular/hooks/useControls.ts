@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ALL_SCALES, type ScaleName } from "../../../shared/constants/scales";
+import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
 import type { ControlsState, Range } from "../types/AudioBlobularPlayer.types";
 
 function updateUrlFromControls(

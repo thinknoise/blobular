@@ -2,18 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
-import { getAudioCtx } from "../../../shared/utils/audio/audioCtx";
-import { s3, BUCKET } from "../../../shared/utils/aws/awsConfig";
-import {
-  deleteAudio,
-  listAudioKeys,
-} from "../../../shared/utils/aws/awsS3Helpers";
-import {
-  getDisplayTitle,
-  setPageTitle,
-} from "../../../shared/utils/url/urlHelpers";
+import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
+import { s3, BUCKET } from "@/shared/utils/aws/awsConfig";
+import { deleteAudio, listAudioKeys } from "@/shared/utils/aws/awsS3Helpers";
+import { getDisplayTitle, setPageTitle } from "@/shared/utils/url/urlHelpers";
 
-import { useAudioBuffer } from "../../../hooks/useAudioBuffer";
+import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 import { useAudioPond } from "../hooks/useAudioPond";
 import { useRecording } from "../hooks/useRecording";
 

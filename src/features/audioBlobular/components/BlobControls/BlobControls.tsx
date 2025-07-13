@@ -1,10 +1,14 @@
-import { BlobRangeSlider, BlobCountSlider, ScaleSelect } from "../Selectors";
+import {
+  BlobRangeSlider,
+  BlobCountSlider,
+  ScaleSelect,
+} from "@/features/audioBlobular/components";
 import "./BlobControls.css";
 import type {
   RangeControl,
   CountControl,
 } from "../../types/AudioBlobularPlayer.types";
-import type { ScaleName } from "../../../../shared/constants/scales";
+import type { ScaleName } from "@/shared/constants/scales";
 import { useEffect } from "react";
 
 export type ScaleControl = {

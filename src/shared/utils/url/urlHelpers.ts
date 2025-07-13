@@ -1,4 +1,4 @@
-import type { PartialControlsState } from "../../../features/audioBlobular/hooks/useControls";
+import type { PartialControlsState } from "@/features/audioBlobular/hooks/useControls";
 
 export function setPageTitle(title: string): void {
   document.title = `Blobular: ${title}`;

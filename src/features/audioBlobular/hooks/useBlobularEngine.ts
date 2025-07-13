@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { playBlobAtTime } from "../../../shared/utils/audio/playBlobAtTime";
-import { getAudioCtx } from "../../../shared/utils/audio/audioCtx";
-import type { BlobEvent } from "../../../shared/types/types";
-import { ALL_SCALES, type ScaleName } from "../../../shared/constants/scales";
-import { useAudioBuffer } from "../../../hooks/useAudioBuffer";
+import { playBlobAtTime } from "@/shared/utils/audio/playBlobAtTime";
+import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
+import type { BlobEvent } from "@/shared/types/types";
+import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
+import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(

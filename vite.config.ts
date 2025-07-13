@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 import react from "@vitejs/plugin-react";
 
@@ -9,6 +10,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       plugins: [visualizer({ open: true })], // open report in browser
+    },
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
     },
   },
 });

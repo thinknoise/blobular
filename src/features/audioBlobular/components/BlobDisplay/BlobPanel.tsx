@@ -1,5 +1,5 @@
 // src/components/BlobPanel.tsx
-import type { BlobEvent } from "../../../../shared/types/types";
+import type { BlobEvent } from "@/shared/types/types";
 import BlobBox from "./BlobBox";
 import "./BlobBox.css";
 

@@ -1,4 +1,4 @@
-import { type ScaleName } from "../../../shared/constants/scales";
+import { type ScaleName } from "@/shared/constants/scales";
 export type Range = [number, number];
 
 export type RangeControl = {

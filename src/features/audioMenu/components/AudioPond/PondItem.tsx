@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import CompactWaveform from "../../../audioBlobular/components/CompactWaveform/CompactWaveform";
+import { CompactWaveform } from "@/features/audioBlobular/components";
 import { AudioLines, Play, Square, X } from "lucide-react";
 import "./Items.css"; // Ensure you have styles for the PondItem
 
