@@ -29,6 +29,37 @@ const AudioBlobularPlayer = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
+  function getBlobNumberFromUrl(): string | null {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("blobs");
+  }
+
+  useEffect(() => {
+    const blobNumber = getBlobNumberFromUrl();
+    if (blobNumber) {
+      const num = parseInt(blobNumber, 10);
+      if (!isNaN(num) && num >= 1 && num <= 12) {
+        setNumBlobs(num);
+      } else {
+        console.warn("Invalid blob number in URL, using default (8)");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const handleMouseUp = () => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("blobs", numBlobs.value.toString());
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, "", newUrl);
+    };
+
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [numBlobs.value]);
+
   useEffect(() => {
     const newMax = buffer ? buffer.duration : 10;
     const clampedEnd = Math.min(8.8, newMax);
