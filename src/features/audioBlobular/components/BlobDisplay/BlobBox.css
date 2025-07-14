@@ -1,0 +1,21 @@
+.blob-box-container {
+  position: absolute;
+  width: 100%;
+  height: 170px;
+}
+
+.blob-box {
+  position: absolute;
+  height: 30px;
+  background-color: rgba(255, 133, 133, 0.45);
+  color: #000000;
+  align-content: center;
+  transition: background 0.3s;
+  font-size: small;
+  font-weight: 900;
+  z-index: 99;
+}
+
+.blob-box:hover {
+  background: rgba(255, 255, 255, 0.5);
+}

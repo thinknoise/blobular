@@ -2,7 +2,7 @@ import { useContext } from "react";
 import {
   AudioBufferContext,
   type AudioBufferContextType,
-} from "../context/AudioBufferContext";
+} from "../shared/context/AudioBufferContext";
 
 export const useAudioBuffer = (): AudioBufferContextType => {
   const context = useContext(AudioBufferContext);

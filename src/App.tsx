@@ -1,8 +1,8 @@
 // src/App.tsx
 import packageJson from "../package.json";
-import AudioBlobularPlayer from "./components/AudioBlobularPlayer";
-import { AudioBufferProvider } from "./context/AudioBufferProvider";
-import AudioPondMenu from "./components/AudioMenu/AudioPondMenu";
+import { AudioBlobularPlayer } from "@/features/audioBlobular/components";
+import { AudioBufferProvider } from "./shared/context/AudioBufferProvider";
+import AudioPondMenu from "./features/audioMenu/components/AudioPondMenu";
 import "./App.css";
 
 function App() {

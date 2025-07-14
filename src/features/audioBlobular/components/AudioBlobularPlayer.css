@@ -1,0 +1,55 @@
+.blobular-visualizer {
+  position: relative;
+  margin-top: 20px;
+  width: 100%;
+  height: 300px;
+  display: block;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.audio-blobular-player {
+  width: 100vw;
+  max-width: 800px;
+  height: 100%;
+  display: block;
+}
+
+.play-button,
+.audio-blobular-player {
+  background-color: transparent;
+  border: none;
+  color: white;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.play-button:hover,
+.play-button.playing {
+  color: #eebb00;
+}
+
+.play-button:focus {
+  outline: none;
+}
+
+.play-button .lucide,
+.audio-blobular-player .lucide {
+  stroke-width: 5px;
+  width: 24px;
+  height: 24px;
+  vertical-align: baseline;
+}
+
+.play-button.individual {
+  position: absolute;
+  left: -60px;
+  top: 10px;
+  width: 48px;
+  height: 48px;
+}
+
+.blobular-title-chunk {
+  font-weight: bold;
+  font-size: 48px;
+}
