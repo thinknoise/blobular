@@ -1,3 +1,5 @@
+import type { ScaleName } from "./scales";
+
 export const controlLimits = {
   MIN_BLOBS: 1,
   MAX_BLOBS: 20,
@@ -12,4 +14,5 @@ export const controlLimits = {
   DEFAULT_DURATION_RANGE: [0.8, 8.8] as [number, number],
   DEFAULT_FADE_RANGE: [0.1, 1.0] as [number, number],
   DEFAULT_PLAYBACK_RATE_RANGE: [0.9, 1.4] as [number, number],
+  DEFAULT_SCALE: "Octave" as ScaleName,
 };

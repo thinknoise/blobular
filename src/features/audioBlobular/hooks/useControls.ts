@@ -4,7 +4,10 @@ import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
 import type { ControlsState, Range } from "../types/AudioBlobularPlayer.types";
 
 function updateUrlFromControls(
-  controls: Pick<ControlsState, "numBlobs" | "duration" | "playbackRate">
+  controls: Pick<
+    ControlsState,
+    "numBlobs" | "duration" | "playbackRate" | "selectedScale"
+  >
 ) {
   const params = new URLSearchParams(window.location.search);
 
@@ -20,6 +23,12 @@ function updateUrlFromControls(
   const [minPlayback, maxPlayback] = controls.playbackRate.range ?? [];
   if (minPlayback != null && maxPlayback != null) {
     params.set("rate", `${minPlayback.toFixed(2)}-${maxPlayback.toFixed(2)}`);
+  }
+
+  if (controls.selectedScale) {
+    params.set("scale", controls.selectedScale);
+  } else {
+    params.delete("scale");
   }
 
   const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -85,6 +94,7 @@ export function useControls(initial?: PartialControlsState) {
           numBlobs: next.numBlobs,
           duration: next.duration,
           playbackRate: next.playbackRate,
+          selectedScale: next.selectedScale,
         });
       }
       return next;
@@ -107,10 +117,7 @@ export function useControls(initial?: PartialControlsState) {
   };
 
   const setSelectedScale = (scale: ScaleName) => {
-    setControls((prev) => ({
-      ...prev,
-      selectedScale: scale,
-    }));
+    updateControl("selectedScale", () => scale);
   };
 
   return {

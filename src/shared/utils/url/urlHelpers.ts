@@ -1,4 +1,5 @@
 import type { PartialControlsState } from "@/features/audioBlobular/hooks/useControls";
+import { SCALE_DEGREE_SETS, type ScaleName } from "@/shared/constants/scales";
 
 export function setPageTitle(title: string): void {
   document.title = `Blobular: ${title}`;
@@ -35,6 +36,18 @@ export function getPlaybackRateRangeFromUrl(): [number, number] | null {
   const max = parseFloat(maxStr);
   if (isNaN(min) || isNaN(max)) return null;
   return [min, max];
+}
+
+export function getScaleFromUrl(): ScaleName | null {
+  const param = new URLSearchParams(window.location.search).get("scale");
+  if (!param) return null;
+
+  // Normalize and validate
+  const match = (Object.keys(SCALE_DEGREE_SETS) as ScaleName[]).find(
+    (name) => name.toLowerCase() === param.toLowerCase()
+  );
+
+  return match ?? null;
 }
 
 export function getInitialControlsFromUrl(): PartialControlsState {

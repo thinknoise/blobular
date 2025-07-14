@@ -13,6 +13,7 @@ import {
   getDurationRangeFromUrl,
   getInitialControlsFromUrl,
   getPlaybackRateRangeFromUrl,
+  getScaleFromUrl,
 } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
 
@@ -52,6 +53,7 @@ const AudioBlobularPlayer = () => {
     const blobNumber = getBlobNumberFromUrl();
     const durationFromUrl = getDurationRangeFromUrl();
     const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
+    const scaleFromUrl = getScaleFromUrl();
 
     if (blobNumber) {
       const num = parseInt(blobNumber, 10);
@@ -72,14 +74,13 @@ const AudioBlobularPlayer = () => {
         };
       }
 
-      console.log("Playback rate from URL:", playbackRateFromUrl);
       if (playbackRateFromUrl) {
         next.playbackRate = {
           ...prev.playbackRate,
           range: playbackRateFromUrl,
         };
       }
-
+      next.selectedScale = scaleFromUrl ?? controlLimits.DEFAULT_SCALE;
       return next;
     });
 
