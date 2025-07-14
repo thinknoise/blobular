@@ -46,6 +46,8 @@ const AudioBlobularPlayer = () => {
   }
 
   useEffect(() => {
+    if (hasInitializedFromUrl) return;
+
     const blobNumber = getBlobNumberFromUrl();
     const durationFromUrl = getDurationRangeFromUrl();
     const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
@@ -59,47 +61,45 @@ const AudioBlobularPlayer = () => {
       }
     }
 
-    if (!hasInitializedFromUrl) {
-      if (durationFromUrl) {
-        setControls((prev) => ({
-          ...prev,
-          duration: {
-            ...prev.duration,
-            range: durationFromUrl,
-          },
-        }));
-      }
-      setHasInitializedFromUrl(true);
-    }
+    setControls((prev) => {
+      const next = { ...prev };
 
-    if (playbackRateFromUrl) {
-      setControls((prev) => ({
-        ...prev,
-        playbackRate: {
+      if (durationFromUrl) {
+        next.duration = {
+          ...prev.duration,
+          range: durationFromUrl,
+        };
+      }
+
+      console.log("Playback rate from URL:", playbackRateFromUrl);
+      if (playbackRateFromUrl) {
+        next.playbackRate = {
           ...prev.playbackRate,
           range: playbackRateFromUrl,
-        },
-      }));
-    }
+        };
+      }
+
+      return next;
+    });
+
+    setHasInitializedFromUrl(true);
   }, []);
 
   useEffect(() => {
-    if (buffer) {
-      const newMax = buffer.duration; // fallback if buffer not ready
-      const newMin = duration.range[0];
+    if (!buffer) return;
 
-      // no URL param, so derive from buffer
-      const clampedEnd = Math.min(3.5, newMax);
-      setControls((prev) => ({
-        ...prev,
-        duration: {
-          ...prev.duration,
-          range: [0.8, clampedEnd],
-          max: newMax,
-          min: newMin,
-        },
-      }));
-    }
+    const newMax = buffer.duration;
+    const clampedEnd = Math.min(duration.range[1], newMax);
+
+    setControls((prev) => ({
+      ...prev,
+      duration: {
+        ...prev.duration,
+        range: [0.8, clampedEnd],
+        max: newMax,
+        min: prev.duration.range[0],
+      },
+    }));
   }, [buffer]);
 
   function handleClick(): void {

@@ -6,13 +6,20 @@ function updateUrlFromControls(
   controls: Pick<ControlsState, "numBlobs" | "duration" | "playbackRate">
 ) {
   const params = new URLSearchParams(window.location.search);
-  params.set("blobs", controls.numBlobs.value.toString());
 
-  const [min, max] = controls.duration.range;
-  params.set("duration", `${min.toFixed(2)},${max.toFixed(2)}`);
+  if (controls.numBlobs?.value != null) {
+    params.set("blobs", controls.numBlobs.value.toString());
+  }
 
-  const [minPlayback, maxPlayback] = controls.playbackRate.range;
-  params.set("rate", `${minPlayback.toFixed(2)},${maxPlayback.toFixed(2)}`);
+  const [min, max] = controls.duration.range ?? [];
+  if (min != null && max != null) {
+    params.set("duration", `${min.toFixed(2)},${max.toFixed(2)}`);
+  }
+
+  const [minPlayback, maxPlayback] = controls.playbackRate.range ?? [];
+  if (minPlayback != null && maxPlayback != null) {
+    params.set("rate", `${minPlayback.toFixed(2)},${maxPlayback.toFixed(2)}`);
+  }
 
   const newUrl = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, "", newUrl);
@@ -33,7 +40,7 @@ export function useControls(initial?: PartialControlsState) {
     duration: {
       range: initial?.duration?.range ?? [0.8, 8.8],
       min: 0.01,
-      max: 43, // default max duration if not initialized
+      max: 1000, // default max duration if not initialized
       step: 0.01,
       ...(initial?.duration ?? {}),
     },
@@ -60,16 +67,17 @@ export function useControls(initial?: PartialControlsState) {
     selectedScale: initial?.selectedScale ?? ALL_SCALES[7].name,
   });
 
-  const setRangeControl = (
-    key: keyof Pick<ControlsState, "duration" | "fade" | "playbackRate">,
-    range: Range
+  const updateControl = <K extends keyof ControlsState>(
+    key: K,
+    updateFn: (prev: ControlsState[K]) => ControlsState[K]
   ) => {
     setControls((prev) => {
       const next = {
         ...prev,
-        [key]: { ...prev[key], range },
+        [key]: updateFn(prev[key]),
       };
-      if (key === "duration") {
+
+      if (hasInitializedFromUrl) {
         updateUrlFromControls({
           numBlobs: next.numBlobs,
           duration: next.duration,
@@ -80,34 +88,19 @@ export function useControls(initial?: PartialControlsState) {
     });
   };
 
+  const setRangeControl = (
+    key: keyof Pick<ControlsState, "duration" | "fade" | "playbackRate">,
+    range: Range
+  ) => {
+    updateControl(key, (prev) => ({ ...prev, range }));
+  };
+
   const setNumBlobs = (value: number) => {
-    setControls((prev) => {
-      const next = {
-        ...prev,
-        numBlobs: { ...prev.numBlobs, value },
-      };
-      updateUrlFromControls({
-        numBlobs: next.numBlobs,
-        duration: next.duration,
-        playbackRate: next.playbackRate,
-      });
-      return next;
-    });
+    updateControl("numBlobs", (prev) => ({ ...prev, value }));
   };
 
   const setPlaybackRate = (range: Range) => {
-    setControls((prev) => {
-      const next = {
-        ...prev,
-        playbackRate: { ...prev.playbackRate, range },
-      };
-      updateUrlFromControls({
-        numBlobs: next.numBlobs,
-        duration: next.duration,
-        playbackRate: next.playbackRate,
-      });
-      return next;
-    });
+    updateControl("playbackRate", (prev) => ({ ...prev, range }));
   };
 
   const setSelectedScale = (scale: ScaleName) => {
