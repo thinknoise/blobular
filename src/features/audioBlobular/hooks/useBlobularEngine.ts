@@ -4,6 +4,7 @@ import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
 import type { BlobEvent } from "@/shared/types/types";
 import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
+import { controlLimits } from "@/shared/constants/controlLimits";
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(
@@ -32,10 +33,13 @@ function getRandomScalePlaybackRate(
 }
 
 export const useBlobularEngine = (
-  numBlobs: number = 8,
-  durationRange: [number, number],
-  playbackRateRange: [number, number],
-  fadeRange: [number, number],
+  numBlobs: number = controlLimits.DEFAULT_BLOBS,
+  durationRange: [number, number] = controlLimits.DEFAULT_DURATION_RANGE,
+  playbackRateRange: [
+    number,
+    number,
+  ] = controlLimits.DEFAULT_PLAYBACK_RATE_RANGE,
+  fadeRange: [number, number] = controlLimits.DEFAULT_FADE_RANGE,
   selectedScale: ScaleName = "Fifths" // default scale
 ) => {
   const { blobularBuffer } = useAudioBuffer();

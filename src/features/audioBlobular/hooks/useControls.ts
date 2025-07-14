@@ -1,3 +1,4 @@
+import { controlLimits } from "@/shared/constants/controlLimits";
 import { useState } from "react";
 import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
 import type { ControlsState, Range } from "../types/AudioBlobularPlayer.types";
@@ -13,12 +14,12 @@ function updateUrlFromControls(
 
   const [min, max] = controls.duration.range ?? [];
   if (min != null && max != null) {
-    params.set("duration", `${min.toFixed(2)},${max.toFixed(2)}`);
+    params.set("duration", `${min.toFixed(2)}-${max.toFixed(2)}`);
   }
 
   const [minPlayback, maxPlayback] = controls.playbackRate.range ?? [];
   if (minPlayback != null && maxPlayback != null) {
-    params.set("rate", `${minPlayback.toFixed(2)},${maxPlayback.toFixed(2)}`);
+    params.set("rate", `${minPlayback.toFixed(2)}-${maxPlayback.toFixed(2)}`);
   }
 
   const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -38,30 +39,32 @@ export function useControls(initial?: PartialControlsState) {
 
   const [controls, setControls] = useState<ControlsState>({
     duration: {
-      range: initial?.duration?.range ?? [0.8, 8.8],
-      min: 0.01,
-      max: 1000, // default max duration if not initialized
+      range: initial?.duration?.range ?? controlLimits.DEFAULT_DURATION_RANGE,
+      min: controlLimits.MIN_DURATION,
+      max: controlLimits.MAX_DURATION,
       step: 0.01,
       ...(initial?.duration ?? {}),
     },
     fade: {
-      range: initial?.fade?.range ?? [0.1, 1.0],
-      min: 0.1,
-      max: 3.0,
+      range: initial?.fade?.range ?? controlLimits.DEFAULT_FADE_RANGE,
+      min: controlLimits.MIN_FADE,
+      max: controlLimits.MAX_FADE,
       step: 0.1,
       ...(initial?.fade ?? {}),
     },
     playbackRate: {
-      range: initial?.playbackRate?.range ?? [0.9, 1.4],
-      min: 0.25,
-      max: 4.0,
+      range:
+        initial?.playbackRate?.range ??
+        controlLimits.DEFAULT_PLAYBACK_RATE_RANGE,
+      min: controlLimits.MIN_PLAYBACK_RATE,
+      max: controlLimits.MAX_PLAYBACK_RATE,
       step: 0.05,
       ...(initial?.playbackRate ?? {}),
     },
     numBlobs: initial?.numBlobs ?? {
-      value: 8,
-      min: 1,
-      max: 12,
+      value: controlLimits.DEFAULT_BLOBS,
+      min: controlLimits.MIN_BLOBS,
+      max: controlLimits.MAX_BLOBS,
       step: 1,
     },
     selectedScale: initial?.selectedScale ?? ALL_SCALES[7].name,

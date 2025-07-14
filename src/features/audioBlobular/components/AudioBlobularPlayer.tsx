@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { controlLimits } from "@/shared/constants/controlLimits";
 import type { Range } from "../types/AudioBlobularPlayer.types";
 
 import { useBlobularEngine } from "../hooks/useBlobularEngine";
@@ -54,7 +55,7 @@ const AudioBlobularPlayer = () => {
 
     if (blobNumber) {
       const num = parseInt(blobNumber, 10);
-      if (!isNaN(num) && num >= 1 && num <= 12) {
+      if (!isNaN(num) && num >= 1 && num <= controlLimits.MAX_BLOBS) {
         setNumBlobs(num);
       } else {
         console.warn("Invalid blob number in URL, using default (8)");
@@ -95,7 +96,7 @@ const AudioBlobularPlayer = () => {
       ...prev,
       duration: {
         ...prev.duration,
-        range: [0.8, clampedEnd],
+        range: [controlLimits.DEFAULT_DURATION_RANGE[0], clampedEnd],
         max: newMax,
         min: prev.duration.range[0],
       },

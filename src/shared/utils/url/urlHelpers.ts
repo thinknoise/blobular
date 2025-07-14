@@ -20,7 +20,7 @@ export function setPageTitle(title: string): void {
 export function getDurationRangeFromUrl(): [number, number] | null {
   const param = new URLSearchParams(window.location.search).get("duration");
   if (!param) return null;
-  const [minStr, maxStr] = param.split(",");
+  const [minStr, maxStr] = param.split("-");
   const min = parseFloat(minStr);
   const max = parseFloat(maxStr);
   if (isNaN(min) || isNaN(max)) return null;
@@ -30,7 +30,7 @@ export function getDurationRangeFromUrl(): [number, number] | null {
 export function getPlaybackRateRangeFromUrl(): [number, number] | null {
   const param = new URLSearchParams(window.location.search).get("rate");
   if (!param) return null;
-  const [minStr, maxStr] = param.split(",");
+  const [minStr, maxStr] = param.split("-");
   const min = parseFloat(minStr);
   const max = parseFloat(maxStr);
   if (isNaN(min) || isNaN(max)) return null;

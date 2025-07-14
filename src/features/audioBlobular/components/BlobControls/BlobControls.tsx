@@ -1,3 +1,4 @@
+import { controlLimits } from "@/shared/constants/controlLimits";
 import {
   BlobRangeSlider,
   BlobCountSlider,
@@ -48,7 +49,7 @@ const BlobControls = ({
         value={numBlobs.value}
         setValue={numBlobs.setValue}
         min={numBlobs.min ?? 1} // todo: centralize the minimum value default
-        max={numBlobs.max ?? 20}
+        max={numBlobs.max ?? controlLimits.MAX_BLOBS}
         step={numBlobs.step}
       />
       <BlobRangeSlider
