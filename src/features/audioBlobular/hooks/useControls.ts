@@ -3,13 +3,16 @@ import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
 import type { ControlsState, Range } from "../types/AudioBlobularPlayer.types";
 
 function updateUrlFromControls(
-  controls: Pick<ControlsState, "numBlobs" | "duration">
+  controls: Pick<ControlsState, "numBlobs" | "duration" | "playbackRate">
 ) {
   const params = new URLSearchParams(window.location.search);
   params.set("blobs", controls.numBlobs.value.toString());
 
   const [min, max] = controls.duration.range;
   params.set("duration", `${min.toFixed(2)},${max.toFixed(2)}`);
+
+  const [minPlayback, maxPlayback] = controls.playbackRate.range;
+  params.set("rate", `${minPlayback.toFixed(2)},${maxPlayback.toFixed(2)}`);
 
   const newUrl = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, "", newUrl);
@@ -24,11 +27,13 @@ export type PartialControlsState = {
 };
 
 export function useControls(initial?: PartialControlsState) {
+  const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState(false);
+
   const [controls, setControls] = useState<ControlsState>({
     duration: {
       range: initial?.duration?.range ?? [0.8, 8.8],
       min: 0.01,
-      max: 10,
+      max: 43, // default max duration if not initialized
       step: 0.01,
       ...(initial?.duration ?? {}),
     },
@@ -68,6 +73,7 @@ export function useControls(initial?: PartialControlsState) {
         updateUrlFromControls({
           numBlobs: next.numBlobs,
           duration: next.duration,
+          playbackRate: next.playbackRate,
         });
       }
       return next;
@@ -83,8 +89,21 @@ export function useControls(initial?: PartialControlsState) {
       updateUrlFromControls({
         numBlobs: next.numBlobs,
         duration: next.duration,
+        playbackRate: next.playbackRate,
       });
       return next;
+    });
+  };
+
+  const setPlaybackRate = (range: Range) => {
+    setControls((prev) => ({
+      ...prev,
+      playbackRate: { ...prev.playbackRate, range },
+    }));
+    updateUrlFromControls({
+      numBlobs: controls.numBlobs,
+      duration: controls.duration,
+      playbackRate: controls.playbackRate,
     });
   };
 
@@ -115,5 +134,9 @@ export function useControls(initial?: PartialControlsState) {
     setRangeControl,
     setNumBlobs,
     setSelectedScale,
+    setControls,
+    setPlaybackRate,
+    hasInitializedFromUrl,
+    setHasInitializedFromUrl,
   };
 }

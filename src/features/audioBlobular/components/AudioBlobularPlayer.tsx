@@ -11,13 +11,21 @@ import { Play, Square } from "lucide-react";
 import {
   getDurationRangeFromUrl,
   getInitialControlsFromUrl,
-} from "../../../shared/utils/url/urlHelpers";
+  getPlaybackRateRangeFromUrl,
+} from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
 
 const AudioBlobularPlayer = () => {
   const initialControls = getInitialControlsFromUrl();
-  const { controls, setRangeControl, setNumBlobs, setSelectedScale } =
-    useControls(initialControls);
+  const {
+    controls,
+    setRangeControl,
+    setNumBlobs,
+    setSelectedScale,
+    setControls,
+    hasInitializedFromUrl,
+    setHasInitializedFromUrl,
+  } = useControls(initialControls);
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
@@ -38,6 +46,9 @@ const AudioBlobularPlayer = () => {
 
   useEffect(() => {
     const blobNumber = getBlobNumberFromUrl();
+    const durationFromUrl = getDurationRangeFromUrl();
+    const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
+
     if (blobNumber) {
       const num = parseInt(blobNumber, 10);
       if (!isNaN(num) && num >= 1 && num <= 12) {
@@ -47,43 +58,47 @@ const AudioBlobularPlayer = () => {
       }
     }
 
-    const durationFromUrl = getDurationRangeFromUrl();
-    if (durationFromUrl) {
-      console.log("Duration from URL:", durationFromUrl);
-      setRangeControl("duration", durationFromUrl);
+    if (!hasInitializedFromUrl) {
+      if (durationFromUrl) {
+        setControls((prev) => ({
+          ...prev,
+          duration: {
+            ...prev.duration,
+            range: durationFromUrl,
+          },
+        }));
+      }
+      setHasInitializedFromUrl(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (playbackRateFromUrl) {
+      setControls((prev) => ({
+        ...prev,
+        playbackRate: {
+          ...prev.playbackRate,
+          range: playbackRateFromUrl,
+        },
+      }));
+    }
   }, []);
 
   useEffect(() => {
-    const handleMouseUp = () => {
-      const params = new URLSearchParams(window.location.search);
+    if (buffer) {
+      const newMax = buffer.duration; // fallback if buffer not ready
+      const newMin = duration.range[0];
 
-      // Add blobs param
-      params.set("blobs", numBlobs.value.toString());
-
-      // Add duration param (e.g. "1.1,2.8")
-      const [min, max] = controls.duration.range;
-      params.set("duration", `${min.toFixed(2)},${max.toFixed(2)}`);
-
-      // Update URL without reload
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
-      window.history.replaceState({}, "", newUrl);
-    };
-
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [numBlobs.value, controls.duration.range]);
-
-  useEffect(() => {
-    const newMax = buffer ? buffer.duration : 10;
-    const clampedEnd = Math.min(8.8, newMax);
-
-    duration.setRange([0.8, clampedEnd]);
-    duration.max = newMax;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // no URL param, so derive from buffer
+      const clampedEnd = Math.min(3.5, newMax);
+      setControls((prev) => ({
+        ...prev,
+        duration: {
+          ...prev.duration,
+          range: [0.8, clampedEnd],
+          max: newMax,
+          min: newMin,
+        },
+      }));
+    }
   }, [buffer]);
 
   function handleClick(): void {

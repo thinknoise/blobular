@@ -31,6 +31,7 @@ const BlobControls = ({
   numBlobs,
   selectedScale,
 }: BlobControlsProps) => {
+  // fade guardrail against duration being less than fade
   useEffect(() => {
     const durationStart = duration.range[0];
     const FadeRangeTop = fade.range[1];
@@ -38,7 +39,7 @@ const BlobControls = ({
     if (durationStart < FadeRangeTop) {
       fade.setRange([fade.min, durationStart]);
     }
-  }, [duration.range]);
+  }, [duration.range, fade.range]);
 
   return (
     <div className="blob-controls">
@@ -47,7 +48,7 @@ const BlobControls = ({
         value={numBlobs.value}
         setValue={numBlobs.setValue}
         min={numBlobs.min ?? 1} // todo: centralize the minimum value default
-        max={numBlobs.max ?? 11}
+        max={numBlobs.max ?? 20}
         step={numBlobs.step}
       />
       <BlobRangeSlider

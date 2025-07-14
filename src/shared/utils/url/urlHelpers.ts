@@ -27,6 +27,16 @@ export function getDurationRangeFromUrl(): [number, number] | null {
   return [min, max];
 }
 
+export function getPlaybackRateRangeFromUrl(): [number, number] | null {
+  const param = new URLSearchParams(window.location.search).get("rate");
+  if (!param) return null;
+  const [minStr, maxStr] = param.split(",");
+  const min = parseFloat(minStr);
+  const max = parseFloat(maxStr);
+  if (isNaN(min) || isNaN(max)) return null;
+  return [min, max];
+}
+
 export function getInitialControlsFromUrl(): PartialControlsState {
   const params = new URLSearchParams(window.location.search);
   const blobsStr = params.get("blobs");
