@@ -58,32 +58,51 @@ export const useBlobularEngine = (
 
   const durationRangeRef = useRef<[number, number]>(durationRange);
   const playbackRateRangeRef = useRef<[number, number]>(playbackRateRange);
-
   const fadeRangeRef = useRef<[number, number]>(fadeRange);
-
   const scaleRef = useRef<ScaleName>(selectedScale);
 
   const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
     Array(numBlobs).fill(null)
   );
 
-  // keep refs up-to-date with the latest slider values
   useEffect(() => {
-    blobRefs.current = Array.from({ length: numBlobs }, () => ({
-      nextBlobTime: 0,
-    }));
-    setBlobEvents(Array(numBlobs).fill(null));
-    if (isPlayingRef.current) {
-      stop();
-      start();
-    } else {
-      // If not playing, just reset the blobRefs and events
-      blobRefs.current.forEach((blob) => {
-        blob.nextBlobTime = 0;
-      });
-      setBlobEvents(Array(numBlobs).fill(null));
+    // Resize blobRefs without resetting all
+    const currentRefs = blobRefs.current;
+    const newRefs = [...currentRefs];
+
+    if (numBlobs > currentRefs.length) {
+      const extra = Array.from(
+        { length: numBlobs - currentRefs.length },
+        () => ({
+          nextBlobTime: 0,
+        })
+      );
+      newRefs.push(...extra);
+    } else if (numBlobs < currentRefs.length) {
+      newRefs.length = numBlobs; // truncate
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    blobRefs.current = newRefs;
+
+    // Resize blobEvents safely
+    setBlobEvents((prev) => {
+      const newEvents = [...prev];
+      if (numBlobs > prev.length) {
+        newEvents.push(...Array(numBlobs - prev.length).fill(null));
+      } else if (numBlobs < prev.length) {
+        newEvents.length = numBlobs;
+      }
+      return newEvents;
+    });
+
+    // Restart only new schedulers if playing
+    if (isPlayingRef.current && audioCtxRef.current) {
+      for (let i = currentRefs.length; i < numBlobs; i++) {
+        blobRefs.current[i].nextBlobTime = audioCtxRef.current.currentTime;
+        const scheduler = createScheduler(i);
+        scheduler();
+      }
+    }
   }, [numBlobs]);
 
   useEffect(() => {

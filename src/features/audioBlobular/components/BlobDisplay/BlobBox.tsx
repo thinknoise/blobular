@@ -1,6 +1,6 @@
 // src/components/BlobPanel/BlobBox.tsx
 import { useRef, useEffect } from "react";
-import type { BlobEvent } from "../../types/types";
+import type { BlobEvent } from "@/shared/types/types";
 import "./BlobBox.css";
 
 type BlobBoxProps = {
