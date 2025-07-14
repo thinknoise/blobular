@@ -96,14 +96,17 @@ export function useControls(initial?: PartialControlsState) {
   };
 
   const setPlaybackRate = (range: Range) => {
-    setControls((prev) => ({
-      ...prev,
-      playbackRate: { ...prev.playbackRate, range },
-    }));
-    updateUrlFromControls({
-      numBlobs: controls.numBlobs,
-      duration: controls.duration,
-      playbackRate: controls.playbackRate,
+    setControls((prev) => {
+      const next = {
+        ...prev,
+        playbackRate: { ...prev.playbackRate, range },
+      };
+      updateUrlFromControls({
+        numBlobs: next.numBlobs,
+        duration: next.duration,
+        playbackRate: next.playbackRate,
+      });
+      return next;
     });
   };
 

@@ -23,6 +23,7 @@ const AudioBlobularPlayer = () => {
     setNumBlobs,
     setSelectedScale,
     setControls,
+    setPlaybackRate,
     hasInitializedFromUrl,
     setHasInitializedFromUrl,
   } = useControls(initialControls);
@@ -149,7 +150,7 @@ const AudioBlobularPlayer = () => {
         }}
         playbackRate={{
           ...controls.playbackRate,
-          setRange: (r: Range) => setRangeControl("playbackRate", r),
+          setRange: setPlaybackRate,
         }}
         numBlobs={{
           ...controls.numBlobs,
