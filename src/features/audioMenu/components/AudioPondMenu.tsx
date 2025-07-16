@@ -54,7 +54,11 @@ const AudioPondMenu: React.FC = () => {
     const bufferKey = getBufferKeyFromUrl();
 
     // If URL param is present and valid, use it
-    if (bufferKey && buffers[bufferKey]?.buffer) {
+    if (
+      bufferKey &&
+      buffers[bufferKey]?.buffer &&
+      buffers[bufferKey].buffer !== blobularBuffer
+    ) {
       if (blobularBuffer !== buffers[bufferKey].buffer) {
         console.log("Setting blobularBuffer from URL param:", bufferKey);
         setBlobularBuffer(buffers[bufferKey].buffer);
@@ -65,7 +69,11 @@ const AudioPondMenu: React.FC = () => {
     }
 
     // Otherwise, fall back to first available buffer
-    if (!blobularBuffer && bufferArray.length > 0) {
+    if (
+      !blobularBuffer &&
+      bufferArray.length > 0 &&
+      bufferArray[0][1].buffer !== blobularBuffer
+    ) {
       const firstBuffer = bufferArray[0][1].buffer;
       console.log("Setting initial blobularBuffer from pond:", firstBuffer);
       if (firstBuffer) {

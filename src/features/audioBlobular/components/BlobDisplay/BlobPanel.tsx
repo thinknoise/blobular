@@ -2,13 +2,17 @@
 import type { BlobEvent } from "@/shared/types/types";
 import BlobBox from "./BlobBox";
 import "./BlobBox.css";
+import { useAudioSource } from "../../engine";
 
 type BlobPanelProps = {
   blobEvents: (BlobEvent | null)[];
-  bufferDuration?: number;
 };
 
-const BlobPanel = ({ blobEvents, bufferDuration = 0 }: BlobPanelProps) => {
+const BlobPanel = ({ blobEvents }: BlobPanelProps) => {
+  const audioSource = useAudioSource();
+  const buffer = audioSource.getBuffer();
+  const bufferDuration = buffer ? buffer.duration : 0;
+
   return (
     <div className="blob-box-container">
       {blobEvents.map((e, i) => (

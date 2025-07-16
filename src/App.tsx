@@ -4,15 +4,18 @@ import { AudioBlobularPlayer } from "@/features/audioBlobular/components";
 import { AudioBufferProvider } from "./shared/context/AudioBufferProvider";
 import AudioPondMenu from "./features/audioMenu/components/AudioPondMenu";
 import "./App.css";
+import { AudioSourceProvider } from "./features/audioBlobular/engine";
 
 function App() {
   return (
     <AudioBufferProvider>
-      <div className="version-text">v{packageJson.version}</div>
-      <div className="app-blobular">
-        <AudioBlobularPlayer />
-        <AudioPondMenu />
-      </div>
+      <AudioSourceProvider>
+        <div className="version-text">v{packageJson.version}</div>
+        <div className="app-blobular">
+          <AudioBlobularPlayer />
+          <AudioPondMenu />
+        </div>
+      </AudioSourceProvider>
     </AudioBufferProvider>
   );
 }

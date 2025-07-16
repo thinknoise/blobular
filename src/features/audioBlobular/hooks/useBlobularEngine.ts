@@ -5,6 +5,7 @@ import type { BlobEvent } from "@/shared/types/types";
 import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 import { controlLimits } from "@/shared/constants/controlLimits";
+import { useAudioSource } from "../engine";
 // ← helper for random major-scale note between minRate…maxRate
 const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
 function getRandomScalePlaybackRate(
@@ -47,8 +48,6 @@ export const useBlobularEngine = (
   const audioCtxRef = useRef<AudioContext | null>(null);
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
   const isPlayingRef = useRef(false);
-  const audioBufferRef = useRef<AudioBuffer | null>(null);
-  const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
 
   const blobRefs = useRef(
     Array.from({ length: numBlobs }, () => ({
@@ -127,12 +126,12 @@ export const useBlobularEngine = (
         !audioCtxRef.current ||
         !compressorRef.current ||
         !isPlayingRef.current ||
-        !audioBufferRef.current
+        !audioSource.getBuffer()
       )
         return;
 
       const ctx = audioCtxRef.current;
-      const buffer = audioBufferRef.current;
+      const buffer = audioSource.getBuffer()!;
       const compressor = compressorRef.current;
 
       const scheduleAheadTime = 0.1;
@@ -217,16 +216,12 @@ export const useBlobularEngine = (
     return scheduler;
   };
 
+  const audioSource = useAudioSource();
+
   useEffect(() => {
-    // If blobularBuffer changes, update the audioBufferRef and state
     if (blobularBuffer) {
-      // If blobularBuffer is available, set it as the audio buffer
-      audioBufferRef.current = blobularBuffer;
-      setBuffer(blobularBuffer);
-    } else {
-      // If not, reset the buffer to null
-      audioBufferRef.current = null;
-      setBuffer(null);
+      console.log("Setting blobularBuffer into audio source", blobularBuffer);
+      audioSource.setBuffer(blobularBuffer);
     }
   }, [blobularBuffer]);
 
@@ -249,18 +244,19 @@ export const useBlobularEngine = (
       compressorRef.current = compressor;
     }
 
-    // Use blobularBuffer if available
-    if (blobularBuffer) {
-      audioBufferRef.current = blobularBuffer;
-      setBuffer(blobularBuffer);
-    } else if (!audioBufferRef.current) {
-      const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
-      const resp = await fetch(url);
-      const abuf = await resp.arrayBuffer();
-      const decoded = await ctx.decodeAudioData(abuf);
-      audioBufferRef.current = decoded;
-      setBuffer(decoded); // ← store it in state
+    if (!audioSource.getBuffer()) {
+      if (blobularBuffer) {
+        audioSource.setBuffer(blobularBuffer);
+      } else {
+        // fallback default
+        const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
+        const resp = await fetch(url);
+        const abuf = await resp.arrayBuffer();
+        const decoded = await ctx.decodeAudioData(abuf);
+        audioSource.setBuffer(decoded);
+      }
     }
+
     isPlayingRef.current = true;
 
     blobRefs.current.forEach((blob, index) => {
@@ -274,5 +270,5 @@ export const useBlobularEngine = (
     isPlayingRef.current = false;
   };
 
-  return { start, stop, blobEvents, buffer };
+  return { start, stop, blobEvents };
 };

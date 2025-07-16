@@ -16,6 +16,7 @@ import {
   getScaleFromUrl,
 } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
+import { useAudioSource } from "../engine";
 
 const AudioBlobularPlayer = () => {
   const initialControls = getInitialControlsFromUrl();
@@ -32,7 +33,7 @@ const AudioBlobularPlayer = () => {
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
-  const { start, stop, blobEvents, buffer } = useBlobularEngine(
+  const { start, stop, blobEvents } = useBlobularEngine(
     numBlobs.value,
     duration.range,
     playbackRate.range,
@@ -87,6 +88,9 @@ const AudioBlobularPlayer = () => {
     setHasInitializedFromUrl(true);
   }, []);
 
+  const audioSource = useAudioSource();
+  const buffer = audioSource.getBuffer();
+
   useEffect(() => {
     if (!buffer) return;
 
@@ -124,11 +128,8 @@ const AudioBlobularPlayer = () => {
       <span className="blobular-title-chunk">r</span>
 
       <div className="blobular-visualizer">
-        <BlobPanel
-          blobEvents={blobEvents}
-          bufferDuration={buffer ? buffer.duration : 0}
-        />
-        {buffer && <CompactWaveform buffer={buffer} />}
+        <BlobPanel blobEvents={blobEvents} />
+        <CompactWaveform />
         <button
           className={
             isPlaying

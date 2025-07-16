@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { CompactWaveform } from "@/features/audioBlobular/components";
+import { WaveformViewer } from "@/features/audioBlobular/components";
 import { AudioLines, Play, Square, X } from "lucide-react";
 import "./Items.css"; // Ensure you have styles for the PondItem
 
@@ -70,9 +70,7 @@ const PondItem: React.FC<PondItemProps> = ({
       {status.error && (
         <span className="error-text">Failed to load: {status.error}</span>
       )}
-      {status.buffer && (
-        <CompactWaveform buffer={status.buffer} customHeight={150} />
-      )}
+      {status.buffer && <WaveformViewer buffer={status.buffer} />}
       <span className="audio-label">{filename}</span>
     </li>
   );
