@@ -27,8 +27,8 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({
     });
     wavesurferRef.current = wavesurfer;
 
-    console.log("Initializing WaveSurfer with buffer:", buffer);
-    console.log("Audio URL:", audioUrl);
+    // console.log("Initializing WaveSurfer with buffer:", buffer);
+    // console.log("Audio URL:", audioUrl);
     if (buffer) {
       wavesurfer.loadBlob(audioBufferToWavBlob(buffer));
     } else if (audioUrl) {
