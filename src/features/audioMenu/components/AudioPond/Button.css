@@ -2,11 +2,10 @@
   position: absolute;
   cursor: pointer;
   top: 0;
-  left: -58px;
-  width: 55px;
+  left: -81px;
+  width: 76px;
   height: 55px;
   padding: 10px;
-
   background-color: #3b3b3b;
   border-radius: 0 0 0 13px;
   border: none;
@@ -22,12 +21,11 @@
 .record-button {
   cursor: pointer;
   position: absolute;
-  left: -58px;
+  left: -81px;
   top: 58px;
-  width: 55px;
+  width: 76px;
   height: 55px;
-  padding: 2px;
-
+  padding: 10px;
   background: rgba(38, 0, 255, 0.461);
   border-radius: 13px 0 0 13px;
   box-shadow: -3px 3px 3px rgba(0, 0, 0, 0.9);
@@ -37,10 +35,13 @@
 
 .record-button.recording {
   background: rgba(255, 23, 68, 1);
+  color: rgba(38, 0, 255, 0.461);
+
 }
 
 .record-button:hover {
   background: rgba(255, 23, 68, 0.2);
+  color: rgba(38, 0, 255, 0.461);
   outline: none;
   border: none;
 }
@@ -54,6 +55,25 @@
   outline: none;
 }
 
+@keyframes fadeWhiteBlack {
+  0% {
+    color: #ffffff;
+    font-weight: 300;
+
+  }
+
+  50% {
+    color: #000000;
+    font-weight: 900;
+
+  }
+
+  100% {
+    color: #ffffff;
+    font-weight: 300;
+  }
+}
+
 .recording-button-status {
   position: absolute;
   top: 21px;
@@ -62,16 +82,22 @@
   height: 100%;
   color: #ff1744;
   font-size: 11px;
+  text-align: center;
 
   pointer-events: none;
+}
+
+.record-button.recording .recording-button-status {
+  animation: fadeWhiteBlack 2s infinite ease-in-out;
+  font-weight: 900;
 }
 
 .update-button {
   cursor: pointer;
   position: absolute;
-  left: -58px;
+  left: -81px;
   top: 118px;
-  width: 55px;
+  width: 76px;
   height: 55px;
   padding: 12px;
   border-radius: 13px 0 0 13px;
