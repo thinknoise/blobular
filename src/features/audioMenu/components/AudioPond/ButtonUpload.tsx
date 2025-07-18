@@ -34,7 +34,7 @@ export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
       });
 
       await s3.send(command);
-      console.log("✅ Uploaded to S3:", key);
+      console.log(" Uploaded to S3:", key);
       // alert("Upload complete!");
 
       onUpload?.(key);

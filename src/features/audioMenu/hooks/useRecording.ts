@@ -7,6 +7,7 @@ export interface UseRecordingResult {
   isRecording: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<Blob | null>;
+  updateWavBlob: () => Promise<Blob | null>;
 }
 
 export function useRecording(audioContext: AudioContext): UseRecordingResult {
@@ -55,9 +56,32 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
     });
   }, [audioContext]);
 
+  function updateWavBlob(): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      const recorder = mediaRecorderRef.current;
+      if (!recorder || recorder.state !== "recording") return resolve(null);
+
+      recorder.ondataavailable = async (e: BlobEvent) => {
+        if (e.data.size > 0) {
+          const blob = new Blob([e.data], { type: "audio/webm" });
+          const arrayBuffer = await blob.arrayBuffer();
+          const decoded = await audioContext.decodeAudioData(arrayBuffer);
+
+          const wavBlob = audioBufferToWavBlob(decoded);
+          resolve(wavBlob);
+        } else {
+          resolve(null);
+        }
+      };
+
+      recorder.requestData(); // ✅ Triggers a `dataavailable` event without stopping
+    });
+  }
+
   return {
     isRecording,
     startRecording,
     stopRecording,
+    updateWavBlob,
   };
 }

@@ -39,6 +39,22 @@
   outline: none;
 }
 
+.update-button {
+  position: absolute;
+  right: 210px;
+  top: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  color: #ff1744;
+  font-size: 24px;
+  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.0);
+  transition: background 0.3s, transform 0.3s, box-shadow 0.8s;
+}
+
 .audio-list {
   list-style: none;
   padding: 20px 0 0 0;

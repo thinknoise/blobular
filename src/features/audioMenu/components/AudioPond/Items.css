@@ -52,11 +52,21 @@
 .icon-button {
   top: 8px;
   height: 32px;
+  width: 32px;
+}
+
+.save-button {
+  bottom: 8px;
+  left: 8px;
+  height: 32px;
+  width: 32px;
 }
 
 .play-button {
   top: auto;
   bottom: 8px;
+  height: 32px;
+  width: 32px;
 }
 
 .delete-button {

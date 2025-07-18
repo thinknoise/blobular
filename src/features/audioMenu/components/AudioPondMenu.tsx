@@ -16,6 +16,7 @@ import RecordedItem from "./AudioPond/RecordedItem";
 import PondItem from "./AudioPond/PondItem";
 
 import "./AudioPondMenu.css";
+import { FileAudio } from "lucide-react";
 
 const AudioPondMenu: React.FC = () => {
   const { blobularBuffer, setBlobularBuffer } = useAudioBuffer();
@@ -24,7 +25,7 @@ const AudioPondMenu: React.FC = () => {
   const [pondMenuOpen, setPondMenuOpen] = useState(false);
 
   const audioContext = getAudioCtx();
-  const { isRecording, startRecording, stopRecording } =
+  const { isRecording, startRecording, stopRecording, updateWavBlob } =
     useRecording(audioContext);
   const [recordings, setRecordings] = useState<{ url: string; blob: Blob }[]>(
     []
@@ -51,34 +52,23 @@ const AudioPondMenu: React.FC = () => {
   // to ensure blobularBuffer is set correctly
   // based on URL param or first available buffer
   useEffect(() => {
-    const bufferKey = getBufferKeyFromUrl();
+    if (blobularBuffer) return; //  don't override if already set
 
-    // If URL param is present and valid, use it
-    if (
-      bufferKey &&
-      buffers[bufferKey]?.buffer &&
-      buffers[bufferKey].buffer !== blobularBuffer
-    ) {
-      if (blobularBuffer !== buffers[bufferKey].buffer) {
-        console.log("Setting blobularBuffer from URL param:", bufferKey);
-        setBlobularBuffer(buffers[bufferKey].buffer);
-        const displayTitle = getDisplayTitle(bufferKey);
-        setPageTitle(displayTitle);
-      }
+    const bufferKey = getBufferKeyFromUrl();
+    const urlBuffer = bufferKey ? buffers[bufferKey]?.buffer : null;
+
+    if (bufferKey && urlBuffer) {
+      console.log("Setting blobularBuffer from URL param:", bufferKey);
+      setBlobularBuffer(urlBuffer);
+      const displayTitle = getDisplayTitle(bufferKey);
+      setPageTitle(displayTitle);
       return;
     }
 
-    // Otherwise, fall back to first available buffer
-    if (
-      !blobularBuffer &&
-      bufferArray.length > 0 &&
-      bufferArray[0][1].buffer !== blobularBuffer
-    ) {
-      const firstBuffer = bufferArray[0][1].buffer;
-      console.log("Setting initial blobularBuffer from pond:", firstBuffer);
-      if (firstBuffer) {
-        setBlobularBuffer(firstBuffer);
-      }
+    const firstBuffer = bufferArray[0]?.[1]?.buffer;
+    if (firstBuffer) {
+      console.log("Initial blobularBuffer:", firstBuffer);
+      setBlobularBuffer(firstBuffer);
     }
   }, [buffers, bufferArray, blobularBuffer, setBlobularBuffer]);
 
@@ -94,7 +84,7 @@ const AudioPondMenu: React.FC = () => {
       });
 
       await s3.send(command);
-      console.log("✅ Uploaded recording to S3:", key);
+      console.log(" Uploaded recording to S3:", key);
       // alert("Upload complete!");
       listAudioKeys(); // Refresh the audio pond list after upload
       fetchAudioKeysAndBuffers(); // Refresh the audio pond list after upload
@@ -104,6 +94,26 @@ const AudioPondMenu: React.FC = () => {
       console.error("❌ Upload failed:", err);
       alert("Upload failed.");
       return null;
+    }
+  };
+
+  const handleSaveClick = async (blob: Blob) => {
+    const key = await uploadRecording(blob);
+    if (key) {
+      console.log("Recording saved:", key);
+    }
+  };
+
+  const handleUpdateRecordedBuffer = async () => {
+    const blob = await updateWavBlob();
+    if (!blob) {
+      console.error("Failed to update recorded buffer: No blob returned");
+      return;
+    } else {
+      console.log("Updated recorded buffer:", blob);
+      const url = URL.createObjectURL(blob);
+      setRecordings((prev) => [{ url, blob }, ...prev]);
+      handleRecordingSelect(blob);
     }
   };
 
@@ -120,11 +130,11 @@ const AudioPondMenu: React.FC = () => {
     }
   };
 
-  const handleSaveClick = async (blob: Blob) => {
-    const key = await uploadRecording(blob);
-    if (key) {
-      console.log("Recording saved:", key);
-    }
+  const handleRecordingSelect = async (blob: Blob) => {
+    console.log("Selected recording:", blob);
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    setBlobularBuffer(audioBuffer);
   };
 
   const handleSelection = (buffer: AudioBuffer | null, key?: string) => {
@@ -152,13 +162,25 @@ const AudioPondMenu: React.FC = () => {
       >
         ☰
       </button>
+      <button
+        className={`update-button ${isRecording ? "recording" : ""}`}
+        aria-label="Record"
+        onClick={handleUpdateRecordedBuffer}
+      >
+        <FileAudio />
+      </button>
       <CreateAudio
         handleRecordClick={handleRecordClick}
         isRecording={isRecording}
       />
       <ul className="audio-list">
         {recordings.map((rec, index) => (
-          <RecordedItem key={index} recording={rec} onSave={handleSaveClick} />
+          <RecordedItem
+            key={index}
+            recording={rec}
+            onSave={handleSaveClick}
+            onSelect={handleRecordingSelect}
+          />
         ))}
         {/* uploaded recordings and audio items */}
         {bufferArray.map(([key, status]) => (
