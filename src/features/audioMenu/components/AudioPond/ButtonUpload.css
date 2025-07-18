@@ -1,6 +1,6 @@
 .button-upload-container {
   position: absolute;
-  right: 120px;
+  left: 220px;
   top: 16px;
   background: rgba(0, 0, 0, 0.5);
   cursor: pointer;

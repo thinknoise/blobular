@@ -1,7 +1,7 @@
 .audio-pond-menu {
   position: fixed;
   top: 0;
-  left: -550px;
+  right: -550px;
   width: 550px;
   display: flex;
   flex-direction: column;
@@ -10,14 +10,14 @@
   background-color: #3b3b3b;
   box-shadow: 1px 8px 11px #000000;
   z-index: 1000;
-  border-radius: 0 0 13px 0;
+  border-radius: 0 0 0 13px;
   margin: 0;
   font-size: smaller;
-  transition: left 0.3s ease-in-out;
+  transition: right 0.3s ease-in-out;
 }
 
 .audio-pond-menu.open {
-  left: 0;
+  right: 0;
 }
 
 .menu-button {
@@ -27,11 +27,11 @@
   color: #ffffff;
   font-size: 24px;
   padding: 10px;
-  box-shadow: 3px 3px 3px #000000;
-  border-radius: 0 0 13px 0;
+  box-shadow: -3px 3px 3px #000000;
+  border-radius: 0 0 0 13px;
   cursor: pointer;
   top: 0;
-  right: -46px;
+  left: -46px;
   z-index: 1001;
 }
 
@@ -41,7 +41,7 @@
 
 .update-button {
   position: absolute;
-  right: 210px;
+  left: 120px;
   top: 16px;
   background: rgba(0, 0, 0, 0.5);
   cursor: pointer;
@@ -53,6 +53,22 @@
   font-size: 24px;
   box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.0);
   transition: background 0.3s, transform 0.3s, box-shadow 0.8s;
+}
+
+.update-button:hover {
+  background: rgba(255, 23, 68, 0.2);
+  outline: none;
+  border: none;
+}
+
+.update-button:focus {
+  outline: none;
+}
+
+.update-button:disabled {
+  background: rgba(255, 23, 68, 0.1);
+  color: #000000;
+  cursor: not-allowed;
 }
 
 .audio-list {

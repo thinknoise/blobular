@@ -10,7 +10,7 @@ function App() {
   return (
     <AudioBufferProvider>
       <AudioSourceProvider>
-        <div className="version-text">v{packageJson.version}</div>
+        <div className="version-text">version: {packageJson.version}</div>
         <div className="app-blobular">
           <AudioBlobularPlayer />
           <AudioPondMenu />

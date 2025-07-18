@@ -3,6 +3,7 @@
 let audioCtx: AudioContext | null = null;
 
 function createAudioCtx(): AudioContext {
+  console.log("CREATING AUDIO CONTEXT");
   audioCtx = new AudioContext();
   return audioCtx;
 }

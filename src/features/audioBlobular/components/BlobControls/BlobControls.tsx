@@ -1,7 +1,7 @@
 import { controlLimits } from "@/shared/constants/controlLimits";
 import {
   BlobRangeSlider,
-  BlobCountSlider,
+  BlobCountDropDown,
   ScaleSelect,
 } from "@/features/audioBlobular/components";
 import "./BlobControls.css";
@@ -44,7 +44,7 @@ const BlobControls = ({
 
   return (
     <div className="blob-controls">
-      <BlobCountSlider
+      <BlobCountDropDown
         label="Number of Blobs"
         value={numBlobs.value}
         setValue={numBlobs.setValue}
