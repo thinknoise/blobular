@@ -20,57 +20,6 @@
   right: 0;
 }
 
-.menu-button {
-  position: absolute;
-  background-color: #3b3b3b;
-  border: none;
-  color: #ffffff;
-  font-size: 24px;
-  padding: 10px;
-  box-shadow: -3px 3px 3px #000000;
-  border-radius: 0 0 0 13px;
-  cursor: pointer;
-  top: 0;
-  left: -46px;
-  z-index: 1001;
-}
-
-.menu-button:focus {
-  outline: none;
-}
-
-.update-button {
-  position: absolute;
-  left: 120px;
-  top: 16px;
-  background: rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 50%;
-  width: 75px;
-  height: 75px;
-  color: #ff1744;
-  font-size: 24px;
-  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.0);
-  transition: background 0.3s, transform 0.3s, box-shadow 0.8s;
-}
-
-.update-button:hover {
-  background: rgba(255, 23, 68, 0.2);
-  outline: none;
-  border: none;
-}
-
-.update-button:focus {
-  outline: none;
-}
-
-.update-button:disabled {
-  background: rgba(255, 23, 68, 0.1);
-  color: #000000;
-  cursor: not-allowed;
-}
-
 .audio-list {
   list-style: none;
   padding: 20px 0 0 0;
