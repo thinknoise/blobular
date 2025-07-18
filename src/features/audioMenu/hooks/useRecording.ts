@@ -28,7 +28,7 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
-    recorder.start();
+    recorder.start(1000);
     mediaRecorderRef.current = recorder;
     setIsRecording(true);
   }, []);
@@ -56,26 +56,33 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
     });
   }, [audioContext]);
 
-  function updateWavBlob(): Promise<Blob | null> {
-    return new Promise((resolve) => {
-      const recorder = mediaRecorderRef.current;
-      if (!recorder || recorder.state !== "recording") return resolve(null);
+  async function updateWavBlob(): Promise<Blob | null> {
+    const recorder = mediaRecorderRef.current;
 
-      recorder.ondataavailable = async (e: BlobEvent) => {
-        if (e.data.size > 0) {
-          const blob = new Blob([e.data], { type: "audio/webm" });
-          const arrayBuffer = await blob.arrayBuffer();
-          const decoded = await audioContext.decodeAudioData(arrayBuffer);
+    // Flush the latest data chunk if recording
+    if (recorder?.state === "recording") {
+      recorder.requestData();
+    }
 
-          const wavBlob = audioBufferToWavBlob(decoded);
-          resolve(wavBlob);
-        } else {
-          resolve(null);
-        }
-      };
+    // Slight delay to ensure `ondataavailable` fires
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
-      recorder.requestData(); // ✅ Triggers a `dataavailable` event without stopping
-    });
+    if (!chunksRef.current.length) {
+      console.warn("No chunks to process");
+      return null;
+    }
+
+    try {
+      const combined = new Blob(chunksRef.current, { type: "audio/webm" });
+      console.log("chunksRef.current length:", chunksRef.current.length);
+
+      const arrayBuffer = await combined.arrayBuffer();
+      const decoded = await audioContext.decodeAudioData(arrayBuffer);
+      return audioBufferToWavBlob(decoded);
+    } catch (err) {
+      console.error("Failed to decode audio blob:", err);
+      return null;
+    }
   }
 
   return {

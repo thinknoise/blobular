@@ -105,16 +105,16 @@ const AudioPondMenu: React.FC = () => {
   };
 
   const handleUpdateRecordedBuffer = async () => {
-    const blob = await updateWavBlob();
+    const blob = await updateWavBlob(); // uses all chunks so far
+
     if (!blob) {
       console.error("Failed to update recorded buffer: No blob returned");
       return;
-    } else {
-      console.log("Updated recorded buffer:", blob);
-      const url = URL.createObjectURL(blob);
-      setRecordings((prev) => [{ url, blob }, ...prev]);
-      handleRecordingSelect(blob);
     }
+
+    const url = URL.createObjectURL(blob);
+    setRecordings((prev) => [{ url, blob }, ...prev]);
+    handleRecordingSelect(blob);
   };
 
   const handleRecordClick = async () => {
@@ -163,6 +163,7 @@ const AudioPondMenu: React.FC = () => {
         ☰
       </button>
       <button
+        disabled={!isRecording}
         className={`update-button ${isRecording ? "recording" : ""}`}
         aria-label="Record"
         onClick={handleUpdateRecordedBuffer}
