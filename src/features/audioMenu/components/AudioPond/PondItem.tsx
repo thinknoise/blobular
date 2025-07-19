@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { WaveformViewer } from "@/features/audioBlobular/components";
-import { AudioLines, Play, Square, X } from "lucide-react";
+import { AudioLines, Play, Square, Trash2 } from "lucide-react";
 import "./Items.css"; // Ensure you have styles for the PondItem
 
 interface PondItemProps {
@@ -55,7 +55,7 @@ const PondItem: React.FC<PondItemProps> = ({
   return (
     <li className={isSelected ? "audio-item playing" : "audio-item"}>
       <button className="icon-button delete-button" onClick={onDelete}>
-        <X />
+        <Trash2 />{" "}
       </button>
       <button className="icon-button select-button" onClick={onSelect}>
         <AudioLines />

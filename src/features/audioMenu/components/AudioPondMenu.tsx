@@ -15,7 +15,7 @@ import CreateAudio from "./AudioPond/CreateAudio";
 import RecordedItem from "./AudioPond/RecordedItem";
 import PondItem from "./AudioPond/PondItem";
 
-import { FileAudio } from "lucide-react";
+import { ArrowLeftFromLine, ArrowRightFromLine, FileAudio } from "lucide-react";
 import "./AudioPondMenu.css";
 import "./AudioPond/Button.css";
 
@@ -202,7 +202,7 @@ const AudioPondMenu: React.FC = () => {
         aria-label="Menu"
         onClick={togglePondMenu}
       >
-        ☰
+        {pondMenuOpen ? <ArrowRightFromLine /> : <ArrowLeftFromLine />}
       </button>
       <CreateAudio
         handleRecordClick={handleRecordClick}
