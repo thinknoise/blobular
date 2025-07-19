@@ -1,4 +1,4 @@
-import "./BlobCountSlider.css"; // optionally rename this too
+import "./BlobCountDropdown.css"; // optionally rename this too
 
 type BlobCountDropDownProps = {
   label: string;
@@ -23,7 +23,7 @@ const BlobCountDropDown = ({
   }
 
   return (
-    <div className="blob-count-slider">
+    <div className="blob-range-dropdown">
       <label className="blob-count-label">
         {label}: {value}
       </label>
