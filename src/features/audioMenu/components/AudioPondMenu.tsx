@@ -24,24 +24,31 @@ function useRecordingLoop(
   handleUpdateRecordedBuffer: () => void,
   interval = 1000
 ) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isUpdatingRef = useRef(false);
 
   useEffect(() => {
-    function loop() {
-      handleUpdateRecordedBuffer();
-      timeoutRef.current = setTimeout(loop, interval);
-    }
-
     if (isRecording) {
-      loop();
-    } else if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+      intervalRef.current = setInterval(async () => {
+        if (isUpdatingRef.current) return;
+        isUpdatingRef.current = true;
+        try {
+          await handleUpdateRecordedBuffer();
+        } finally {
+          isUpdatingRef.current = false;
+        }
+      }, interval);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, [isRecording, handleUpdateRecordedBuffer, interval]);
@@ -168,7 +175,7 @@ const AudioPondMenu: React.FC = () => {
     handleRecordingSelect(blob);
   };
 
-  useRecordingLoop(isRecording, handleUpdateRecordedBuffer, 2000); // 2 seconds interval
+  useRecordingLoop(isRecording, handleUpdateRecordedBuffer, 200); // 200ms interval
 
   const handleRecordingSelect = async (blob: Blob) => {
     console.log("Selected recording:", blob);
