@@ -31,7 +31,7 @@ const AudioPondMenu: React.FC = () => {
   const [recordings, setRecordings] = useState<{ url: string; blob: Blob }[]>(
     []
   );
-
+  const [updatingRecording, setUpdatingRecording] = useState(false);
   const togglePondMenu = () => {
     setPondMenuOpen(!pondMenuOpen);
   };
@@ -112,18 +112,27 @@ const AudioPondMenu: React.FC = () => {
       console.error("Failed to update recorded buffer: No blob returned");
       return;
     }
-
     const url = URL.createObjectURL(blob);
-    setRecordings((prev) => [{ url, blob }, ...prev]);
+
+    setRecordings((prev) => {
+      const rest = !updatingRecording ? prev : prev.slice(1);
+      return [{ url, blob }, ...rest];
+    });
+
+    setUpdatingRecording(true);
     handleRecordingSelect(blob);
   };
 
   const handleRecordClick = async () => {
     if (isRecording) {
       const wavBlob = await stopRecording();
+      setUpdatingRecording(false);
       if (wavBlob) {
         const url = URL.createObjectURL(wavBlob);
-        setRecordings((prev) => [{ url, blob: wavBlob }, ...prev]);
+        setRecordings((prev) => {
+          const rest = updatingRecording ? prev.slice(1) : prev;
+          return [{ url, blob: wavBlob }, ...rest];
+        });
       }
     } else {
       console.log("Starting recording...");
@@ -163,18 +172,18 @@ const AudioPondMenu: React.FC = () => {
       >
         ☰
       </button>
-      <button
-        disabled={!isRecording}
-        className={`update-button ${isRecording ? "recording" : ""}`}
-        aria-label="Record"
-        onClick={handleUpdateRecordedBuffer}
-      >
-        <FileAudio />
-      </button>
       <CreateAudio
         handleRecordClick={handleRecordClick}
         isRecording={isRecording}
       />
+      <button
+        disabled={!isRecording}
+        className={`update-button ${isRecording ? "recording" : ""}`}
+        aria-label="Update"
+        onClick={handleUpdateRecordedBuffer}
+      >
+        <FileAudio />
+      </button>
       <ul className="audio-list">
         {recordings.map((rec, index) => (
           <RecordedItem
