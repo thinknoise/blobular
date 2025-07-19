@@ -5,11 +5,7 @@
 
 
 .app-blobular {
-  display: flex;
-  flex-direction: column;
   width: 100vw;
-  align-items: flex-start;
-  margin-left: 80px;
 }
 
 .card {
@@ -20,6 +16,5 @@
   font-size: 14px;
   color: #ccc;
   text-align: left;
-  margin-top: 4px;
-  margin-left: 80px;
+  padding: 4px 0 4px 48px;
 }
