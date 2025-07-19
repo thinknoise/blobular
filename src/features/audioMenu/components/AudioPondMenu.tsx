@@ -1,5 +1,5 @@
 // src/components/AudioPondMenu.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
@@ -18,6 +18,34 @@ import PondItem from "./AudioPond/PondItem";
 import { FileAudio } from "lucide-react";
 import "./AudioPondMenu.css";
 import "./AudioPond/Button.css";
+
+function useRecordingLoop(
+  isRecording: boolean,
+  handleUpdateRecordedBuffer: () => void,
+  interval = 1000
+) {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    function loop() {
+      handleUpdateRecordedBuffer();
+      timeoutRef.current = setTimeout(loop, interval);
+    }
+
+    if (isRecording) {
+      loop();
+    } else if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isRecording, handleUpdateRecordedBuffer, interval]);
+}
 
 const AudioPondMenu: React.FC = () => {
   const { blobularBuffer, setBlobularBuffer } = useAudioBuffer();
@@ -105,6 +133,23 @@ const AudioPondMenu: React.FC = () => {
     }
   };
 
+  const handleRecordClick = async () => {
+    if (isRecording) {
+      const wavBlob = await stopRecording();
+      setUpdatingRecording(false);
+      if (wavBlob) {
+        const url = URL.createObjectURL(wavBlob);
+        setRecordings((prev) => {
+          const rest = updatingRecording ? prev.slice(1) : prev;
+          return [{ url, blob: wavBlob }, ...rest];
+        });
+      }
+    } else {
+      console.log("Starting recording...");
+      await startRecording();
+    }
+  };
+
   const handleUpdateRecordedBuffer = async () => {
     const blob = await updateWavBlob(); // uses all chunks so far
 
@@ -123,22 +168,7 @@ const AudioPondMenu: React.FC = () => {
     handleRecordingSelect(blob);
   };
 
-  const handleRecordClick = async () => {
-    if (isRecording) {
-      const wavBlob = await stopRecording();
-      setUpdatingRecording(false);
-      if (wavBlob) {
-        const url = URL.createObjectURL(wavBlob);
-        setRecordings((prev) => {
-          const rest = updatingRecording ? prev.slice(1) : prev;
-          return [{ url, blob: wavBlob }, ...rest];
-        });
-      }
-    } else {
-      console.log("Starting recording...");
-      await startRecording();
-    }
-  };
+  useRecordingLoop(isRecording, handleUpdateRecordedBuffer, 2000); // 2 seconds interval
 
   const handleRecordingSelect = async (blob: Blob) => {
     console.log("Selected recording:", blob);
@@ -147,6 +177,8 @@ const AudioPondMenu: React.FC = () => {
     setBlobularBuffer(audioBuffer);
   };
 
+  //////////////////////
+  // click on a pond item
   const handleSelection = (buffer: AudioBuffer | null, key?: string) => {
     if (buffer) {
       setBlobularBuffer(buffer);
