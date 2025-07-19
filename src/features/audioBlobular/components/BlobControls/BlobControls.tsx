@@ -44,16 +44,8 @@ const BlobControls = ({
 
   return (
     <div className="blob-controls">
-      <BlobCountDropDown
-        label="Number of Blobs"
-        value={numBlobs.value}
-        setValue={numBlobs.setValue}
-        min={numBlobs.min ?? 1} // todo: centralize the minimum value default
-        max={numBlobs.max ?? controlLimits.MAX_BLOBS}
-        step={numBlobs.step}
-      />
       <BlobRangeSlider
-        label="Duration (secs)"
+        label="Duration"
         range={duration.range}
         setRange={duration.setRange}
         min={duration.min}
@@ -61,7 +53,7 @@ const BlobControls = ({
         step={duration.step}
       />
       <BlobRangeSlider
-        label="Fade in/Out (secs)"
+        label="Fade tail"
         range={fade.range}
         setRange={fade.setRange}
         min={fade.min}
@@ -69,7 +61,7 @@ const BlobControls = ({
         step={fade.step}
       />
       <BlobRangeSlider
-        label="Playback/Pitch (sample rate %)"
+        label="Playback sample rate"
         range={playbackRate.range}
         setRange={playbackRate.setRange}
         min={playbackRate.min}
@@ -79,6 +71,14 @@ const BlobControls = ({
       <ScaleSelect
         value={selectedScale.value}
         onChange={selectedScale.setValue}
+      />
+      <BlobCountDropDown
+        label="Blobs"
+        value={numBlobs.value}
+        setValue={numBlobs.setValue}
+        min={numBlobs.min ?? 1} // todo: centralize the minimum value default
+        max={numBlobs.max ?? controlLimits.MAX_BLOBS}
+        step={numBlobs.step}
       />
     </div>
   );
