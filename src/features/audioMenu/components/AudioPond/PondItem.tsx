@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { WaveformViewer } from "@/features/audioBlobular/components";
 import { AudioLines, Play, Square, Trash2 } from "lucide-react";
 import "./Items.css"; // Ensure you have styles for the PondItem
+import { getAudioCtx } from "@/shared";
 
 interface PondItemProps {
   keyName: string;
@@ -23,7 +24,7 @@ const PondItem: React.FC<PondItemProps> = ({
   onDelete,
 }) => {
   const filename = keyName.replace(/^.*\//, "");
-  const [audioContext] = useState(() => new AudioContext());
+  const [audioContext] = useState(() => getAudioCtx());
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 

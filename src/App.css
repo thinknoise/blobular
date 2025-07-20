@@ -8,8 +8,18 @@
   width: 100vw;
 }
 
-.card {
+
+.welcome-screen {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  color: white;
   padding: 2em;
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .version-text {
