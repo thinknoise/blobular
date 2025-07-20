@@ -31,8 +31,7 @@ const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
   // compute positioning
 
   // width of your panel in px
-  const PANEL_WIDTH = 800; // todo: need to match your CSS width which should be set in BlobBox.css
-
+  const PANEL_WIDTH = window.innerWidth - 118;
   // raw values
   const rawOffset = event?.offset ?? 0;
   const dur = event?.duration ?? 0;
