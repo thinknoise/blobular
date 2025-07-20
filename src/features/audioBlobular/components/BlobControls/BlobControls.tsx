@@ -1,7 +1,7 @@
 import { controlLimits } from "@/shared/constants/controlLimits";
 import {
   BlobRangeSlider,
-  BlobCountSlider,
+  BlobCountDropDown,
   ScaleSelect,
 } from "@/features/audioBlobular/components";
 import "./BlobControls.css";
@@ -44,32 +44,26 @@ const BlobControls = ({
 
   return (
     <div className="blob-controls">
-      <BlobCountSlider
-        label="Number of Blobs"
-        value={numBlobs.value}
-        setValue={numBlobs.setValue}
-        min={numBlobs.min ?? 1} // todo: centralize the minimum value default
-        max={numBlobs.max ?? controlLimits.MAX_BLOBS}
-        step={numBlobs.step}
-      />
       <BlobRangeSlider
-        label="Duration (secs)"
+        label="Duration"
         range={duration.range}
         setRange={duration.setRange}
         min={duration.min}
         max={duration.max}
         step={duration.step}
       />
+      <div style={{ width: "200px" }}>
+        <BlobRangeSlider
+          label="Fade tail"
+          range={fade.range}
+          setRange={fade.setRange}
+          min={fade.min}
+          max={fade.max}
+          step={fade.step}
+        />
+      </div>
       <BlobRangeSlider
-        label="Fade in/Out (secs)"
-        range={fade.range}
-        setRange={fade.setRange}
-        min={fade.min}
-        max={fade.max}
-        step={fade.step}
-      />
-      <BlobRangeSlider
-        label="Playback/Pitch (sample rate %)"
+        label="Playback sample rate"
         range={playbackRate.range}
         setRange={playbackRate.setRange}
         min={playbackRate.min}
@@ -79,6 +73,14 @@ const BlobControls = ({
       <ScaleSelect
         value={selectedScale.value}
         onChange={selectedScale.setValue}
+      />
+      <BlobCountDropDown
+        label="Blobs"
+        value={numBlobs.value}
+        setValue={numBlobs.setValue}
+        min={numBlobs.min ?? 1} // todo: centralize the minimum value default
+        max={numBlobs.max ?? controlLimits.MAX_BLOBS}
+        step={numBlobs.step}
       />
     </div>
   );

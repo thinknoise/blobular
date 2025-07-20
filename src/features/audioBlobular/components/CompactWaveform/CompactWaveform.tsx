@@ -1,20 +1,19 @@
-// src/components/CompactWaveform.tsx
-import { useRef, useEffect } from "react";
-import type { FC } from "react";
+// src/features/audioBlobular/components/CompactWaveform/CompactWaveform.tsx
+import { useRef, useEffect, useState } from "react";
 import { getWaveformData } from "@/shared/utils/audio/waveformUtils";
+import { useAudioSource } from "../../engine";
 import "./CompactWaveform.css";
 
 interface CompactWaveformProps {
-  /** The decoded AudioBuffer to visualize */
-  buffer: AudioBuffer;
-  customHeight?: number; // Optional height, defaults to 100px
+  customHeight?: number | null; // Optional height, defaults to 100px
 }
 
-const CompactWaveform: FC<CompactWaveformProps> = ({
-  buffer,
-  customHeight = null,
-}) => {
+const CompactWaveform = ({ customHeight = null }: CompactWaveformProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const audioSource = useAudioSource();
+  const [buffer, setBuffer] = useState<AudioBuffer | null>(
+    audioSource.getBuffer()
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,15 +38,25 @@ const CompactWaveform: FC<CompactWaveformProps> = ({
       });
     };
 
-    // Use ResizeObserver to handle container resizes
     const resizeObserver = new ResizeObserver(drawWaveform);
     resizeObserver.observe(parent);
 
-    // Initial draw
     drawWaveform();
 
     return () => resizeObserver.disconnect();
   }, [buffer, customHeight]);
+
+  useEffect(() => {
+    const unsubscribe = audioSource.subscribeToBufferChange(() => {
+      setBuffer(audioSource.getBuffer());
+    });
+
+    return () => {
+      unsubscribe(); // ensure this returns void
+    };
+  }, [audioSource]);
+
+  if (!buffer) return null;
 
   return (
     <div

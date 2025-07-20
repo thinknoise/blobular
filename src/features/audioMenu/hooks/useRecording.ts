@@ -1,11 +1,13 @@
 // src/hooks/useRecording.ts
 
 import { useRef, useState, useCallback } from "react";
+import { audioBufferToWavBlob } from "@/shared/utils/audio/audioBufferToWavBlob";
 
 export interface UseRecordingResult {
   isRecording: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<Blob | null>;
+  updateWavBlob: () => Promise<Blob | null>;
 }
 
 export function useRecording(audioContext: AudioContext): UseRecordingResult {
@@ -26,7 +28,7 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
-    recorder.start();
+    recorder.start(1000);
     mediaRecorderRef.current = recorder;
     setIsRecording(true);
   }, []);
@@ -54,61 +56,39 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
     });
   }, [audioContext]);
 
-  function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
-    const numChannels = buffer.numberOfChannels;
-    const sampleRate = buffer.sampleRate;
-    const format = 1; // PCM
-    const bitDepth = 16;
+  async function updateWavBlob(): Promise<Blob | null> {
+    const recorder = mediaRecorderRef.current;
 
-    const length = buffer.length * numChannels * (bitDepth / 8);
-    const wavBuffer = new ArrayBuffer(44 + length);
-    const view = new DataView(wavBuffer);
-
-    /* RIFF chunk descriptor */
-    writeString(view, 0, "RIFF");
-    view.setUint32(4, 36 + length, true);
-    writeString(view, 8, "WAVE");
-
-    /* fmt subchunk */
-    writeString(view, 12, "fmt ");
-    view.setUint32(16, 16, true);
-    view.setUint16(20, format, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
-    view.setUint16(32, numChannels * (bitDepth / 8), true);
-    view.setUint16(34, bitDepth, true);
-
-    /* data subchunk */
-    writeString(view, 36, "data");
-    view.setUint32(40, length, true);
-
-    const offset = 44;
-    const channels = [];
-    for (let i = 0; i < numChannels; i++) {
-      channels.push(buffer.getChannelData(i));
+    // Flush the latest data chunk if recording
+    if (recorder?.state === "recording") {
+      recorder.requestData();
     }
 
-    let sampleIdx = 0;
-    for (let i = 0; i < buffer.length; i++) {
-      for (let ch = 0; ch < numChannels; ch++) {
-        const sample = Math.max(-1, Math.min(1, channels[ch][i]));
-        view.setInt16(offset + sampleIdx, sample * 0x7fff, true);
-        sampleIdx += 2;
-      }
+    // Slight delay to ensure `ondataavailable` fires
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    if (!chunksRef.current.length) {
+      console.warn("No chunks to process");
+      return null;
     }
 
-    return new Blob([view], { type: "audio/wav" });
-  }
+    try {
+      const combined = new Blob(chunksRef.current, { type: "audio/webm" });
+      console.log("chunksRef.current length:", chunksRef.current.length);
 
-  function writeString(view: DataView, offset: number, str: string) {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
+      const arrayBuffer = await combined.arrayBuffer();
+      const decoded = await audioContext.decodeAudioData(arrayBuffer);
+      return audioBufferToWavBlob(decoded);
+    } catch (err) {
+      console.error("Failed to decode audio blob:", err);
+      return null;
     }
   }
+
   return {
     isRecording,
     startRecording,
     stopRecording,
+    updateWavBlob,
   };
 }

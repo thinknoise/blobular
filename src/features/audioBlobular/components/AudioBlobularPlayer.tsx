@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { controlLimits } from "@/shared/constants/controlLimits";
+import { Play, Square } from "lucide-react";
 import type { Range } from "../types/AudioBlobularPlayer.types";
-
+import { controlLimits } from "@/shared/constants/controlLimits";
 import { useBlobularEngine } from "../hooks/useBlobularEngine";
+import { useControls } from "../hooks/useControls";
 import BlobPanel from "./BlobDisplay/BlobPanel";
 import BlobControls from "./BlobControls/BlobControls";
 import CompactWaveform from "./CompactWaveform/CompactWaveform";
-import { useControls } from "../hooks/useControls";
-import { Play, Square } from "lucide-react";
 
 import {
   getDurationRangeFromUrl,
@@ -16,6 +15,7 @@ import {
   getScaleFromUrl,
 } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
+import { useAudioSource } from "../engine";
 
 const AudioBlobularPlayer = () => {
   const initialControls = getInitialControlsFromUrl();
@@ -32,7 +32,7 @@ const AudioBlobularPlayer = () => {
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
-  const { start, stop, blobEvents, buffer } = useBlobularEngine(
+  const { start, stop, blobEvents } = useBlobularEngine(
     numBlobs.value,
     duration.range,
     playbackRate.range,
@@ -87,6 +87,9 @@ const AudioBlobularPlayer = () => {
     setHasInitializedFromUrl(true);
   }, []);
 
+  const audioSource = useAudioSource();
+  const buffer = audioSource.getBuffer();
+
   useEffect(() => {
     if (!buffer) return;
 
@@ -119,26 +122,22 @@ const AudioBlobularPlayer = () => {
         isPlaying ? "audio-blobular-player playing" : "audio-blobular-player"
       }
     >
-      <span className="blobular-title-chunk">Blobul</span>
+      <span className="blobular-title-chunk left-side">Blobul</span>
       {isPlaying ? <Square /> : <Play />}
       <span className="blobular-title-chunk">r</span>
 
-      <div className="blobular-visualizer">
-        <BlobPanel
-          blobEvents={blobEvents}
-          bufferDuration={buffer ? buffer.duration : 0}
-        />
-        {buffer && <CompactWaveform buffer={buffer} />}
+      <div className="blob-channel">
         <button
-          className={
-            isPlaying
-              ? "play-button individual playing"
-              : "play-button individual"
-          }
+          className={`play-button individual ${isPlaying ? "playing" : ""}`}
           onClick={handleClick}
+          aria-label={isPlaying ? "Stop playback" : "Start playback"}
         >
           {isPlaying ? <Square /> : <Play />}
         </button>
+        <div className="blobular-visualizer">
+          <BlobPanel blobEvents={blobEvents} />
+          <CompactWaveform />
+        </div>
       </div>
 
       <BlobControls

@@ -4,7 +4,7 @@ import { listAudioKeys } from "@/shared/utils/aws/awsS3Helpers";
 import ButtonUpload from "./ButtonUpload";
 
 import { MicIcon } from "./IconMic";
-import "./CreateAudio.css";
+import "./Button.css";
 
 interface CreateAudioProps {
   handleRecordClick: () => void;
@@ -32,12 +32,8 @@ const CreateAudio: React.FC<CreateAudioProps> = ({
         onClick={handleRecordClick}
         className={`record-button ${isRecording ? "recording" : ""}`}
       >
-        <MicIcon
-          size={32}
-          color={isRecording ? "#ff1744" : "#3a80e3"}
-          style={{ marginTop: "-8px" }}
-        />
-        <div className="recording-status">
+        <MicIcon size={43} color="#3a80e3" style={{ marginTop: "-8px" }} />
+        <div className="recording-button-status">
           {isRecording ? "recording..." : "record"}
         </div>
       </button>

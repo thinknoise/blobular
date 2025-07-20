@@ -1,7 +1,7 @@
 .audio-pond-menu {
   position: fixed;
   top: 0;
-  left: -550px;
+  right: -550px;
   width: 550px;
   display: flex;
   flex-direction: column;
@@ -10,33 +10,14 @@
   background-color: #3b3b3b;
   box-shadow: 1px 8px 11px #000000;
   z-index: 1000;
-  border-radius: 0 0 13px 0;
+  border-radius: 0 0 0 13px;
   margin: 0;
   font-size: smaller;
-  transition: left 0.3s ease-in-out;
+  transition: right 0.3s ease-in-out;
 }
 
 .audio-pond-menu.open {
-  left: 0;
-}
-
-.menu-button {
-  position: absolute;
-  background-color: #3b3b3b;
-  border: none;
-  color: #ffffff;
-  font-size: 24px;
-  padding: 10px;
-  box-shadow: 3px 3px 3px #000000;
-  border-radius: 0 0 13px 0;
-  cursor: pointer;
-  top: 0;
-  right: -46px;
-  z-index: 1001;
-}
-
-.menu-button:focus {
-  outline: none;
+  right: 0;
 }
 
 .audio-list {

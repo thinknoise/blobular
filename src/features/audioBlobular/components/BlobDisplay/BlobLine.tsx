@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { BlobEvent } from "../../types/types";
+import type { BlobEvent } from "@/shared/types/types";
 import "./BlobDisplay.css";
 
 type BlobLineProps = {

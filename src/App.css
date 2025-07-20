@@ -1,15 +1,11 @@
 #root {
-  margin: 0 auto;
-  text-align: center;
+  margin: 33px auto;
+  text-align: left;
 }
 
 
 .app-blobular {
-  display: flex;
-  flex-direction: column;
   width: 100vw;
-  align-items: center;
-  min-height: 100vh;
 }
 
 .card {
@@ -17,8 +13,8 @@
 }
 
 .version-text {
-  font-size: 10px;
+  font-size: 14px;
   color: #ccc;
-  text-align: center;
-  margin-top: 4px;
+  text-align: left;
+  padding: 4px 0 4px 58px;
 }

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
-import { CompactWaveform } from "@/features/audioBlobular/components";
-import { AudioLines, Play, Square, X } from "lucide-react";
+import { WaveformViewer } from "@/features/audioBlobular/components";
+import { AudioLines, Play, Square, Trash2 } from "lucide-react";
 import "./Items.css"; // Ensure you have styles for the PondItem
 
 interface PondItemProps {
@@ -55,7 +55,7 @@ const PondItem: React.FC<PondItemProps> = ({
   return (
     <li className={isSelected ? "audio-item playing" : "audio-item"}>
       <button className="icon-button delete-button" onClick={onDelete}>
-        <X />
+        <Trash2 />{" "}
       </button>
       <button className="icon-button select-button" onClick={onSelect}>
         <AudioLines />
@@ -70,9 +70,7 @@ const PondItem: React.FC<PondItemProps> = ({
       {status.error && (
         <span className="error-text">Failed to load: {status.error}</span>
       )}
-      {status.buffer && (
-        <CompactWaveform buffer={status.buffer} customHeight={150} />
-      )}
+      {status.buffer && <WaveformViewer buffer={status.buffer} />}
       <span className="audio-label">{filename}</span>
     </li>
   );

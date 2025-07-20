@@ -5,7 +5,7 @@ import { CloudArrowUp } from "phosphor-react";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3, BUCKET } from "@/shared/utils/aws/awsConfig";
 import IconButton from "@mui/material/IconButton";
-import "./ButtonUpload.css"; // Ensure you have styles for the upload button
+import "./Button.css";
 
 type ButtonUploadProps = {
   onUpload?: (key: string) => void;
@@ -34,7 +34,7 @@ export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
       });
 
       await s3.send(command);
-      console.log("✅ Uploaded to S3:", key);
+      console.log(" Uploaded to S3:", key);
       // alert("Upload complete!");
 
       onUpload?.(key);
