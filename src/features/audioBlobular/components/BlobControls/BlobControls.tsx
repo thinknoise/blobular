@@ -52,14 +52,16 @@ const BlobControls = ({
         max={duration.max}
         step={duration.step}
       />
-      <BlobRangeSlider
-        label="Fade tail"
-        range={fade.range}
-        setRange={fade.setRange}
-        min={fade.min}
-        max={fade.max}
-        step={fade.step}
-      />
+      <div style={{ width: "200px" }}>
+        <BlobRangeSlider
+          label="Fade tail"
+          range={fade.range}
+          setRange={fade.setRange}
+          min={fade.min}
+          max={fade.max}
+          step={fade.step}
+        />
+      </div>
       <BlobRangeSlider
         label="Playback sample rate"
         range={playbackRate.range}
