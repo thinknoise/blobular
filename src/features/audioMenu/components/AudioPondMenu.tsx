@@ -11,13 +11,14 @@ import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 import { useAudioPond } from "../hooks/useAudioPond";
 import { useRecording } from "../hooks/useRecording";
 
-import CreateAudio from "./AudioPond/CreateAudio";
+import ButtonRecord from "./AudioPond/ButtonRecord";
 import RecordedItem from "./AudioPond/RecordedItem";
 import PondItem from "./AudioPond/PondItem";
 
 import { ArrowLeftFromLine, ArrowRightFromLine, FileAudio } from "lucide-react";
 import "./AudioPondMenu.css";
 import "./AudioPond/Button.css";
+import ButtonUpload from "./AudioPond/ButtonUpload";
 
 function useRecordingLoop(
   isRecording: boolean,
@@ -211,7 +212,7 @@ const AudioPondMenu: React.FC = () => {
       >
         {pondMenuOpen ? <ArrowRightFromLine /> : <ArrowLeftFromLine />}
       </button>
-      <CreateAudio
+      <ButtonRecord
         handleRecordClick={handleRecordClick}
         isRecording={isRecording}
       />
@@ -223,6 +224,8 @@ const AudioPondMenu: React.FC = () => {
       >
         <FileAudio />
       </button>
+      <ButtonUpload />
+
       <ul className="audio-list">
         {recordings.map((rec, index) => (
           <RecordedItem
