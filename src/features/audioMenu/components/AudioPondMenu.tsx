@@ -73,7 +73,9 @@ const AudioPondMenu: React.FC = () => {
 
   function getBufferKeyFromUrl(): string | null {
     const params = new URLSearchParams(window.location.search);
-    return params.get("buffer");
+    const bufferKey = params.get("buffer");
+    console.log("Buffer key from URL:", bufferKey);
+    return bufferKey;
   }
 
   useEffect(() => {
@@ -92,6 +94,7 @@ const AudioPondMenu: React.FC = () => {
 
     const bufferKey = getBufferKeyFromUrl();
     const urlBuffer = bufferKey ? buffers[bufferKey]?.buffer : null;
+    const firstBuffer = bufferArray[0]?.[1]?.buffer;
 
     if (bufferKey && urlBuffer) {
       console.log("Setting blobularBuffer from URL param:", bufferKey);
@@ -99,10 +102,7 @@ const AudioPondMenu: React.FC = () => {
       const displayTitle = getDisplayTitle(bufferKey);
       setPageTitle(displayTitle);
       return;
-    }
-
-    const firstBuffer = bufferArray[0]?.[1]?.buffer;
-    if (firstBuffer) {
+    } else if (firstBuffer && !bufferKey) {
       console.log("Initial blobularBuffer:", firstBuffer);
       setBlobularBuffer(firstBuffer);
     }
