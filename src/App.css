@@ -1,5 +1,5 @@
 #root {
-  margin: 33px auto;
+  margin: 0 auto;
   text-align: left;
 }
 
@@ -8,18 +8,18 @@
   width: 100vw;
 }
 
-
 .welcome-screen {
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
   color: white;
-  padding: 2em;
   text-align: center;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.welcome-screen .description {
+  font-size: 1em;
+  padding: 0 20px;
 }
 
 .version-text {

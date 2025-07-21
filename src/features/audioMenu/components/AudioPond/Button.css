@@ -2,8 +2,8 @@
   position: absolute;
   cursor: pointer;
   top: 0;
-  left: -81px;
-  width: 76px;
+  left: -53px;
+  width: 51px;
   height: 55px;
   padding: 10px;
   background-color: #3b3b3b;
@@ -21,12 +21,12 @@
 .record-button {
   cursor: pointer;
   position: absolute;
-  left: -81px;
+  left: -53px;
   top: 58px;
-  width: 76px;
+  width: 51px;
   height: 55px;
-  padding: 10px;
-  background: rgba(38, 0, 255, 0.461);
+  padding: 10px 3px;
+  background: rgba(38, 0, 255, 1);
   border-radius: 13px 0 0 13px;
   box-shadow: -3px 3px 3px rgba(0, 0, 0, 0.9);
   color: #ff1744;
@@ -76,7 +76,7 @@
 
 .recording-button-status {
   position: absolute;
-  top: 21px;
+  top: 23px;
   left: 0;
   width: 100%;
   height: 100%;
@@ -95,21 +95,21 @@
 .update-button {
   cursor: pointer;
   position: absolute;
-  left: -81px;
+  left: -53px;
   top: 118px;
-  width: 76px;
+  width: 51px;
   height: 55px;
   padding: 12px;
   border-radius: 13px 0 0 13px;
   border: none;
   box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.0);
   background: rgba(102, 255, 0, 0.5);
-  color: #ff1744;
+  color: #fb2a00;
   transition: background 0.3s, transform 0.3s, box-shadow 0.8s;
 }
 
 .update-button:hover {
-  background: rgba(255, 23, 68, 0.2);
+  background: rgba(255, 23, 68, 0.5);
   outline: none;
   border: none;
 }
@@ -119,7 +119,7 @@
 }
 
 .update-button:disabled {
-  background: rgba(255, 23, 68, 0.1);
+  background: rgba(255, 23, 68, 0.5);
   color: #000000;
   cursor: not-allowed;
 }

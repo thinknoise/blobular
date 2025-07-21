@@ -3,5 +3,5 @@
   flex-direction: column;
   gap: 8px;
   padding: 16px 0 0 58px;
-  width: 380px;
+  max-width: 100vw;
 }

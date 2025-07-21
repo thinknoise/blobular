@@ -31,7 +31,8 @@ function App() {
               explore audio through blobular forms and sample bending controls.
             </p>
             <p>
-              Record live into blobularator, click <MicIcon />, then mess with
+              Record live into blobularator, click the <MicIcon /> button to
+              start recording source for the Blubulator, then mess with
               playback, and watch it all come alive.
             </p>
             <p>When you’re ready, tap below and let the blobs begin.</p>

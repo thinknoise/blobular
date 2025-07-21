@@ -19,9 +19,7 @@ const ButtonRecord: React.FC<ButtonRecordProps> = ({
         className={`record-button ${isRecording ? "recording" : ""}`}
       >
         <MicIcon size={43} color="#3a80e3" style={{ marginTop: "-8px" }} />
-        <div className="recording-button-status">
-          {isRecording ? "recording..." : "record"}
-        </div>
+        <div className="recording-button-status">Record</div>
       </button>
     </div>
   );
