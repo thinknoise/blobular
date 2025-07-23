@@ -224,9 +224,9 @@ const AudioPondMenu: React.FC = () => {
       >
         <FileAudio />
       </button>
-      <ButtonUpload />
 
       <ul className="audio-list">
+        <h3 className="audio-list-title">Audio Pond </h3>
         {recordings.map((rec, index) => (
           <RecordedItem
             key={index}
@@ -256,6 +256,7 @@ const AudioPondMenu: React.FC = () => {
             }}
           />
         ))}
+        <ButtonUpload />
       </ul>
     </div>
   );

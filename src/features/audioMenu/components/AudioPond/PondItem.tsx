@@ -56,7 +56,7 @@ const PondItem: React.FC<PondItemProps> = ({
   return (
     <li className={isSelected ? "audio-item playing" : "audio-item"}>
       <button className="icon-button delete-button" onClick={onDelete}>
-        <Trash2 />{" "}
+        <Trash2 />
       </button>
       <button className="icon-button select-button" onClick={onSelect}>
         <AudioLines />

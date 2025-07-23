@@ -35,7 +35,7 @@ const BlobRangeSlider = ({
 
   return (
     <div className="blob-range-slider">
-      <span className="slider-value">{min.toFixed(2)}</span>
+      <span className="slider-value">{min}</span>
       <Slider.Root
         className="SliderRoot"
         min={min}
