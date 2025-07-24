@@ -1,5 +1,5 @@
 #root {
-  margin: 33px auto;
+  margin: 0 auto;
   text-align: left;
 }
 
@@ -8,8 +8,18 @@
   width: 100vw;
 }
 
-.card {
-  padding: 2em;
+.welcome-screen {
+  color: white;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-screen .description {
+  font-size: 1em;
+  padding: 0 20px;
 }
 
 .version-text {

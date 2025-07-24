@@ -6,13 +6,20 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3, BUCKET } from "@/shared/utils/aws/awsConfig";
 import IconButton from "@mui/material/IconButton";
 import "./Button.css";
+import { useAudioPond } from "../../hooks/useAudioPond";
+import { listAudioKeys } from "@/shared";
 
-type ButtonUploadProps = {
-  onUpload?: (key: string) => void;
-};
-
-export default function ButtonUpload({ onUpload }: ButtonUploadProps) {
+export default function ButtonUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { fetchAudioKeysAndBuffers } = useAudioPond();
+
+  const onUpload = (key: string) => {
+    console.log("Uploaded file key:", key);
+    // Update your registry or UI state here
+    listAudioKeys(); // Refresh the audio pond list after upload
+
+    fetchAudioKeysAndBuffers(); // Refresh the list after upload
+  };
 
   const handleClick = () => {
     fileInputRef.current?.click();

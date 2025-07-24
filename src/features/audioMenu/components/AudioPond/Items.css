@@ -4,7 +4,7 @@
   justify-content: space-between;
   transition: background-color 0.3s ease-out;
   margin: 16px;
-  border: #4a4a4a 2px solid;
+  height: 118px;  border: #4a4a4a 2px solid;
   background-color: #282c34;
   color: white;
 }

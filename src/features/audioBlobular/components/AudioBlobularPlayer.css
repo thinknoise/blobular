@@ -1,7 +1,8 @@
 .blob-channel {
   display: flex;
   flex-direction: row;
-  width: 100%;
+  /* blob width */
+  width: calc(100vw - 118px);
   height: 100%;
   position: relative;
 }

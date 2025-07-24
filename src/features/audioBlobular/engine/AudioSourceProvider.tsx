@@ -2,6 +2,7 @@
 import React, { useRef } from "react";
 import { AudioSourceContext } from "./AudioSourceContext";
 import { BlobularAudioSource } from "./BlobularAudioSource";
+import { getAudioCtx } from "@/shared";
 
 export const AudioSourceProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -9,7 +10,7 @@ export const AudioSourceProvider: React.FC<{ children: React.ReactNode }> = ({
   const sourceRef = useRef<BlobularAudioSource | null>(null);
 
   if (!sourceRef.current) {
-    const audioCtx = new AudioContext();
+    const audioCtx = getAudioCtx();
     sourceRef.current = new BlobularAudioSource(audioCtx);
   }
 

@@ -1,8 +1,8 @@
 .audio-pond-menu {
   position: fixed;
   top: 0;
-  right: -550px;
-  width: 550px;
+  right: -350px;
+  width: 350px;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -20,10 +20,18 @@
   right: 0;
 }
 
+.audio-list-title {
+  font-size: 1.2em;
+  color: #ffffff;
+  padding: 0;
+  text-align: center;
+  border-bottom: 1px solid #4a4a4a;
+}
+
 .audio-list {
   list-style: none;
-  padding: 20px 0 0 0;
-  margin: 100px 0 0 0;
+  padding: 0;
+  margin: 0;
   flex: 1;
   overflow-y: scroll;
   height: calc(100vh - 180px);
