@@ -1,7 +1,7 @@
 // ScaleSelect.tsx
 
 import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
-import "./ScaleSelect.css"; // Ensure you have a CSS file for styling
+import { scaleSelectLabel } from "./ScaleSelect.css";
 
 interface ScaleSelectProps {
   value: ScaleName;
@@ -10,7 +10,7 @@ interface ScaleSelectProps {
 
 export default function ScaleSelect({ value, onChange }: ScaleSelectProps) {
   return (
-    <label className="scale-select-label">
+    <label className={scaleSelectLabel}>
       Scale -&nbsp;
       <select
         value={value}

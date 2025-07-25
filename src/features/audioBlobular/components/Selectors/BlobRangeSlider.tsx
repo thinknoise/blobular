@@ -1,6 +1,14 @@
 import * as Slider from "@radix-ui/react-slider";
-import "./BlobRangeSlider.css";
 import { useEffect } from "react";
+import {
+  blobRangeSlider,
+  sliderLabel,
+  sliderValue,
+  sliderRoot,
+  sliderTrack,
+  sliderRange,
+  sliderThumb,
+} from "./BlobRangeSlider.css";
 
 type BlobRangeSliderProps = {
   label: string;
@@ -29,34 +37,33 @@ const BlobRangeSlider = ({
   }, [min, max, range, setRange]);
 
   const handleChange = (values: number[]) => {
-    // values always [thumb0, thumb1]
     setRange([values[0], values[1]]);
   };
 
   return (
-    <div className="blob-range-slider">
-      <span className="slider-value">{min}</span>
+    <div className={blobRangeSlider}>
+      <span className={sliderValue}>{min}</span>
       <Slider.Root
-        className="SliderRoot"
+        className={sliderRoot}
         min={min}
         max={max}
         step={step}
         value={range}
         onValueChange={handleChange}
       >
-        <Slider.Track className="SliderTrack">
-          <Slider.Range className="SliderRange" />
+        <Slider.Track className={sliderTrack}>
+          <Slider.Range className={sliderRange} />
         </Slider.Track>
         {range.map((val, idx) => (
           <Slider.Thumb
             key={idx}
-            className="SliderThumb"
+            className={sliderThumb}
             data-value={val.toFixed(2)}
           />
         ))}
       </Slider.Root>
-      <span className="slider-value">{max.toFixed(2)}</span>
-      <label className="slider-label">{label}</label>
+      <span className={sliderValue}>{max.toFixed(2)}</span>
+      <label className={sliderLabel}>{label}</label>
     </div>
   );
 };
