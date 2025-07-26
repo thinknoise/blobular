@@ -11,6 +11,10 @@ import type {
 } from "../../types/AudioBlobularPlayer.types";
 import type { ScaleName } from "@/shared/constants/scales";
 import { useEffect } from "react";
+import { blobControls, controlRow } from "./BlobControls.css";
+
+// note: range values are in seconds, so we use for the blobs duration
+// min and max are used to limit the range
 
 export type ScaleControl = {
   value: ScaleName;
@@ -40,48 +44,53 @@ const BlobControls = ({
     if (durationStart < FadeRangeTop) {
       fade.setRange([fade.min, durationStart]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration.range, fade.range]);
 
   return (
-    <div className="blob-controls">
-      <BlobRangeSlider
-        label="Duration"
-        range={duration.range}
-        setRange={duration.setRange}
-        min={duration.min}
-        max={duration.max}
-        step={duration.step}
-      />
-      <div style={{ width: "200px" }}>
+    <div className={blobControls}>
+      <div className={controlRow}>
         <BlobRangeSlider
-          label="Fade tail"
-          range={fade.range}
-          setRange={fade.setRange}
-          min={fade.min}
-          max={fade.max}
-          step={fade.step}
+          label="Duration"
+          range={duration.range}
+          setRange={duration.setRange}
+          min={duration.min}
+          max={duration.max}
+          step={duration.step}
+        />
+        <div style={{ width: "200px" }}>
+          <BlobRangeSlider
+            label="Fade tail"
+            range={fade.range}
+            setRange={fade.setRange}
+            min={fade.min}
+            max={fade.max}
+            step={fade.step}
+          />
+        </div>
+      </div>
+      <div className={controlRow}>
+        <BlobRangeSlider
+          label="Playback sample rate"
+          range={playbackRate.range}
+          setRange={playbackRate.setRange}
+          min={playbackRate.min}
+          max={playbackRate.max}
+          step={playbackRate.step}
+        />
+        <ScaleSelect
+          value={selectedScale.value}
+          onChange={selectedScale.setValue}
+        />
+        <BlobCountDropDown
+          label="Blobs"
+          value={numBlobs.value}
+          setValue={numBlobs.setValue}
+          min={numBlobs.min ?? 1} // todo: centralize the minimum value default
+          max={numBlobs.max ?? controlLimits.MAX_BLOBS}
+          step={numBlobs.step}
         />
       </div>
-      <BlobRangeSlider
-        label="Playback sample rate"
-        range={playbackRate.range}
-        setRange={playbackRate.setRange}
-        min={playbackRate.min}
-        max={playbackRate.max}
-        step={playbackRate.step}
-      />
-      <ScaleSelect
-        value={selectedScale.value}
-        onChange={selectedScale.setValue}
-      />
-      <BlobCountDropDown
-        label="Blobs"
-        value={numBlobs.value}
-        setValue={numBlobs.setValue}
-        min={numBlobs.min ?? 1} // todo: centralize the minimum value default
-        max={numBlobs.max ?? controlLimits.MAX_BLOBS}
-        step={numBlobs.step}
-      />
     </div>
   );
 };

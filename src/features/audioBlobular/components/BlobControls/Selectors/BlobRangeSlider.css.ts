@@ -5,6 +5,9 @@ export const blobRangeSlider = style({
   display: "flex",
   flexDirection: "row",
   gap: "4px",
+  width: "calc(100vw - 58px - 16px)", // Adjusted for padding and controls width
+  maxWidth: "100%",
+  alignItems: "center",
 });
 
 export const sliderLabel = style({
@@ -48,25 +51,25 @@ export const sliderRange = style({
 export const sliderThumb = style({
   position: "absolute",
   transform: "translateY(-50%) translateX(-80%)",
-  width: "10px",
-  height: "25px",
-  borderRadius: "2px",
-  backgroundColor: "#3300ff",
+  width: "33px",
+  height: "33px",
+  borderRadius: "50%",
+  backgroundColor: "#3300ff88",
   cursor: "grab",
   selectors: {
     "&:hover": {
-      backgroundColor: "#ffffff",
+      backgroundColor: "#fb2a0055",
     },
     "&:active": {
-      backgroundColor: "#ffffff",
+      backgroundColor: "#fb2a00aa",
     },
     "&::before": {
       content: "attr(data-value)",
       position: "absolute",
-      top: "-16px",
+      top: "5px",
       left: "50%",
       transform: "translateX(-50%)",
-      fontSize: "8px",
+      fontSize: "13px",
       whiteSpace: "nowrap",
     },
   },

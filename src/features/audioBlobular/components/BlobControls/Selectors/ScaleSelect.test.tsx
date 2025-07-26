@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 
 import { render, screen, fireEvent } from "@testing-library/react";
 import ScaleSelect from "./ScaleSelect";
-import { ALL_SCALES } from "../../../../shared/constants/scales";
+import { ALL_SCALES } from "../../../../../shared/constants/scales";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("ScaleSelect", () => {
