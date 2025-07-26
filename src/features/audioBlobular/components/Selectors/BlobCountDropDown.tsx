@@ -1,4 +1,4 @@
-import "./BlobCountDropdown.css"; // optionally rename this too
+import { blobCountLabel, blobCountRange } from "./BlobCountDropdown.css";
 
 type BlobCountDropDownProps = {
   label: string;
@@ -23,10 +23,10 @@ const BlobCountDropDown = ({
   }
 
   return (
-    <div className="blob-range-dropdown">
-      <label className="blob-count-label">{label} -&nbsp;</label>
+    <div>
+      <label className={blobCountLabel}>{label} -&nbsp;</label>
       <select
-        className="blob-count-dropdown"
+        className={blobCountRange}
         value={value}
         onChange={(e) => setValue(Number(e.target.value))}
       >
