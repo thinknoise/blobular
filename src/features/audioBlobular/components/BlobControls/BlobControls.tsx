@@ -50,6 +50,16 @@ const BlobControls = ({
   return (
     <div className={blobControls}>
       <div className={controlRow}>
+        <div style={{ width: "200px" }}>
+          <BlobRangeSlider
+            label="Fade"
+            range={fade.range}
+            setRange={fade.setRange}
+            min={fade.min}
+            max={fade.max}
+            step={fade.step}
+          />
+        </div>
         <BlobRangeSlider
           label="Duration"
           range={duration.range}
@@ -58,16 +68,6 @@ const BlobControls = ({
           max={duration.max}
           step={duration.step}
         />
-        <div style={{ width: "200px" }}>
-          <BlobRangeSlider
-            label="Fade tail"
-            range={fade.range}
-            setRange={fade.setRange}
-            min={fade.min}
-            max={fade.max}
-            step={fade.step}
-          />
-        </div>
       </div>
       <div className={controlRow}>
         <BlobRangeSlider

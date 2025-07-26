@@ -10,6 +10,7 @@ export const blobCountSlider = style({
 export const blobCountLabel = style({
   fontSize: "0.8rem",
   whiteSpace: "nowrap",
+  margin: "auto",
 });
 
 export const blobCountRange = style({

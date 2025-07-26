@@ -16,4 +16,5 @@ export const controlRow = style({
   display: "flex",
   flexDirection: "row",
   gap: "8px",
+  marginRight: "8px", // Adjusted for right margin
 });

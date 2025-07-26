@@ -10,8 +10,8 @@ interface ScaleSelectProps {
 
 export default function ScaleSelect({ value, onChange }: ScaleSelectProps) {
   return (
-    <label className={scaleSelectLabel}>
-      Scale -&nbsp;
+    <div className={scaleSelectLabel}>
+      <label>Scale -&nbsp; </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as ScaleName)}
@@ -22,6 +22,6 @@ export default function ScaleSelect({ value, onChange }: ScaleSelectProps) {
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }

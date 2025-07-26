@@ -14,7 +14,6 @@ export const sliderLabel = style({
   fontSize: "11px",
   color: "#ffffff",
   padding: "15px 0 15px 18px",
-  width: "200px",
   textAlign: "left",
 });
 
@@ -50,18 +49,31 @@ export const sliderRange = style({
 
 export const sliderThumb = style({
   position: "absolute",
+  top: "0px",
   transform: "translateY(-50%) translateX(-80%)",
   width: "33px",
   height: "33px",
-  borderRadius: "50%",
+  borderRadius: "18px",
   backgroundColor: "#3300ff88",
   cursor: "grab",
+  transition:
+    "top 0.7s ease-out, height 0.7s ease-out, background-color 0.7s ease-out",
   selectors: {
     "&:hover": {
       backgroundColor: "#fb2a0055",
+      top: "-11px",
+      height: "68px",
+      transition:
+        "top 0.1s ease-out, height 0.1s ease-out, background-color 0.3s ease-in",
     },
-    "&:active": {
+    "&:active, &:focus": {
       backgroundColor: "#fb2a00aa",
+      top: "-13px",
+      height: "70px",
+      boxShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+      transition:
+        "top 0.1s ease-out, height 0.1s ease-out, background-color 0.3s ease-in",
+      cursor: "grabbing",
     },
     "&::before": {
       content: "attr(data-value)",
@@ -69,7 +81,7 @@ export const sliderThumb = style({
       top: "5px",
       left: "50%",
       transform: "translateX(-50%)",
-      fontSize: "13px",
+      fontSize: "11px",
       whiteSpace: "nowrap",
     },
   },

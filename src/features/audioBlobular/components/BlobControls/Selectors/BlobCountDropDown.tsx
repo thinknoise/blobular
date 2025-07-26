@@ -23,8 +23,8 @@ const BlobCountDropDown = ({
   }
 
   return (
-    <div>
-      <label className={blobCountLabel}>{label} -&nbsp;</label>
+    <div className={blobCountLabel}>
+      <label>{label} -&nbsp;</label>
       <select
         className={blobCountRange}
         value={value}
