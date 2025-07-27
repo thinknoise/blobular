@@ -15,7 +15,7 @@ describe("ScaleSelect", () => {
 
   it("renders label and select with current value", () => {
     render(<ScaleSelect value="Major" onChange={mockOnChange} />);
-    expect(screen.getByLabelText(/scale/i)).toBeInTheDocument();
+    expect(screen.getByTestId("scale-select")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Major")).toBeInTheDocument();
   });
 

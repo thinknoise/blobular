@@ -140,6 +140,7 @@ const AudioBlobularPlayer = () => {
         </div>
 
         <BlobControls
+          bufferLength={buffer ? buffer.duration : 0}
           duration={{
             ...controls.duration,
             setRange: (r: Range) => setRangeControl("duration", r),

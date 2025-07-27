@@ -22,6 +22,7 @@ export type ScaleControl = {
 };
 
 type BlobControlsProps = {
+  bufferLength: number;
   duration: RangeControl & { setRange: (range: [number, number]) => void };
   fade: RangeControl & { setRange: (range: [number, number]) => void };
   playbackRate: RangeControl & { setRange: (range: [number, number]) => void };
@@ -30,6 +31,7 @@ type BlobControlsProps = {
 };
 
 const BlobControls = ({
+  bufferLength,
   duration,
   fade,
   playbackRate,
@@ -39,13 +41,23 @@ const BlobControls = ({
   // fade guardrail against duration being less than fade
   useEffect(() => {
     const durationStart = duration.range[0];
-    const FadeRangeTop = fade.range[1];
+    const fadeEnd = fade.range[1];
 
-    if (durationStart < FadeRangeTop) {
+    if (fadeEnd > durationStart) {
       fade.setRange([fade.min, durationStart]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [duration.range, fade.range]);
+  }, [duration.range]); // respond only to duration change
+
+  useEffect(() => {
+    const durationStart = duration.range[0];
+    const fadeEnd = fade.range[1];
+
+    if (fadeEnd > durationStart) {
+      duration.setRange([fadeEnd, duration.max]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fade.range]); // respond only to fade change
 
   return (
     <div className={blobControls}>
@@ -64,8 +76,8 @@ const BlobControls = ({
           label="Duration"
           range={duration.range}
           setRange={duration.setRange}
-          min={duration.min}
-          max={duration.max}
+          min={0.3}
+          max={Math.min(18, bufferLength)}
           step={duration.step}
         />
       </div>
@@ -86,7 +98,7 @@ const BlobControls = ({
           label="Blobs"
           value={numBlobs.value}
           setValue={numBlobs.setValue}
-          min={numBlobs.min ?? 1} // todo: centralize the minimum value default
+          min={numBlobs.min ?? 1}
           max={numBlobs.max ?? controlLimits.MAX_BLOBS}
           step={numBlobs.step}
         />

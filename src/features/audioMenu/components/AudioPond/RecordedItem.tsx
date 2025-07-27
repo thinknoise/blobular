@@ -1,13 +1,11 @@
 import React, { useRef, useState } from "react";
-import clsx from "clsx";
 import { WaveformViewer } from "@/features/audioBlobular/components";
 import { AudioLines, CloudCogIcon, Play, Square } from "lucide-react";
 import {
-  audioItem,
-  iconButton,
   saveButton,
   selectButton,
   playButton,
+  recordedItem,
 } from "./Items.css"; // Import the styles
 
 interface RecordedItemProps {
@@ -38,7 +36,7 @@ const RecordedItem: React.FC<RecordedItemProps> = ({
   };
 
   return (
-    <div className={clsx(audioItem, "recorded-item")}>
+    <div className={recordedItem}>
       <audio
         ref={audioRef}
         src={recording.url}
@@ -47,21 +45,18 @@ const RecordedItem: React.FC<RecordedItemProps> = ({
         onPause={() => setIsPlaying(false)}
         hidden
       />
-      <button className={clsx(iconButton, playButton)} onClick={togglePlay}>
+      <button className={playButton} onClick={togglePlay}>
         {isPlaying ? <Square /> : <Play />}
       </button>
       {onSelect && (
         <button
-          className={clsx(iconButton, selectButton)}
+          className={selectButton}
           onClick={() => onSelect(recording.blob)}
         >
           <AudioLines />
         </button>
       )}
-      <button
-        className={clsx(iconButton, saveButton)}
-        onClick={() => onSave(recording.blob)}
-      >
+      <button className={saveButton} onClick={() => onSave(recording.blob)}>
         <CloudCogIcon size={32} />
       </button>
       <WaveformViewer audioUrl={recording.url} />

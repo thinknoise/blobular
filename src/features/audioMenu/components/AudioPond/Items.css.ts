@@ -38,12 +38,15 @@ export const errorText = style({
   fontSize: "12px",
 });
 
-export const recordedItem = style({
-  position: "relative",
-  padding: "16px",
-  backgroundColor: "#282c34",
-  color: "white",
-});
+export const recordedItem = style([
+  audioItem,
+  {
+    position: "relative",
+    padding: "16px",
+    backgroundColor: "#282c34",
+    color: "white",
+  },
+]);
 
 export const iconButton = style({
   position: "absolute",
@@ -70,8 +73,11 @@ export const iconButton = style({
 export const saveButton = style([
   iconButton,
   {
-    bottom: "8px",
-    left: "8px",
+    top: "8px",
+    bottom: "auto",
+    left: "auto",
+    right: "8px",
+    backgroundColor: "transparent",
   },
 ]);
 
@@ -86,8 +92,8 @@ export const selectButton = style([
 export const playButton = style([
   iconButton,
   {
-    bottom: "8px",
     top: "auto",
+    bottom: "8px",
     left: "6px",
     backgroundColor: "#282c34aa",
     borderRadius: "50%",
@@ -96,16 +102,26 @@ export const playButton = style([
   },
 ]);
 
-export const deleteButton = style({
-  position: "absolute",
-  right: "8px",
-  top: "8px",
-  backgroundColor: "transparent",
-  border: "none",
-  color: "white",
-  padding: "0",
-  cursor: "pointer",
-});
+export const deleteButton = style([
+  iconButton,
+  {
+    position: "absolute",
+    right: "8px",
+    top: "8px",
+    backgroundColor: "transparent",
+    border: "none",
+    color: "white",
+    padding: "0",
+    cursor: "pointer",
+  },
+  {
+    selectors: {
+      "&:hover": {
+        backgroundColor: "#c00",
+      },
+    },
+  },
+]);
 
 export const playRecorded = style({
   selectors: {

@@ -13,6 +13,7 @@ export default function ScaleSelect({ value, onChange }: ScaleSelectProps) {
     <div className={scaleSelectLabel}>
       <label>Scale -&nbsp; </label>
       <select
+        data-testid="scale-select"
         value={value}
         onChange={(e) => onChange(e.target.value as ScaleName)}
       >
