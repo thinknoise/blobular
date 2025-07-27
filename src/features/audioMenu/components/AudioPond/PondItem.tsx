@@ -1,8 +1,16 @@
 import React, { useRef, useState } from "react";
 import { WaveformViewer } from "@/features/audioBlobular/components";
 import { AudioLines, Play, Square, Trash2 } from "lucide-react";
-import "./Items.css"; // Ensure you have styles for the PondItem
 import { getAudioCtx } from "@/shared";
+import {
+  audioItem,
+  audioLabel,
+  loadingSpinner,
+  errorText,
+  selectButton,
+  playButton,
+  deleteButton,
+} from "./Items.css"; // Import the styles
 
 interface PondItemProps {
   keyName: string;
@@ -54,25 +62,25 @@ const PondItem: React.FC<PondItemProps> = ({
   };
 
   return (
-    <li className={isSelected ? "audio-item playing" : "audio-item"}>
-      <button className="icon-button delete-button" onClick={onDelete}>
+    <li className={isSelected ? audioItem + " playing" : audioItem}>
+      <button className={deleteButton} onClick={onDelete}>
         <Trash2 />
       </button>
-      <button className="icon-button select-button" onClick={onSelect}>
+      <button className={selectButton} onClick={onSelect}>
         <AudioLines />
       </button>
 
-      <button className="icon-button play-button" onClick={playBuffer}>
+      <button className={playButton} onClick={playBuffer}>
         {isPlaying ? <Square /> : <Play />}
       </button>
 
-      {status.loading && <span className="loading-spinner">Loading...</span>}
+      {status.loading && <span className={loadingSpinner}>Loading...</span>}
 
       {status.error && (
-        <span className="error-text">Failed to load: {status.error}</span>
+        <span className={errorText}>Failed to load: {status.error}</span>
       )}
       {status.buffer && <WaveformViewer buffer={status.buffer} />}
-      <span className="audio-label">{filename}</span>
+      <span className={audioLabel}>{filename}</span>
     </li>
   );
 };

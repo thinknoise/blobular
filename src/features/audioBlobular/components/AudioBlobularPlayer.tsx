@@ -124,7 +124,7 @@ const AudioBlobularPlayer = () => {
     >
       <span className="blobular-title-chunk left-side">Blobul</span>
       {isPlaying ? <Square /> : <Play />}
-      <span className="blobular-title-chunk">r</span>
+      <span className="blobular-title-chunk">r&nbsp; Synthesis</span>
 
       <div className="blob-channel">
         <button
@@ -138,32 +138,33 @@ const AudioBlobularPlayer = () => {
           <BlobPanel blobEvents={blobEvents} />
           <CompactWaveform />
         </div>
+
+        <BlobControls
+          bufferLength={buffer ? buffer.duration : 0}
+          duration={{
+            ...controls.duration,
+            setRange: (r: Range) => setRangeControl("duration", r),
+          }}
+          fade={{
+            ...controls.fade,
+            setRange: (r: Range) => setRangeControl("fade", r),
+          }}
+          playbackRate={{
+            ...controls.playbackRate,
+            setRange: setPlaybackRate,
+          }}
+          numBlobs={{
+            ...controls.numBlobs,
+            setValue: setNumBlobs,
+          }}
+          selectedScale={{
+            value: controls.selectedScale,
+            setValue: setSelectedScale,
+          }}
+        />
+
+        {/* <BlobDisplay events={blobEvents} /> */}
       </div>
-
-      <BlobControls
-        duration={{
-          ...controls.duration,
-          setRange: (r: Range) => setRangeControl("duration", r),
-        }}
-        fade={{
-          ...controls.fade,
-          setRange: (r: Range) => setRangeControl("fade", r),
-        }}
-        playbackRate={{
-          ...controls.playbackRate,
-          setRange: setPlaybackRate,
-        }}
-        numBlobs={{
-          ...controls.numBlobs,
-          setValue: setNumBlobs,
-        }}
-        selectedScale={{
-          value: controls.selectedScale,
-          setValue: setSelectedScale,
-        }}
-      />
-
-      {/* <BlobDisplay events={blobEvents} /> */}
     </div>
   );
 };

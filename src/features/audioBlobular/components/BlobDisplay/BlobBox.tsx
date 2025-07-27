@@ -1,7 +1,7 @@
 // src/components/BlobPanel/BlobBox.tsx
 import { useRef, useEffect } from "react";
 import type { BlobEvent } from "@/shared/types/types";
-import "./BlobBox.css";
+import { blobBox, inactive } from "./BlobBox.css";
 
 type BlobBoxProps = {
   event: BlobEvent | null;
@@ -18,31 +18,22 @@ const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
 
       // reset opacity & animation
       el.classList.remove("fade-out");
-      void el.offsetWidth; // force reflow
+      void el.offsetWidth;
 
-      // set dynamic duration
       el.style.animationDuration = `${event.duration}s`;
-
-      // start fade-out
       el.classList.add("fade-out");
     }
   }, [event]);
 
-  // compute positioning
-
-  // width of your panel in px
-  const PANEL_WIDTH = window.innerWidth - 118;
-  // raw values
+  const PANEL_WIDTH = window.innerWidth - 58 - 48; // width: calc(100vw - 58px); minus play button width 48 on blobChannel
   const rawOffset = event?.offset ?? 0;
   const dur = event?.duration ?? 0;
-
-  // compute the maximum allowed offset so that offset + duration ≤ bufferDuration
   const maxOffset = Math.max(0, bufferDuration - dur);
-
-  // clamp the raw offset into [0, maxOffset]
   const clampedOffset = Math.min(Math.max(rawOffset, 0), maxOffset);
 
-  // finally map into pixels
+  const bottom =
+    Math.round(12 * Math.log2((event?.playbackRate ?? 0) + 1)) * 11 - 40; // Adjusted for better visibility
+
   const left =
     bufferDuration > 0 ? (clampedOffset / bufferDuration) * PANEL_WIDTH : 0;
 
@@ -50,21 +41,23 @@ const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
     ? ((event?.duration ?? 0) / bufferDuration) * 100
     : 0;
 
-  return event ? (
+  return (
     <div
       ref={ref}
-      className="blob-box"
-      style={{
-        bottom: `${Math.round(12 * Math.log2(event.playbackRate ?? 1)) * 5}px`,
-        left: `${left}px`,
-        width: `${width}%`,
-        borderRadius: `${(event.fadeTime ?? 0) * width}px`,
-      }}
+      className={event ? blobBox : `${blobBox} ${inactive}`}
+      style={
+        event
+          ? {
+              bottom: `${bottom}px`,
+              left: `${left}px`,
+              width: `${width}%`,
+              borderRadius: `${(event.fadeTime ?? 0) * width}px`,
+            }
+          : undefined
+      }
     >
-      {event.blobIndex + 1}
+      {event?.blobIndex != null ? event.blobIndex + 1 : null}
     </div>
-  ) : (
-    <div className="blob-box inactive"></div>
   );
 };
 
