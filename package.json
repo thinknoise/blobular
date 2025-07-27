@@ -1,7 +1,7 @@
 {
   "name": "blobular",
   "private": true,
-  "version": "0.0.5t",
+  "version": "0.0.5st",
   "type": "module",
   "scripts": {
     "dev": "vite",

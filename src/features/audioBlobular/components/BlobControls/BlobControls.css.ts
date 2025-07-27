@@ -1,5 +1,6 @@
 // src/components/BlobControls/BlobControls.css.ts
 import { style } from "@vanilla-extract/css";
+import { breakpoints } from "@/shared/styles/breakpoints";
 
 export const blobControls = style({
   position: "absolute",
@@ -16,5 +17,22 @@ export const controlRow = style({
   display: "flex",
   flexDirection: "row",
   gap: "8px",
-  marginRight: "8px", // Adjusted for right margin
+  marginRight: "8px",
+
+  "@media": {
+    [`screen and (max-width: ${breakpoints.md})`]: {
+      flexDirection: "column",
+      flexWrap: "wrap",
+      alignItems: "flex-start",
+      gap: "12px",
+    },
+  },
+});
+
+export const selectionRow = style({
+  display: "flex",
+  flexDirection: "row",
+  gap: "12px",
+  alignItems: "center",
+  margin: "0 auto 12px auto",
 });

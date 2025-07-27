@@ -61,15 +61,15 @@ export const sliderThumb = style({
   selectors: {
     "&:hover": {
       backgroundColor: "#fb2a0055",
-      top: "-11px",
-      height: "68px",
+      top: "-5px",
+      height: "56px",
       transition:
         "top 0.1s ease-out, height 0.1s ease-out, background-color 0.3s ease-in",
     },
     "&:active, &:focus": {
       backgroundColor: "#fb2a00aa",
-      top: "-13px",
-      height: "70px",
+      top: "-8px",
+      height: "60px",
       boxShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
       transition:
         "top 0.1s ease-out, height 0.1s ease-out, background-color 0.3s ease-in",

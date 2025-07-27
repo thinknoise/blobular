@@ -124,7 +124,7 @@ const AudioBlobularPlayer = () => {
     >
       <span className="blobular-title-chunk left-side">Blobul</span>
       {isPlaying ? <Square /> : <Play />}
-      <span className="blobular-title-chunk">r</span>
+      <span className="blobular-title-chunk">r&nbsp; Synthesis</span>
 
       <div className="blob-channel">
         <button

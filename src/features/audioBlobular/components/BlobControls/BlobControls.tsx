@@ -11,7 +11,7 @@ import type {
 } from "../../types/AudioBlobularPlayer.types";
 import type { ScaleName } from "@/shared/constants/scales";
 import { useEffect } from "react";
-import { blobControls, controlRow } from "./BlobControls.css";
+import { blobControls, controlRow, selectionRow } from "./BlobControls.css";
 
 // note: range values are in seconds, so we use for the blobs duration
 // min and max are used to limit the range
@@ -90,18 +90,20 @@ const BlobControls = ({
           max={playbackRate.max}
           step={playbackRate.step}
         />
-        <ScaleSelect
-          value={selectedScale.value}
-          onChange={selectedScale.setValue}
-        />
-        <BlobCountDropDown
-          label="Blobs"
-          value={numBlobs.value}
-          setValue={numBlobs.setValue}
-          min={numBlobs.min ?? 1}
-          max={numBlobs.max ?? controlLimits.MAX_BLOBS}
-          step={numBlobs.step}
-        />
+        <div className={selectionRow}>
+          <ScaleSelect
+            value={selectedScale.value}
+            onChange={selectedScale.setValue}
+          />
+          <BlobCountDropDown
+            label="Blobs"
+            value={numBlobs.value}
+            setValue={numBlobs.setValue}
+            min={numBlobs.min ?? 1}
+            max={numBlobs.max ?? controlLimits.MAX_BLOBS}
+            step={numBlobs.step}
+          />
+        </div>
       </div>
     </div>
   );
