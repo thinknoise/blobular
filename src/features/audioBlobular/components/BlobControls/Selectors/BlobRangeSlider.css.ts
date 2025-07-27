@@ -1,5 +1,6 @@
 // blobRangeSlider.css.ts
 import { style } from "@vanilla-extract/css";
+import { breakpoints } from "@/shared/styles/breakpoints";
 
 export const blobRangeSlider = style({
   display: "flex",
@@ -8,6 +9,13 @@ export const blobRangeSlider = style({
   width: "calc(100vw - 58px - 16px)", // Adjusted for padding and controls width
   maxWidth: "100%",
   alignItems: "center",
+  height: "80px",
+
+  "@media": {
+    [`screen and (max-width: ${breakpoints.md})`]: {
+      height: "40px",
+    },
+  },
 });
 
 export const sliderLabel = style({

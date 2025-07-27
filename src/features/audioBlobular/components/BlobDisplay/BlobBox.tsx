@@ -25,7 +25,7 @@ const BlobBox = ({ event, bufferDuration }: BlobBoxProps) => {
     }
   }, [event]);
 
-  const PANEL_WIDTH = window.innerWidth - 118 - 48; // width: calc(100vw - 118px); minus play button width 48 on blobChannel
+  const PANEL_WIDTH = window.innerWidth - 58 - 48; // width: calc(100vw - 58px); minus play button width 48 on blobChannel
   const rawOffset = event?.offset ?? 0;
   const dur = event?.duration ?? 0;
   const maxOffset = Math.max(0, bufferDuration - dur);

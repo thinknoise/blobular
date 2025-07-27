@@ -18,6 +18,7 @@ export const controlRow = style({
   flexDirection: "row",
   gap: "8px",
   marginRight: "8px",
+  alignItems: "center",
 
   "@media": {
     [`screen and (max-width: ${breakpoints.md})`]: {
@@ -34,5 +35,12 @@ export const selectionRow = style({
   flexDirection: "row",
   gap: "12px",
   alignItems: "center",
-  margin: "0 auto 12px auto",
+  height: "20px",
+  margin: "0 auto 0 auto",
+
+  "@media": {
+    [`screen and (max-width: ${breakpoints.md})`]: {
+      margin: "0 auto 20px auto",
+    },
+  },
 });
