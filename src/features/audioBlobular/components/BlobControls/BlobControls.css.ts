@@ -8,7 +8,7 @@ export const blobControls = style({
   flexDirection: "column",
   justifyContent: "space-between", // push rows apart
   gap: "12px", // optional if space-between handles spacing
-  padding: "0 0 0 58px",
+  padding: "0 0 0 58px", // todo: we should do flex row
   width: "calc(100% - 58px)", // Adjusted for padding
   height: "100%", // required to allow vertical spacing
 });

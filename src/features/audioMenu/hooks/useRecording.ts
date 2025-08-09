@@ -65,7 +65,7 @@ export function useRecording(audioContext: AudioContext): UseRecordingResult {
     }
 
     // Slight delay to ensure `ondataavailable` fires
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     if (!chunksRef.current.length) {
       console.warn("No chunks to process");
