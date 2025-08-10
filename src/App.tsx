@@ -51,7 +51,12 @@ function App() {
           <AudioSourceProvider>
             <div className="version-text">version: {packageJson.version}</div>
             <div className="app-blobular">
+              <h1 className="blobular-title-chunk left-side">
+                Blobular Synthesis
+              </h1>
+
               <AudioBlobularPlayer />
+              {/* <AudioBlobularPlayer /> */}
               <AudioPondMenu />
             </div>
           </AudioSourceProvider>

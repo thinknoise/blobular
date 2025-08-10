@@ -82,19 +82,7 @@ const BlobControls = ({
         />
       </div>
       <div className={controlRow}>
-        <BlobRangeSlider
-          label="Playback sample rate"
-          range={playbackRate.range}
-          setRange={playbackRate.setRange}
-          min={playbackRate.min}
-          max={playbackRate.max}
-          step={playbackRate.step}
-        />
         <div className={selectionRow}>
-          <ScaleSelect
-            value={selectedScale.value}
-            onChange={selectedScale.setValue}
-          />
           <BlobCountDropDown
             label="Blobs"
             value={numBlobs.value}
@@ -103,7 +91,19 @@ const BlobControls = ({
             max={numBlobs.max ?? controlLimits.MAX_BLOBS}
             step={numBlobs.step}
           />
+          <ScaleSelect
+            value={selectedScale.value}
+            onChange={selectedScale.setValue}
+          />
         </div>
+        <BlobRangeSlider
+          label="Sample Rate"
+          range={playbackRate.range}
+          setRange={playbackRate.setRange}
+          min={playbackRate.min}
+          max={playbackRate.max}
+          step={playbackRate.step}
+        />
       </div>
     </div>
   );

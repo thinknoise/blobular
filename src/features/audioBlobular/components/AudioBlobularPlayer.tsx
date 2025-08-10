@@ -122,10 +122,6 @@ const AudioBlobularPlayer = () => {
         isPlaying ? "audio-blobular-player playing" : "audio-blobular-player"
       }
     >
-      <span className="blobular-title-chunk left-side">Blobul</span>
-      {isPlaying ? <Square /> : <Play />}
-      <span className="blobular-title-chunk">r&nbsp; Synthesis</span>
-
       <div className="blob-channel">
         <button
           className={`play-button individual ${isPlaying ? "playing" : ""}`}
