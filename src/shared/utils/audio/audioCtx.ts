@@ -1,12 +1,13 @@
 // src/utils/audioCtx.ts
 
-let audioCtx: AudioContext | null = null;
+// Maintain a single AudioContext instance and expose helpers to manage it.
+// A previous version of this module accidentally tracked the context in two
+// separate variables which meant functions like `closeAudioCtx` and
+// `resetAudioCtx` operated on a different reference than `getAudioCtx`. As a
+// result the context was never actually closed or reset. We now keep a single
+// `audioCtx` reference that all helpers share.
 
-function createAudioCtx(): AudioContext {
-  console.log("CREATING AUDIO CONTEXT");
-  audioCtx = new AudioContext();
-  return audioCtx;
-}
+let audioCtx: AudioContext | null = null;
 
 declare global {
   interface Window {
@@ -14,19 +15,17 @@ declare global {
   }
 }
 
-let _ctx: AudioContext | null = null;
-
 export function getAudioCtx() {
-  if (_ctx) return _ctx;
+  if (audioCtx) return audioCtx;
   const AC = window.AudioContext || window.webkitAudioContext!;
-  _ctx = new AC({
+  audioCtx = new AC({
     latencyHint: "interactive",
     sampleRate: 48000, // prefer 48k for mic/WebRTC paths
   });
   // iOS/Safari: ensure resumed on user gesture elsewhere too
-  const tryResume = () => _ctx!.state === "suspended" && _ctx!.resume();
+  const tryResume = () => audioCtx!.state === "suspended" && audioCtx!.resume();
   document.addEventListener("click", tryResume, { once: true, capture: true });
-  return _ctx!;
+  return audioCtx!;
 }
 
 export async function resumeAudioCtx(): Promise<void> {
@@ -36,22 +35,16 @@ export async function resumeAudioCtx(): Promise<void> {
   }
 }
 
-export function closeAudioCtx(): void {
+export async function closeAudioCtx(): Promise<void> {
   if (audioCtx) {
-    audioCtx.close().then(() => {
-      audioCtx = null;
-    });
+    await audioCtx.close();
+    audioCtx = null;
   }
 }
 
-export function resetAudioCtx(): void {
-  if (audioCtx) {
-    audioCtx.close().then(() => {
-      createAudioCtx();
-    });
-  } else {
-    createAudioCtx();
-  }
+export async function resetAudioCtx(): Promise<void> {
+  await closeAudioCtx();
+  getAudioCtx();
 }
 
 export function isAudioCtxRunning(): boolean {
