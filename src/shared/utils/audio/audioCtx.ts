@@ -8,14 +8,25 @@ function createAudioCtx(): AudioContext {
   return audioCtx;
 }
 
-export function getAudioCtx(): AudioContext {
-  if (!audioCtx || audioCtx.state === "closed") {
-    return createAudioCtx();
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
   }
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  return audioCtx;
+}
+
+let _ctx: AudioContext | null = null;
+
+export function getAudioCtx() {
+  if (_ctx) return _ctx;
+  const AC = window.AudioContext || window.webkitAudioContext!;
+  _ctx = new AC({
+    latencyHint: "interactive",
+    sampleRate: 48000, // prefer 48k for mic/WebRTC paths
+  });
+  // iOS/Safari: ensure resumed on user gesture elsewhere too
+  const tryResume = () => _ctx!.state === "suspended" && _ctx!.resume();
+  document.addEventListener("click", tryResume, { once: true, capture: true });
+  return _ctx!;
 }
 
 export async function resumeAudioCtx(): Promise<void> {
