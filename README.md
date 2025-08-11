@@ -35,7 +35,7 @@ src/
 ```
 Other top-level files include `vite.config.ts`, `tsconfig.json`, ESLint configuration, and CSS assets.
 
-## Important Concepts
+## Basis of Blobular
 
 - **Audio context management** – `shared/utils/audio/audioCtx.ts` centralizes creation and reuse of a single `AudioContext` (48 kHz, suspended until user interaction).
 - **Granular playback engine** – `useBlobularEngine` schedules “blobs” of audio with randomized timing, pan, and pitch, optionally driven by scales defined in `shared/constants/scales.ts`. Playback is triggered through `playBlobAtTime`.
