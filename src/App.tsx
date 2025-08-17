@@ -7,7 +7,7 @@ import AudioPondMenu from "./features/audioMenu/components/AudioPondMenu";
 import { AudioBlobularPlayer } from "@/features/audioBlobular/components";
 
 import { AudioSourceProvider } from "./features/audioBlobular/engine";
-import { MicIcon } from "lucide-react";
+import { MicIcon, PlayIcon } from "lucide-react";
 import "./App.css";
 
 function App() {
@@ -27,13 +27,21 @@ function App() {
 
           <div className="description">
             <p>
-              Step into the pond, where sound takes shape. Blobular lets you
-              explore audio through blobular forms and sample bending controls.
+              Step into the Audio Pond of Blobs, where sound takes shape.
+              Blobular lets you explore audio through blobular forms and sample
+              bending controls.
             </p>
             <p>
-              Record live into blobularator, click the <MicIcon /> button to
-              start recording source for the Blubulator, then mess with
-              playback, and watch it all come alive.
+              Record live into Blobulator, click the <MicIcon /> button to start
+              recording source for the Blobulator.
+            </p>
+            <p>
+              Then press the Blobulator
+              <PlayIcon /> button to hear the magic happen.
+            </p>
+            <p>
+              Adjust the controls to set the duration, fade, playback rate, and
+              number of blobs.
             </p>
             <p>When you’re ready, tap below and let the blobs begin.</p>
           </div>
@@ -47,20 +55,19 @@ function App() {
         </div>
       )}
       {userInteraction && (
-        <AudioBufferProvider>
-          <AudioSourceProvider>
-            <div className="version-text">version: {packageJson.version}</div>
-            <div className="app-blobular">
-              <h1 className="blobular-title-chunk left-side">
-                Blobular Synthesis
-              </h1>
-
+        <AudioSourceProvider>
+          <div className="version-text">version: {packageJson.version}</div>
+          <div className="app-blobular">
+            <h1 className="blobular-title-chunk left-side">
+              Blobular Synthesis
+            </h1>
+            <AudioBufferProvider>
               <AudioBlobularPlayer />
               {/* <AudioBlobularPlayer /> */}
               <AudioPondMenu />
-            </div>
-          </AudioSourceProvider>
-        </AudioBufferProvider>
+            </AudioBufferProvider>
+          </div>
+        </AudioSourceProvider>
       )}
     </div>
   );
