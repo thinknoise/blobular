@@ -17,6 +17,7 @@ export function useAudioPond() {
 
   const fetchAudioKeysAndBuffers = async () => {
     const keys = await listAudioKeys();
+    console.log("🗝️ Found audio keys:", keys);
 
     const initialMap: Record<string, BufferStatus> = {};
     keys.forEach((key) => {
@@ -36,7 +37,7 @@ export function useAudioPond() {
           [key]: { buffer: decoded, loading: false },
         }));
       } catch (err) {
-        console.error(`Failed to load ${key}`, err);
+        console.error(`❌ Failed to load ${key}`, err);
         setBuffers((prev) => ({
           ...prev,
           [key]: { loading: false, error: String(err) },

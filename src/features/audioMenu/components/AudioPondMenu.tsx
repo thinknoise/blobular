@@ -62,7 +62,7 @@ const AudioPondMenu: React.FC = () => {
   const [pondMenuOpen, setPondMenuOpen] = useState(false);
 
   const audioContext = getAudioCtx();
-  const { isRecording, startRecording, stopRecording, updateWavBlob } =
+  const { isRecording, startRecording, stopRecording, updateWavBlob, setInputGain, inputGain } =
     useRecording(audioContext);
   const [recordings, setRecordings] = useState<{ url: string; blob: Blob }[]>(
     []
@@ -87,9 +87,11 @@ const AudioPondMenu: React.FC = () => {
       if (isLoading) return; // Prevent multiple simultaneous loads
       setIsLoading(true);
       try {
+        console.log("🔄 Loading audio pond...");
         await fetchAudioKeysAndBuffers();
+        console.log("✅ Audio pond loaded successfully");
       } catch (error) {
-        console.error("Failed to load audio pond:", error);
+        console.error("❌ Failed to load audio pond:", error);
         setError("Failed to load audio pond. Please try again.");
       } finally {
         setIsLoading(false);
@@ -107,21 +109,35 @@ const AudioPondMenu: React.FC = () => {
   // to ensure blobularBuffer is set correctly
   // based on URL param or first available buffer
   useEffect(() => {
-    if (blobularBuffer) return; //  don't override if already set
+    console.log("🔍 Buffer initialization effect triggered");
+    console.log(`Current blobularBuffer: ${!!blobularBuffer}`);
+    console.log(`Available buffers: ${Object.keys(buffers).length}`);
+    console.log(`Buffer array length: ${bufferArray.length}`);
+    
+    if (blobularBuffer) {
+      console.log("⏭️ Buffer already set, skipping initialization");
+      return; //  don't override if already set
+    }
 
     const bufferKey = getBufferKeyFromUrl();
     const urlBuffer = bufferKey ? buffers[bufferKey]?.buffer : null;
     const firstBuffer = bufferArray[0]?.[1]?.buffer;
 
+    console.log(`URL buffer key: ${bufferKey || 'none'}`);
+    console.log(`URL buffer found: ${!!urlBuffer}`);
+    console.log(`First buffer found: ${!!firstBuffer}`);
+
     if (bufferKey && urlBuffer) {
-      console.log("Setting blobularBuffer from URL param:", bufferKey);
+      console.log(`🎯 Setting blobularBuffer from URL param: ${bufferKey}`);
       setBlobularBuffer(urlBuffer);
       const displayTitle = getDisplayTitle(bufferKey);
       setPageTitle(displayTitle);
       return;
     } else if (firstBuffer && !bufferKey) {
-      console.log("Initial blobularBuffer:", firstBuffer);
+      console.log("🎵 Setting initial blobularBuffer from S3");
       setBlobularBuffer(firstBuffer);
+    } else {
+      console.log("⚠️ No S3 buffer to initialize with (default buffer should be loaded by AudioBufferProvider)");
     }
   }, [buffers, bufferArray, blobularBuffer, setBlobularBuffer]);
 
@@ -236,6 +252,43 @@ const AudioPondMenu: React.FC = () => {
         handleRecordClick={handleRecordClick}
         isRecording={isRecording}
       />
+      
+      {/* Input Gain Control */}
+      <div style={{
+        padding: "8px",
+        backgroundColor: "rgba(255, 193, 7, 0.1)",
+        borderRadius: "4px",
+        margin: "4px 8px",
+        fontSize: "0.75rem",
+        color: "#333"
+      }}>
+        <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>
+          Input Gain: {inputGain.toFixed(1)}x
+        </label>
+        <input
+          type="range"
+          min="0.1"
+          max="5.0"
+          step="0.1"
+          value={inputGain}
+          onChange={(e) => setInputGain(parseFloat(e.target.value))}
+          style={{
+            width: "100%",
+            accentColor: "#ffc107"
+          }}
+        />
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          fontSize: "0.65rem", 
+          color: "#666",
+          marginTop: "2px"
+        }}>
+          <span>0.1x</span>
+          <span>5.0x</span>
+        </div>
+      </div>
+      
       <button
         disabled={!isRecording}
         className={`update-button ${isRecording ? "recording" : ""}`}
@@ -247,6 +300,7 @@ const AudioPondMenu: React.FC = () => {
 
       <ul className="audio-list">
         <h3 className="audio-list-title">Audio Pond </h3>
+        
         {error && (
           <div
             style={{
