@@ -68,6 +68,9 @@ const AudioPondMenu: React.FC = () => {
     []
   );
   const [updatingRecording, setUpdatingRecording] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const togglePondMenu = () => {
     setPondMenuOpen(!pondMenuOpen);
   };
@@ -80,8 +83,21 @@ const AudioPondMenu: React.FC = () => {
   }
 
   useEffect(() => {
-    fetchAudioKeysAndBuffers();
-  }, []);
+    const loadAudioPond = async () => {
+      if (isLoading) return; // Prevent multiple simultaneous loads
+      setIsLoading(true);
+      try {
+        await fetchAudioKeysAndBuffers();
+      } catch (error) {
+        console.error("Failed to load audio pond:", error);
+        setError("Failed to load audio pond. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAudioPond();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const bufferArray = Object.entries(buffers);
 
@@ -111,6 +127,8 @@ const AudioPondMenu: React.FC = () => {
 
   const uploadRecording = async (blob: Blob) => {
     const key = `audio-pond/recording-${Date.now()}.wav`;
+    setIsUploading(true);
+    setError(null); // Clear any previous errors
     try {
       const arrayBuffer = await blob.arrayBuffer();
       const command = new PutObjectCommand({
@@ -129,8 +147,10 @@ const AudioPondMenu: React.FC = () => {
       return key;
     } catch (err) {
       console.error("❌ Upload failed:", err);
-      alert("Upload failed.");
+      setError("Upload failed. Please try again.");
       return null;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -227,6 +247,82 @@ const AudioPondMenu: React.FC = () => {
 
       <ul className="audio-list">
         <h3 className="audio-list-title">Audio Pond </h3>
+        {error && (
+          <div
+            style={{
+              color: "#ff6b6b",
+              padding: "8px",
+              backgroundColor: "rgba(255, 107, 107, 0.1)",
+              borderRadius: "4px",
+              margin: "8px",
+              fontSize: "0.8rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            {error}
+            <button
+              onClick={() => setError(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#ff6b6b",
+                cursor: "pointer",
+                padding: "0",
+                marginLeft: "8px",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        {isUploading && (
+          <div style={{
+            color: '#007acc',
+            padding: '8px',
+            backgroundColor: 'rgba(0, 122, 204, 0.1)',
+            borderRadius: '4px',
+            margin: '8px',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: '2px solid #666',
+              borderTop: '2px solid #007acc',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            Uploading...
+          </div>
+        )}
+        {isLoading && (
+          <div style={{
+            color: '#007acc',
+            padding: '8px',
+            backgroundColor: 'rgba(0, 122, 204, 0.1)',
+            borderRadius: '4px',
+            margin: '8px',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: '2px solid #666',
+              borderTop: '2px solid #007acc',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            Loading audio pond...
+          </div>
+        )}
         {recordings.map((rec, index) => (
           <RecordedItem
             key={index}
