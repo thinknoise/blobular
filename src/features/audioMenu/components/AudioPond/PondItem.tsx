@@ -1,6 +1,11 @@
 import React, { useRef, useState } from "react";
 import { WaveformViewer } from "@/features/audioBlobular/components";
-import { AudioLines, Play, Square, Trash2 } from "lucide-react";
+import {
+  AudioLines,
+  Play,
+  Square,
+  //  Trash2
+} from "lucide-react";
 import { getAudioCtx } from "@/shared";
 import {
   audioItem,
@@ -9,7 +14,7 @@ import {
   errorText,
   selectButton,
   playButton,
-  deleteButton,
+  // deleteButton,
 } from "./Items.css"; // Import the styles
 
 interface PondItemProps {
@@ -29,7 +34,7 @@ const PondItem: React.FC<PondItemProps> = ({
   status,
   isSelected,
   onSelect,
-  onDelete,
+  // onDelete,
 }) => {
   const filename = keyName.replace(/^.*\//, "");
   const [audioContext] = useState(() => getAudioCtx());
@@ -63,9 +68,9 @@ const PondItem: React.FC<PondItemProps> = ({
 
   return (
     <li className={isSelected ? audioItem + " playing" : audioItem}>
-      <button className={deleteButton} onClick={onDelete}>
+      {/* <button className={deleteButton} onClick={onDelete}>
         <Trash2 />
-      </button>
+      </button> */}
       <button className={selectButton} onClick={onSelect}>
         <AudioLines />
       </button>
