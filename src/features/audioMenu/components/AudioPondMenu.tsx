@@ -278,48 +278,56 @@ const AudioPondMenu: React.FC = () => {
           </div>
         )}
         {isUploading && (
-          <div style={{
-            color: '#007acc',
-            padding: '8px',
-            backgroundColor: 'rgba(0, 122, 204, 0.1)',
-            borderRadius: '4px',
-            margin: '8px',
-            fontSize: '0.8rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <div style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #666',
-              borderTop: '2px solid #007acc',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
+          <div
+            style={{
+              color: "#007acc",
+              padding: "8px",
+              backgroundColor: "rgba(0, 122, 204, 0.1)",
+              borderRadius: "4px",
+              margin: "8px",
+              fontSize: "0.8rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <div
+              style={{
+                width: "16px",
+                height: "16px",
+                border: "2px solid #666",
+                borderTop: "2px solid #007acc",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            ></div>
             Uploading...
           </div>
         )}
         {isLoading && (
-          <div style={{
-            color: '#007acc',
-            padding: '8px',
-            backgroundColor: 'rgba(0, 122, 204, 0.1)',
-            borderRadius: '4px',
-            margin: '8px',
-            fontSize: '0.8rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <div style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #666',
-              borderTop: '2px solid #007acc',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
+          <div
+            style={{
+              color: "#007acc",
+              padding: "8px",
+              backgroundColor: "rgba(0, 122, 204, 0.1)",
+              borderRadius: "4px",
+              margin: "8px",
+              fontSize: "0.8rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <div
+              style={{
+                width: "16px",
+                height: "16px",
+                border: "2px solid #666",
+                borderTop: "2px solid #007acc",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            ></div>
             Loading audio pond...
           </div>
         )}
