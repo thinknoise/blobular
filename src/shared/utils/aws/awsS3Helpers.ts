@@ -11,10 +11,6 @@ const AUDIO_EXTENSIONS = /\.(wav|mp3|ogg|flac|aac)$/i;
 
 /**
  * List all audio keys under the specified prefixes in your S3 bucket
- * @param prefixes Array of folder prefixes to list (defaults to both "audio/" and "audio-pond/")
- */
-/**
- * List all audio keys under the specified prefixes in your S3 bucket
  * @param prefixes Array of folder prefixes to list (defaults to "audio-pond/")
  * @returns Promise resolving to array of audio file keys, sorted by most recent first
  */
@@ -32,7 +28,7 @@ export async function listAudioKeys(
 
         const response = await s3.send(command);
 
-        // Filter for audio files only and sort by most recent
+        // Filter for audio files only and sort by most recent first
         return (response.Contents ?? [])
           .filter((item) => item.Key && AUDIO_EXTENSIONS.test(item.Key))
           .sort((a, b) => {

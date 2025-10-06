@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Chrome microphone notification delay
+// Chrome plays a system notification sound when microphone access is granted.
+// This delay ensures the notification finishes before recording starts.
+const CHROME_MIC_NOTIFICATION_DELAY = 500;
+
 type UseRecording = {
   isRecording: boolean;
   startRecording: () => Promise<void>;
@@ -160,9 +165,9 @@ export function useRecording(audioContext: AudioContext): UseRecording {
     // sound finishes playing before we start our recording, preventing the
     // notification bell from being captured in the recording audio.
     //
-    // This 500ms delay is intentional and necessary to overcome Chrome's
+    // This delay is intentional and necessary to overcome Chrome's
     // mic access notification sound interference.
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, CHROME_MIC_NOTIFICATION_DELAY));
     // ========================================================================
 
     // Mic node
