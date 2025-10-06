@@ -23,9 +23,18 @@ export type ScaleControl = {
 
 type BlobControlsProps = {
   bufferLength: number;
-  duration: RangeControl & { setRange: (range: [number, number]) => void };
-  fade: RangeControl & { setRange: (range: [number, number]) => void };
-  playbackRate: RangeControl & { setRange: (range: [number, number]) => void };
+  duration: RangeControl & {
+    setRange: (range: [number, number]) => void;
+    commitRange: (range: [number, number]) => void;
+  };
+  fade: RangeControl & {
+    setRange: (range: [number, number]) => void;
+    commitRange: (range: [number, number]) => void;
+  };
+  playbackRate: RangeControl & {
+    setRange: (range: [number, number]) => void;
+    commitRange: (range: [number, number]) => void;
+  };
   numBlobs: CountControl & { setValue: (val: number) => void };
   selectedScale: ScaleControl;
 };
@@ -67,6 +76,7 @@ const BlobControls = ({
             label="Fade"
             range={fade.range}
             setRange={fade.setRange}
+            onRangeCommit={fade.commitRange}
             min={fade.min}
             max={fade.max}
             step={fade.step}
@@ -76,9 +86,11 @@ const BlobControls = ({
           label="Duration"
           range={duration.range}
           setRange={duration.setRange}
-          min={0.3}
-          max={Math.min(18, bufferLength)}
+          onRangeCommit={duration.commitRange}
+          min={duration.min}
+          max={bufferLength}
           step={duration.step}
+          showMaxAsRightValue={true}
         />
       </div>
       <div className={controlRow}>
@@ -100,6 +112,7 @@ const BlobControls = ({
           label="Sample Rate"
           range={playbackRate.range}
           setRange={playbackRate.setRange}
+          onRangeCommit={playbackRate.commitRange}
           min={playbackRate.min}
           max={playbackRate.max}
           step={playbackRate.step}

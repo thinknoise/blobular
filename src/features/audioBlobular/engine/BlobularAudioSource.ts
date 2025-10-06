@@ -16,6 +16,10 @@ export class BlobularAudioSource {
   }
 
   setBuffer(buffer: AudioBuffer | null) {
+    console.log("🔄 BlobularAudioSource.setBuffer called", {
+      buffer: !!buffer,
+      duration: buffer?.duration,
+    });
     this.currentBuffer = buffer;
     this.bufferListeners.forEach((cb) => cb());
   }
@@ -25,6 +29,10 @@ export class BlobularAudioSource {
   }
 
   getBuffer(): AudioBuffer | null {
+    console.log("🔄 BlobularAudioSource.getBuffer called, returning:", {
+      buffer: !!this.currentBuffer,
+      duration: this.currentBuffer?.duration,
+    });
     return this.currentBuffer;
   }
 

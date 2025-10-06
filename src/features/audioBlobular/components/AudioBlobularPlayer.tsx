@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Play, Square } from "lucide-react";
 import type { Range } from "../types/AudioBlobularPlayer.types";
-import { controlLimits } from "@/shared/constants/controlLimits";
 import { useBlobularEngine } from "../hooks/useBlobularEngine";
 import { useControls } from "../hooks/useControls";
 import BlobPanel from "./BlobDisplay/BlobPanel";
@@ -10,15 +9,15 @@ import CompactWaveform from "./CompactWaveform/CompactWaveform";
 
 import {
   getDurationRangeFromUrl,
-  getInitialControlsFromUrl,
   getPlaybackRateRangeFromUrl,
   getScaleFromUrl,
 } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
 import { useAudioSource } from "../engine";
+import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 
 const AudioBlobularPlayer = () => {
-  const initialControls = getInitialControlsFromUrl();
+  // Don't parse URL parameters initially - wait for buffer to load
   const {
     controls,
     setRangeControl,
@@ -26,9 +25,8 @@ const AudioBlobularPlayer = () => {
     setSelectedScale,
     setControls,
     setPlaybackRate,
-    hasInitializedFromUrl,
     setHasInitializedFromUrl,
-  } = useControls(initialControls);
+  } = useControls();
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
@@ -42,70 +40,90 @@ const AudioBlobularPlayer = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  function getBlobNumberFromUrl(): string | null {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("blobs");
-  }
+  const { blobularBuffer } = useAudioBuffer();
 
+  const audioSource = useAudioSource();
+  const buffer = audioSource.getBuffer();
+
+  // Apply URL parameters after buffer is loaded
   useEffect(() => {
-    if (hasInitializedFromUrl) return;
+    if (!buffer) return;
 
-    const blobNumber = getBlobNumberFromUrl();
-    const durationFromUrl = getDurationRangeFromUrl();
-    const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
-    const scaleFromUrl = getScaleFromUrl();
-
-    if (blobNumber) {
-      const num = parseInt(blobNumber, 10);
-      if (!isNaN(num) && num >= 1 && num <= controlLimits.MAX_BLOBS) {
-        setNumBlobs(num);
-      } else {
-        console.warn("Invalid blob number in URL, using default (8)");
-      }
-    }
+    console.log("🎵 Buffer loaded, applying URL parameters...", {
+      bufferDuration: buffer.duration,
+    });
 
     setControls((prev) => {
       const next = { ...prev };
 
+      // Update duration max to buffer length and clamp URL parameters if needed
+      const durationFromUrl = getDurationRangeFromUrl();
       if (durationFromUrl) {
+        const [urlMin, urlMax] = durationFromUrl;
+        // Clamp URL values to valid range
+        const clampedMin = Math.max(
+          prev.duration.min,
+          Math.min(urlMin, buffer.duration)
+        );
+        const clampedMax = Math.max(
+          clampedMin,
+          Math.min(urlMax, buffer.duration)
+        );
+
+        console.log("🎵 Clamping URL duration:", {
+          original: [urlMin, urlMax],
+          clamped: [clampedMin, clampedMax],
+          bufferDuration: buffer.duration,
+        });
+
+        // If we had to clamp the values, update the URL to reflect the corrected parameters
+        if (urlMax > buffer.duration || urlMin !== clampedMin) {
+          const params = new URLSearchParams(window.location.search);
+          params.set(
+            "duration",
+            `${clampedMin.toFixed(2)}-${clampedMax.toFixed(2)}`
+          );
+          const newUrl = `${window.location.pathname}?${params.toString()}`;
+          window.history.replaceState({}, "", newUrl);
+          console.log("🔧 Corrected URL parameters:", newUrl);
+        }
+
         next.duration = {
           ...prev.duration,
-          range: durationFromUrl,
+          range: [clampedMin, clampedMax],
+          max: buffer.duration,
+        };
+      } else {
+        // No URL params, just update the max
+        next.duration = {
+          ...prev.duration,
+          max: buffer.duration,
         };
       }
 
+      // Apply playback rate from URL
+      const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
       if (playbackRateFromUrl) {
+        console.log("🎵 Applying URL playback rate:", playbackRateFromUrl);
         next.playbackRate = {
           ...prev.playbackRate,
           range: playbackRateFromUrl,
         };
       }
-      next.selectedScale = scaleFromUrl ?? controlLimits.DEFAULT_SCALE;
+
+      // Apply scale from URL
+      const scaleFromUrl = getScaleFromUrl();
+      if (scaleFromUrl) {
+        console.log("🎵 Applying URL scale:", scaleFromUrl);
+        next.selectedScale = scaleFromUrl;
+      }
+
       return next;
     });
 
+    // Enable URL updates for future control changes
     setHasInitializedFromUrl(true);
-  }, []);
-
-  const audioSource = useAudioSource();
-  const buffer = audioSource.getBuffer();
-
-  useEffect(() => {
-    if (!buffer) return;
-
-    const newMax = buffer.duration;
-    const clampedEnd = Math.min(duration.range[1], newMax);
-
-    setControls((prev) => ({
-      ...prev,
-      duration: {
-        ...prev.duration,
-        range: [controlLimits.DEFAULT_DURATION_RANGE[0], clampedEnd],
-        max: newMax,
-        min: prev.duration.range[0],
-      },
-    }));
-  }, [buffer]);
+  }, [buffer, setControls, setHasInitializedFromUrl]);
 
   function handleClick(): void {
     if (isPlaying) {
@@ -136,18 +154,22 @@ const AudioBlobularPlayer = () => {
         </div>
 
         <BlobControls
+          key={`controls-${buffer?.duration || 0}`}
           bufferLength={buffer ? buffer.duration : 0}
           duration={{
             ...controls.duration,
             setRange: (r: Range) => setRangeControl("duration", r),
+            commitRange: controls.duration.commitRange,
           }}
           fade={{
             ...controls.fade,
             setRange: (r: Range) => setRangeControl("fade", r),
+            commitRange: controls.fade.commitRange,
           }}
           playbackRate={{
             ...controls.playbackRate,
             setRange: setPlaybackRate,
+            commitRange: controls.playbackRate.commitRange,
           }}
           numBlobs={{
             ...controls.numBlobs,

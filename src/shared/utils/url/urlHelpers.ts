@@ -29,7 +29,7 @@ export function getDurationRangeFromUrl(): [number, number] | null {
 }
 
 export function getPlaybackRateRangeFromUrl(): [number, number] | null {
-  const param = new URLSearchParams(window.location.search).get("rate");
+  const param = new URLSearchParams(window.location.search).get("sampleRate");
   if (!param) return null;
   const [minStr, maxStr] = param.split("-");
   const min = parseFloat(minStr);
@@ -59,18 +59,32 @@ export function getInitialControlsFromUrl(): PartialControlsState {
 
   const duration: [number, number] | undefined = (() => {
     if (!durationStr) return undefined;
-    const [minStr, maxStr] = durationStr.split(",");
+    const [minStr, maxStr] = durationStr.split("-"); // Use hyphen, not comma
     const min = parseFloat(minStr);
     const max = parseFloat(maxStr);
     if (isNaN(min) || isNaN(max)) return undefined;
     return [min, max];
   })();
 
+  const playbackRate: [number, number] | undefined = (() => {
+    const rateStr = params.get("sampleRate");
+    if (!rateStr) return undefined;
+    const [minStr, maxStr] = rateStr.split("-");
+    const min = parseFloat(minStr);
+    const max = parseFloat(maxStr);
+    if (isNaN(min) || isNaN(max)) return undefined;
+    return [min, max];
+  })();
+
+  const scale = getScaleFromUrl();
+
   return {
     ...(numBlobs && numBlobs >= 1 && numBlobs <= 12
       ? { numBlobs: { value: numBlobs } }
       : {}),
     ...(duration ? { duration: { range: duration } } : {}),
+    ...(playbackRate ? { playbackRate: { range: playbackRate } } : {}),
+    ...(scale ? { selectedScale: scale } : {}),
   };
 }
 

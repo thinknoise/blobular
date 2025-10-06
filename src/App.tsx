@@ -55,19 +55,19 @@ function App() {
         </div>
       )}
       {userInteraction && (
-        <AudioSourceProvider>
-          <div className="version-text">version: {packageJson.version}</div>
-          <div className="app-blobular">
-            <h1 className="blobular-title-chunk left-side">
-              Blobular Synthesis
-            </h1>
-            <AudioBufferProvider>
+        <AudioBufferProvider>
+          <AudioSourceProvider>
+            <div className="version-text">version: {packageJson.version}</div>
+            <div className="app-blobular">
+              <h1 className="blobular-title-chunk left-side">
+                Blobular Synthesis
+              </h1>
               <AudioBlobularPlayer />
               {/* <AudioBlobularPlayer /> */}
               <AudioPondMenu />
-            </AudioBufferProvider>
-          </div>
-        </AudioSourceProvider>
+            </div>
+          </AudioSourceProvider>
+        </AudioBufferProvider>
       )}
     </div>
   );

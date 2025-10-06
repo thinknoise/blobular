@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>S3 Test</title>
+</head>
+<body>
+    <h1>S3 Connection Test</h1>
+    <button id="test-btn">Test S3 Connection</button>
+    <div id="results"></div>
+    
+    <script type="module">
+        import { listAudioKeys } from './src/shared/utils/aws/awsS3Helpers.js';
+        
+        document.getElementById('test-btn').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing S3...</p>';
+            
+            try {
+                console.log('Testing S3 connection...');
+                const keys = await listAudioKeys();
+                console.log('S3 keys found:', keys);
+                resultsDiv.innerHTML = `
+                    <h2>✅ Success!</h2>
+                    <p>Found ${keys.length} audio files:</p>
+                    <ul>
+                        ${keys.map(key => `<li>${key}</li>`).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('S3 test failed:', error);
+                resultsDiv.innerHTML = `
+                    <h2>❌ Failed!</h2>
+                    <p>Error: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

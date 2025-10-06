@@ -14,18 +14,22 @@ type BlobRangeSliderProps = {
   label: string;
   range: [number, number];
   setRange: (val: [number, number]) => void;
+  onRangeCommit?: (val: [number, number]) => void; // Called only when user finishes dragging
   min: number;
   max: number;
   step: number;
+  showMaxAsRightValue?: boolean; // For duration slider to show total wave length
 };
 
 const BlobRangeSlider = ({
   label,
   range,
   setRange,
+  onRangeCommit,
   min,
   max,
   step,
+  showMaxAsRightValue = false,
 }: BlobRangeSliderProps) => {
   useEffect(() => {
     if (range[0] < min) {
@@ -40,17 +44,25 @@ const BlobRangeSlider = ({
     setRange([values[0], values[1]]);
   };
 
+  const handleCommit = (values: number[]) => {
+    if (onRangeCommit) {
+      onRangeCommit([values[0], values[1]]);
+    }
+  };
+
   return (
     <div className={blobRangeSlider}>
       <label className={sliderLabel}>{label}</label>
-      <span className={sliderValue}>{min}</span>
+      <span className={sliderValue}>{min.toFixed(2)}</span>
       <Slider.Root
+        key={`${label}-${min}-${max}`}
         className={sliderRoot}
         min={min}
         max={max}
         step={step}
         value={range}
         onValueChange={handleChange}
+        onValueCommit={handleCommit}
       >
         <Slider.Track className={sliderTrack}>
           <Slider.Range className={sliderRange} />
@@ -63,7 +75,9 @@ const BlobRangeSlider = ({
           />
         ))}
       </Slider.Root>
-      <span className={sliderValue}>{max.toFixed(2)}</span>
+      <span className={sliderValue}>
+        {showMaxAsRightValue ? max.toFixed(2) : range[1].toFixed(2)}
+      </span>
     </div>
   );
 };

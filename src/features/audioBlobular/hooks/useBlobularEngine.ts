@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { playBlobAtTime } from "@/shared/utils/audio/playBlobAtTime";
 import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
 import type { BlobEvent } from "@/shared/types/types";
@@ -62,77 +62,9 @@ export const useBlobularEngine = (
     Array(numBlobs).fill(null)
   );
 
-  useEffect(() => {
-    const currentRefs = blobRefs.current;
-    const newRefs = [...currentRefs];
-    if (numBlobs > currentRefs.length) {
-      newRefs.push(
-        ...Array.from({ length: numBlobs - currentRefs.length }, () => ({
-          nextBlobTime: 0,
-        }))
-      );
-    } else if (numBlobs < currentRefs.length) {
-      newRefs.length = numBlobs;
-    }
-    blobRefs.current = newRefs;
+  const audioSource = useAudioSource();
 
-    setBlobEvents((prev) => {
-      const next = [...prev];
-      if (numBlobs > prev.length)
-        next.push(...Array(numBlobs - prev.length).fill(null));
-      else if (numBlobs < prev.length) next.length = numBlobs;
-      return next;
-    });
-
-    if (isPlayingRef.current && audioCtxRef.current) {
-      for (let i = currentRefs.length; i < numBlobs; i++) {
-        blobRefs.current[i].nextBlobTime = audioCtxRef.current.currentTime;
-        const scheduler = createScheduler(i);
-        scheduler();
-      }
-    }
-  }, [numBlobs]);
-
-  useEffect(() => {
-    durationRangeRef.current = durationRange;
-  }, [durationRange]);
-  useEffect(() => {
-    playbackRateRangeRef.current = playbackRateRange;
-  }, [playbackRateRange]);
-  useEffect(() => {
-    fadeRangeRef.current = fadeRange;
-  }, [fadeRange]);
-  useEffect(() => {
-    scaleRef.current = selectedScale;
-  }, [selectedScale]);
-
-  const ensureBus = (ctx: AudioContext) => {
-    if (!masterRef.current) {
-      const master = ctx.createGain();
-      master.gain.value = 1.0;
-      master.connect(ctx.destination);
-      masterRef.current = master;
-    }
-    if (!compressorRef.current) {
-      const comp = ctx.createDynamicsCompressor();
-      comp.threshold.setValueAtTime(-24, ctx.currentTime);
-      comp.knee.setValueAtTime(30, ctx.currentTime);
-      comp.ratio.setValueAtTime(12, ctx.currentTime);
-      comp.attack.setValueAtTime(0.003, ctx.currentTime);
-      comp.release.setValueAtTime(0.25, ctx.currentTime);
-      comp.connect(masterRef.current);
-      compressorRef.current = comp;
-    }
-  };
-
-  const ensureRecorderWorklet = async (ctx: AudioContext) => {
-    // serves from /public/worklets/recorder.js
-    await ctx.audioWorklet.addModule(
-      `${import.meta.env.BASE_URL}worklets/recorder.js`
-    );
-  };
-
-  const createScheduler = (blobIndex: number) => {
+  const createScheduler = useCallback((blobIndex: number) => {
     const scheduler = () => {
       if (
         !audioCtxRef.current ||
@@ -213,15 +145,88 @@ export const useBlobularEngine = (
       requestAnimationFrame(scheduler);
     };
     return scheduler;
-  };
-
-  const audioSource = useAudioSource();
+  }, [audioSource]);
 
   useEffect(() => {
+    const currentRefs = blobRefs.current;
+    const newRefs = [...currentRefs];
+    if (numBlobs > currentRefs.length) {
+      newRefs.push(
+        ...Array.from({ length: numBlobs - currentRefs.length }, () => ({
+          nextBlobTime: 0,
+        }))
+      );
+    } else if (numBlobs < currentRefs.length) {
+      newRefs.length = numBlobs;
+    }
+    blobRefs.current = newRefs;
+
+    setBlobEvents((prev) => {
+      const next = [...prev];
+      if (numBlobs > prev.length)
+        next.push(...Array(numBlobs - prev.length).fill(null));
+      else if (numBlobs < prev.length) next.length = numBlobs;
+      return next;
+    });
+
+    if (isPlayingRef.current && audioCtxRef.current) {
+      for (let i = currentRefs.length; i < numBlobs; i++) {
+        blobRefs.current[i].nextBlobTime = audioCtxRef.current.currentTime;
+        const scheduler = createScheduler(i);
+        scheduler();
+      }
+    }
+  }, [numBlobs, createScheduler]);
+
+  useEffect(() => {
+    durationRangeRef.current = durationRange;
+  }, [durationRange]);
+  useEffect(() => {
+    playbackRateRangeRef.current = playbackRateRange;
+  }, [playbackRateRange]);
+  useEffect(() => {
+    fadeRangeRef.current = fadeRange;
+  }, [fadeRange]);
+  useEffect(() => {
+    scaleRef.current = selectedScale;
+  }, [selectedScale]);
+
+  const ensureBus = (ctx: AudioContext) => {
+    if (!masterRef.current) {
+      const master = ctx.createGain();
+      master.gain.value = 1.0;
+      master.connect(ctx.destination);
+      masterRef.current = master;
+    }
+    if (!compressorRef.current) {
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.setValueAtTime(-24, ctx.currentTime);
+      comp.knee.setValueAtTime(30, ctx.currentTime);
+      comp.ratio.setValueAtTime(12, ctx.currentTime);
+      comp.attack.setValueAtTime(0.003, ctx.currentTime);
+      comp.release.setValueAtTime(0.25, ctx.currentTime);
+      comp.connect(masterRef.current);
+      compressorRef.current = comp;
+    }
+  };
+
+  const ensureRecorderWorklet = async (ctx: AudioContext) => {
+    // serves from /public/worklets/recorder.js
+    await ctx.audioWorklet.addModule(
+      `${import.meta.env.BASE_URL}worklets/recorder.js`
+    );
+  };
+
+  useEffect(() => {
+    console.log("🔄 useBlobularEngine: syncing blobularBuffer to audioSource", {
+      blobularBuffer: !!blobularBuffer,
+      bufferDuration: blobularBuffer?.duration,
+    });
     if (blobularBuffer) {
+      console.log("🔄 Setting buffer on audioSource");
       audioSource.setBuffer(blobularBuffer);
     }
-  }, [blobularBuffer]);
+  }, [blobularBuffer, audioSource]);
 
   const start = async () => {
     if (!audioCtxRef.current) {

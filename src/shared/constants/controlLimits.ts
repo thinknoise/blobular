@@ -4,8 +4,8 @@ export const controlLimits = {
   MIN_BLOBS: 1,
   MAX_BLOBS: 20,
   DEFAULT_BLOBS: 8,
-  MIN_DURATION: 0.01,
-  MAX_DURATION: 1000,
+  MIN_DURATION: 0.3, // Minimum practical blob duration
+  MAX_DURATION: 1000, // Will be overridden by buffer duration
   MIN_FADE: 0.1,
   MAX_FADE: 3.0,
   MIN_PLAYBACK_RATE: 0.25,

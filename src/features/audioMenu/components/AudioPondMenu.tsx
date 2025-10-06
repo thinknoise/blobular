@@ -62,8 +62,14 @@ const AudioPondMenu: React.FC = () => {
   const [pondMenuOpen, setPondMenuOpen] = useState(false);
 
   const audioContext = getAudioCtx();
-  const { isRecording, startRecording, stopRecording, updateWavBlob, setInputGain, inputGain } =
-    useRecording(audioContext);
+  const {
+    isRecording,
+    startRecording,
+    stopRecording,
+    updateWavBlob,
+    setInputGain,
+    inputGain,
+  } = useRecording(audioContext);
   const [recordings, setRecordings] = useState<{ url: string; blob: Blob }[]>(
     []
   );
@@ -71,6 +77,7 @@ const AudioPondMenu: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const hasInitializedFromS3 = useRef(false);
   const togglePondMenu = () => {
     setPondMenuOpen(!pondMenuOpen);
   };
@@ -78,7 +85,14 @@ const AudioPondMenu: React.FC = () => {
   function getBufferKeyFromUrl(): string | null {
     const params = new URLSearchParams(window.location.search);
     const bufferKey = params.get("buffer");
-    console.log("Buffer key from URL:", bufferKey);
+    console.log("🔍 Raw buffer key from URL:", bufferKey);
+    console.log("🔍 Full URL:", window.location.href);
+    console.log("🔍 Search params:", window.location.search);
+
+    // Also log the encoded version to see what we're working with
+    const encodedKey = new URL(window.location.href).searchParams.get("buffer");
+    console.log("🔍 Encoded buffer key:", encodedKey);
+
     return bufferKey;
   }
 
@@ -88,15 +102,18 @@ const AudioPondMenu: React.FC = () => {
       setIsLoading(true);
       try {
         console.log("🔄 Loading audio pond...");
+        console.log("🔄 About to call fetchAudioKeysAndBuffers");
         await fetchAudioKeysAndBuffers();
         console.log("✅ Audio pond loaded successfully");
       } catch (error) {
         console.error("❌ Failed to load audio pond:", error);
+        console.log("❌ Full error details:", error);
         setError("Failed to load audio pond. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
+    console.log("🔄 AudioPondMenu useEffect triggered");
     loadAudioPond();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
@@ -113,33 +130,70 @@ const AudioPondMenu: React.FC = () => {
     console.log(`Current blobularBuffer: ${!!blobularBuffer}`);
     console.log(`Available buffers: ${Object.keys(buffers).length}`);
     console.log(`Buffer array length: ${bufferArray.length}`);
-    
-    if (blobularBuffer) {
-      console.log("⏭️ Buffer already set, skipping initialization");
-      return; //  don't override if already set
+    console.log(`Has initialized from S3: ${hasInitializedFromS3.current}`);
+
+    // Don't re-initialize if we already have
+    if (hasInitializedFromS3.current && Object.keys(buffers).length > 0) {
+      console.log("⏭️ Already initialized from S3, skipping");
+      return;
     }
 
+    // Check URL parameters first
     const bufferKey = getBufferKeyFromUrl();
     const urlBuffer = bufferKey ? buffers[bufferKey]?.buffer : null;
     const firstBuffer = bufferArray[0]?.[1]?.buffer;
 
-    console.log(`URL buffer key: ${bufferKey || 'none'}`);
-    console.log(`URL buffer found: ${!!urlBuffer}`);
-    console.log(`First buffer found: ${!!firstBuffer}`);
+    console.log(`🔍 URL buffer key: "${bufferKey || "none"}"`);
+    console.log(`🔍 Available S3 keys:`, Object.keys(buffers));
+    console.log(`🔍 URL buffer found: ${!!urlBuffer}`);
+    console.log(`🔍 First buffer found: ${!!firstBuffer}`);
 
+    // Priority 1: URL buffer parameter
     if (bufferKey && urlBuffer) {
       console.log(`🎯 Setting blobularBuffer from URL param: ${bufferKey}`);
       setBlobularBuffer(urlBuffer);
       const displayTitle = getDisplayTitle(bufferKey);
       setPageTitle(displayTitle);
+      hasInitializedFromS3.current = true;
       return;
-    } else if (firstBuffer && !bufferKey) {
-      console.log("🎵 Setting initial blobularBuffer from S3");
-      setBlobularBuffer(firstBuffer);
-    } else {
-      console.log("⚠️ No S3 buffer to initialize with (default buffer should be loaded by AudioBufferProvider)");
     }
-  }, [buffers, bufferArray, blobularBuffer, setBlobularBuffer]);
+
+    // Priority 2: First S3 buffer if no URL param
+    if (firstBuffer && !bufferKey) {
+      console.log("🎵 Setting blobularBuffer from first S3 buffer");
+      setBlobularBuffer(firstBuffer);
+      hasInitializedFromS3.current = true;
+      return;
+    }
+
+    // Handle URL param cases
+    if (bufferKey) {
+      const bufferStatus = buffers[bufferKey];
+      if (bufferStatus?.loading) {
+        console.log(`⏳ Waiting for URL buffer to load: ${bufferKey}`);
+        return;
+      } else if (bufferStatus?.error) {
+        console.log(`❌ URL buffer failed: ${bufferKey}, falling back to first available`);
+        if (firstBuffer) {
+          setBlobularBuffer(firstBuffer);
+          hasInitializedFromS3.current = true;
+        }
+        return;
+      } else if (Object.keys(buffers).length === 0) {
+        console.log(`⏳ S3 buffers not loaded yet, waiting...`);
+        return;
+      } else {
+        console.log(`❌ URL buffer not found: ${bufferKey}, falling back to first available`);
+        if (firstBuffer) {
+          setBlobularBuffer(firstBuffer);
+          hasInitializedFromS3.current = true;
+        }
+        return;
+      }
+    }
+
+    console.log("⚠️ No S3 buffer available to set");
+  }, [buffers, bufferArray, setBlobularBuffer, blobularBuffer]);
 
   const uploadRecording = async (blob: Blob) => {
     const key = `audio-pond/recording-${Date.now()}.wav`;
@@ -252,17 +306,21 @@ const AudioPondMenu: React.FC = () => {
         handleRecordClick={handleRecordClick}
         isRecording={isRecording}
       />
-      
+
       {/* Input Gain Control */}
-      <div style={{
-        padding: "8px",
-        backgroundColor: "rgba(255, 193, 7, 0.1)",
-        borderRadius: "4px",
-        margin: "4px 8px",
-        fontSize: "0.75rem",
-        color: "#333"
-      }}>
-        <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>
+      <div
+        style={{
+          padding: "8px",
+          backgroundColor: "rgba(255, 193, 7, 0.1)",
+          borderRadius: "4px",
+          margin: "4px 8px",
+          fontSize: "0.75rem",
+          color: "#333",
+        }}
+      >
+        <label
+          style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}
+        >
           Input Gain: {inputGain.toFixed(1)}x
         </label>
         <input
@@ -274,21 +332,23 @@ const AudioPondMenu: React.FC = () => {
           onChange={(e) => setInputGain(parseFloat(e.target.value))}
           style={{
             width: "100%",
-            accentColor: "#ffc107"
+            accentColor: "#ffc107",
           }}
         />
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          fontSize: "0.65rem", 
-          color: "#666",
-          marginTop: "2px"
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "0.65rem",
+            color: "#666",
+            marginTop: "2px",
+          }}
+        >
           <span>0.1x</span>
           <span>5.0x</span>
         </div>
       </div>
-      
+
       <button
         disabled={!isRecording}
         className={`update-button ${isRecording ? "recording" : ""}`}
@@ -301,6 +361,10 @@ const AudioPondMenu: React.FC = () => {
       <ul className="audio-list">
         <h3 className="audio-list-title">Audio Pond </h3>
         
+        <div style={{backgroundColor: 'red', color: 'white', padding: '10px', margin: '5px'}}>
+          DEBUG: S3 Status - Keys: {Object.keys(buffers).length}, Loading: {isLoading ? 'YES' : 'NO'}, Error: {error || 'NONE'}
+        </div>
+
         {error && (
           <div
             style={{
