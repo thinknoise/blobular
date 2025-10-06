@@ -14,7 +14,6 @@ import {
 } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
 import { useAudioSource } from "../engine";
-import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 
 /**
  * AudioBlobularPlayer - Main audio synthesis interface
@@ -50,8 +49,6 @@ const AudioBlobularPlayer = () => {
   );
 
   const [isPlaying, setIsPlaying] = useState(false);
-
-  const { blobularBuffer } = useAudioBuffer();
 
   const audioSource = useAudioSource();
   const buffer = audioSource.getBuffer();
