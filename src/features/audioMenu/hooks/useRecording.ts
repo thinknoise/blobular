@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Chrome microphone notification delay
+// Chrome plays a system notification sound when microphone access is granted.
+// This delay ensures the notification finishes before recording starts.
+const CHROME_MIC_NOTIFICATION_DELAY = 500;
+
 type UseRecording = {
   isRecording: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<Blob | null>;
   updateWavBlob: () => Promise<Blob | null>;
+  setInputGain: (gain: number) => void;
+  inputGain: number;
 };
 
 async function ensureRecorderWorklet(ctx: AudioContext) {
@@ -75,9 +82,11 @@ function encodeWavMono16(chunks: Float32Array[], sampleRate: number): Blob {
 
 export function useRecording(audioContext: AudioContext): UseRecording {
   const [isRecording, setIsRecording] = useState(false);
+  const [inputGain, setInputGainState] = useState(2.0); // Default 2x gain
 
   const micStreamRef = useRef<MediaStream | null>(null);
   const micNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const micGainRef = useRef<GainNode | null>(null); // NEW: Input gain control
   const micMonitorRef = useRef<GainNode | null>(null);
   const workletRef = useRef<AudioWorkletNode | null>(null);
 
@@ -86,16 +95,23 @@ export function useRecording(audioContext: AudioContext): UseRecording {
   // Clean up graph/stream
   const teardown = useCallback(() => {
     try {
-      if (micNodeRef.current && workletRef.current) {
+      if (micGainRef.current && workletRef.current) {
         try {
-          micNodeRef.current.disconnect(workletRef.current);
+          micGainRef.current.disconnect(workletRef.current);
+        } catch {
+          // ignore if already disconnected
+        }
+      }
+      if (micNodeRef.current && micGainRef.current) {
+        try {
+          micNodeRef.current.disconnect(micGainRef.current);
         } catch {
           // ignore if already disconnected
         }
       }
       if (micMonitorRef.current) {
         try {
-          micNodeRef.current?.disconnect(micMonitorRef.current);
+          micGainRef.current?.disconnect(micMonitorRef.current);
         } catch {
           // ignore if already disconnected
         }
@@ -112,6 +128,7 @@ export function useRecording(audioContext: AudioContext): UseRecording {
         // ignore if already disconnected
       }
       workletRef.current = null;
+      micGainRef.current = null;
       micMonitorRef.current = null;
       micNodeRef.current = null;
 
@@ -140,17 +157,34 @@ export function useRecording(audioContext: AudioContext): UseRecording {
     });
     micStreamRef.current = stream;
 
+    // ========================================================================
+    // INTENTIONAL DELAY: Wait for Chrome's microphone notification bell
+    // ========================================================================
+    // Chrome plays a system notification "ping/bell" sound when microphone
+    // access is granted via getUserMedia(). This delay ensures that system
+    // sound finishes playing before we start our recording, preventing the
+    // notification bell from being captured in the recording audio.
+    //
+    // This delay is intentional and necessary to overcome Chrome's
+    // mic access notification sound interference.
+    await new Promise((resolve) => setTimeout(resolve, CHROME_MIC_NOTIFICATION_DELAY));
+    // ========================================================================
+
     // Mic node
     const mic = new MediaStreamAudioSourceNode(audioContext, {
       mediaStream: stream,
     });
     micNodeRef.current = mic;
 
+    // Input gain control (THIS IS WHERE YOU CAN BOOST THE SIGNAL!)
+    const inputGainNode = audioContext.createGain();
+    inputGainNode.gain.value = inputGain; // Use current gain setting
+    micGainRef.current = inputGainNode;
+
     // Optional self-monitor (muted to avoid feedback/echo cancellation)
     const mon = audioContext.createGain();
     mon.gain.value = 0.0;
     micMonitorRef.current = mon;
-    mic.connect(mon).connect(audioContext.destination); // keep at 0.0 gain
 
     // AudioWorkletNode to pull mic samples
     const rec = new AudioWorkletNode(audioContext, "recorder", {
@@ -165,18 +199,29 @@ export function useRecording(audioContext: AudioContext): UseRecording {
       chunksRef.current.push(chunk);
     };
 
-    // IMPORTANT: connect mic -> worklet (no mix tap)
-    mic.connect(rec);
+    // IMPORTANT: New signal chain: mic -> inputGain -> worklet
+    // Also connect to monitor for potential self-monitoring
+    mic.connect(inputGainNode);
+    inputGainNode.connect(rec);
+    inputGainNode.connect(mon).connect(audioContext.destination); // monitor at 0.0 gain
 
     setIsRecording(true);
-  }, [audioContext]);
+  }, [audioContext, inputGain]);
+
+  // Function to update input gain in real-time
+  const setInputGain = useCallback((gain: number) => {
+    setInputGainState(gain);
+    if (micGainRef.current) {
+      micGainRef.current.gain.value = gain;
+    }
+  }, []);
 
   const stopRecording = useCallback(async (): Promise<Blob | null> => {
     if (!isRecording) return null;
 
     // Detach first so no new chunks arrive
     try {
-      micNodeRef.current?.disconnect(workletRef.current!);
+      micGainRef.current?.disconnect(workletRef.current!);
     } catch {
       // ignore if already disconnected
     }
@@ -198,5 +243,12 @@ export function useRecording(audioContext: AudioContext): UseRecording {
     return encodeWavMono16(chunksRef.current, audioContext.sampleRate);
   }, [audioContext.sampleRate, isRecording]);
 
-  return { isRecording, startRecording, stopRecording, updateWavBlob };
+  return { 
+    isRecording, 
+    startRecording, 
+    stopRecording, 
+    updateWavBlob, 
+    setInputGain, 
+    inputGain 
+  };
 }

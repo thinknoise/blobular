@@ -10,8 +10,16 @@ export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
 
+  const wrappedSetBlobularBuffer = (buffer: AudioBuffer | null) => {
+    setBlobularBuffer(buffer);
+  };
+
+  // No default loading - buffers are loaded through AudioPondMenu S3 integration
+
   return (
-    <AudioBufferContext.Provider value={{ blobularBuffer, setBlobularBuffer }}>
+    <AudioBufferContext.Provider
+      value={{ blobularBuffer, setBlobularBuffer: wrappedSetBlobularBuffer }}
+    >
       {children}
     </AudioBufferContext.Provider>
   );

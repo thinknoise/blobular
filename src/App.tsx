@@ -55,19 +55,22 @@ function App() {
         </div>
       )}
       {userInteraction && (
-        <AudioSourceProvider>
-          <div className="version-text">version: {packageJson.version}</div>
-          <div className="app-blobular">
-            <h1 className="blobular-title-chunk left-side">
-              Blobular Synthesis
-            </h1>
-            <AudioBufferProvider>
+        // Provider order matters for initialization:
+        // AudioBufferProvider must wrap AudioSourceProvider to ensure
+        // buffer context is available when audio source initializes
+        <AudioBufferProvider>
+          <AudioSourceProvider>
+            <div className="version-text">version: {packageJson.version}</div>
+            <div className="app-blobular">
+              <h1 className="blobular-title-chunk left-side">
+                Blobular Synthesis
+              </h1>
               <AudioBlobularPlayer />
               {/* <AudioBlobularPlayer /> */}
               <AudioPondMenu />
-            </AudioBufferProvider>
-          </div>
-        </AudioSourceProvider>
+            </div>
+          </AudioSourceProvider>
+        </AudioBufferProvider>
       )}
     </div>
   );

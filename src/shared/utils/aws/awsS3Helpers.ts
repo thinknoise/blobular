@@ -11,31 +11,41 @@ const AUDIO_EXTENSIONS = /\.(wav|mp3|ogg|flac|aac)$/i;
 
 /**
  * List all audio keys under the specified prefixes in your S3 bucket
- * @param prefixes Array of folder prefixes to list (defaults to both "audio/" and "audio-pond/")
+ * @param prefixes Array of folder prefixes to list (defaults to "audio-pond/")
+ * @returns Promise resolving to array of audio file keys, sorted by most recent first
  */
 export async function listAudioKeys(
   prefixes: string[] = ["audio-pond/"]
 ): Promise<string[]> {
-  const results = await Promise.all(
-    prefixes.map(async (prefix) => {
-      const command = new ListObjectsV2Command({
-        Bucket: BUCKET,
-        Prefix: prefix,
-      });
-      const response = await s3.send(command);
-      return (response.Contents ?? [])
-        .filter((item) => item.Key && AUDIO_EXTENSIONS.test(item.Key))
-        .sort((a, b) => {
-          // Sort by most recent first
-          const aDate = new Date(a.LastModified || 0);
-          const bDate = new Date(b.LastModified || 0);
-          return bDate.getTime() - aDate.getTime();
-        })
-        .map((item) => item.Key!);
-    })
-  );
-  // Flatten the array of arrays into a single list of valid audio keys
-  return results.flat();
+  try {
+    // Fetch objects from all specified prefixes in parallel
+    const results = await Promise.all(
+      prefixes.map(async (prefix) => {
+        const command = new ListObjectsV2Command({
+          Bucket: BUCKET,
+          Prefix: prefix,
+        });
+
+        const response = await s3.send(command);
+
+        // Filter for audio files only and sort by most recent first
+        return (response.Contents ?? [])
+          .filter((item) => item.Key && AUDIO_EXTENSIONS.test(item.Key))
+          .sort((a, b) => {
+            const aDate = new Date(a.LastModified || 0);
+            const bDate = new Date(b.LastModified || 0);
+            return bDate.getTime() - aDate.getTime();
+          })
+          .map((item) => item.Key!);
+      })
+    );
+
+    // Flatten results from all prefixes into single array
+    return results.flat();
+  } catch (error) {
+    console.error("Failed to list S3 audio keys:", error);
+    throw error;
+  }
 }
 
 /**

@@ -56,14 +56,18 @@ const CompactWaveform = ({ customHeight = null }: CompactWaveformProps) => {
     };
   }, [audioSource]);
 
-  if (!buffer) return null;
-
   return (
     <div
       className="compact-waveform-container"
       style={{ height: canvasRef.current?.height }}
     >
-      <canvas ref={canvasRef} className="compact-waveform" />
+      {!buffer && (
+        <div className="waveform-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading audio...</p>
+        </div>
+      )}
+      {buffer && <canvas ref={canvasRef} className="compact-waveform" />}
     </div>
   );
 };

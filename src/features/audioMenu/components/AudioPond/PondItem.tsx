@@ -79,7 +79,9 @@ const PondItem: React.FC<PondItemProps> = ({
         {isPlaying ? <Square /> : <Play />}
       </button>
 
-      {status.loading && <span className={loadingSpinner}>Loading...</span>}
+      {status.loading && !status.buffer && (
+        <span className={loadingSpinner}>Loading...</span>
+      )}
 
       {status.error && (
         <span className={errorText}>Failed to load: {status.error}</span>

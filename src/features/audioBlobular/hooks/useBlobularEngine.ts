@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { playBlobAtTime } from "@/shared/utils/audio/playBlobAtTime";
 import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
 import type { BlobEvent } from "@/shared/types/types";
@@ -62,6 +62,94 @@ export const useBlobularEngine = (
     Array(numBlobs).fill(null)
   );
 
+  const audioSource = useAudioSource();
+
+  const createScheduler = useCallback(
+    (blobIndex: number) => {
+      const scheduler = () => {
+        if (
+          !audioCtxRef.current ||
+          !compressorRef.current ||
+          !isPlayingRef.current ||
+          !audioSource.getBuffer()
+        )
+          return;
+
+        const ctx = audioCtxRef.current;
+        const buffer = audioSource.getBuffer()!;
+        const compressor = compressorRef.current;
+
+        const scheduleAheadTime = 0.1;
+        const blob = blobRefs.current[blobIndex];
+
+        while (
+          blob?.nextBlobTime &&
+          blob.nextBlobTime < ctx.currentTime + scheduleAheadTime
+        ) {
+          const [minDur, maxDur] = durationRangeRef.current;
+          const randomDuration = Math.random() * (maxDur - minDur) + minDur;
+
+          const [minRate, maxRate] = playbackRateRangeRef.current;
+          const degrees = ALL_SCALES.find(
+            (s) => s.name === (scaleRef.current as ScaleName)
+          )?.degrees;
+          const randomPlaybackRate = getRandomScalePlaybackRate(
+            minRate,
+            maxRate,
+            degrees
+          );
+          const actualPlayTime = randomDuration / randomPlaybackRate;
+
+          const [minFade, maxFade] = fadeRangeRef.current;
+          const randomFade = Math.random() * (maxFade - minFade) + minFade;
+          const fadeTime = Math.min(randomFade, actualPlayTime / 2);
+
+          const coinFlip = Math.random() < 0.5;
+          const pan = { start: coinFlip ? -1 : 1, rampTo: coinFlip ? 1 : -1 };
+
+          const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
+          const randomOffset = Math.random() * maxOffset;
+          const gain = 0.8;
+
+          const event: BlobEvent = {
+            blobIndex,
+            scheduledTime: blob.nextBlobTime,
+            duration: randomDuration,
+            playbackRate: randomPlaybackRate,
+            fadeTime,
+            pan,
+            timestamp: Date.now(),
+            offset: randomOffset,
+          };
+          setBlobEvents((prev) => {
+            const u = [...prev];
+            u[blobIndex] = event;
+            return u;
+          });
+
+          playBlobAtTime(
+            ctx,
+            buffer,
+            blob.nextBlobTime,
+            randomDuration,
+            randomPlaybackRate,
+            gain,
+            compressor,
+            fadeTime,
+            pan,
+            randomOffset
+          );
+
+          blob.nextBlobTime += randomDuration - fadeTime;
+        }
+
+        requestAnimationFrame(scheduler);
+      };
+      return scheduler;
+    },
+    [audioSource]
+  );
+
   useEffect(() => {
     const currentRefs = blobRefs.current;
     const newRefs = [...currentRefs];
@@ -91,7 +179,7 @@ export const useBlobularEngine = (
         scheduler();
       }
     }
-  }, [numBlobs]);
+  }, [numBlobs, createScheduler]);
 
   useEffect(() => {
     durationRangeRef.current = durationRange;
@@ -132,96 +220,15 @@ export const useBlobularEngine = (
     );
   };
 
-  const createScheduler = (blobIndex: number) => {
-    const scheduler = () => {
-      if (
-        !audioCtxRef.current ||
-        !compressorRef.current ||
-        !isPlayingRef.current ||
-        !audioSource.getBuffer()
-      )
-        return;
-
-      const ctx = audioCtxRef.current;
-      const buffer = audioSource.getBuffer()!;
-      const compressor = compressorRef.current;
-
-      const scheduleAheadTime = 0.1;
-      const blob = blobRefs.current[blobIndex];
-
-      while (
-        blob?.nextBlobTime &&
-        blob.nextBlobTime < ctx.currentTime + scheduleAheadTime
-      ) {
-        const [minDur, maxDur] = durationRangeRef.current;
-        const randomDuration = Math.random() * (maxDur - minDur) + minDur;
-
-        const [minRate, maxRate] = playbackRateRangeRef.current;
-        const degrees = ALL_SCALES.find(
-          (s) => s.name === (scaleRef.current as ScaleName)
-        )?.degrees;
-        const randomPlaybackRate = getRandomScalePlaybackRate(
-          minRate,
-          maxRate,
-          degrees
-        );
-        const actualPlayTime = randomDuration / randomPlaybackRate;
-
-        const [minFade, maxFade] = fadeRangeRef.current;
-        const randomFade = Math.random() * (maxFade - minFade) + minFade;
-        const fadeTime = Math.min(randomFade, actualPlayTime / 2);
-
-        const coinFlip = Math.random() < 0.5;
-        const pan = { start: coinFlip ? -1 : 1, rampTo: coinFlip ? 1 : -1 };
-
-        const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
-        const randomOffset = Math.random() * maxOffset;
-        const gain = 0.8;
-
-        const event: BlobEvent = {
-          blobIndex,
-          scheduledTime: blob.nextBlobTime,
-          duration: randomDuration,
-          playbackRate: randomPlaybackRate,
-          fadeTime,
-          pan,
-          timestamp: Date.now(),
-          offset: randomOffset,
-        };
-        setBlobEvents((prev) => {
-          const u = [...prev];
-          u[blobIndex] = event;
-          return u;
-        });
-
-        playBlobAtTime(
-          ctx,
-          buffer,
-          blob.nextBlobTime,
-          randomDuration,
-          randomPlaybackRate,
-          gain,
-          compressor,
-          fadeTime,
-          pan,
-          randomOffset
-        );
-
-        blob.nextBlobTime += randomDuration - fadeTime;
-      }
-
-      requestAnimationFrame(scheduler);
-    };
-    return scheduler;
-  };
-
-  const audioSource = useAudioSource();
-
+  /**
+   * Synchronize blobularBuffer (from S3/AudioBufferProvider) with audioSource (legacy system)
+   * This ensures that when users select S3 audio files, they're available to the audio engine
+   */
   useEffect(() => {
     if (blobularBuffer) {
       audioSource.setBuffer(blobularBuffer);
     }
-  }, [blobularBuffer]);
+  }, [blobularBuffer, audioSource]);
 
   const start = async () => {
     if (!audioCtxRef.current) {
@@ -230,15 +237,15 @@ export const useBlobularEngine = (
     const ctx = audioCtxRef.current;
     ensureBus(ctx);
 
+    // Ensure audio buffer is available from dual buffer system
     if (!audioSource.getBuffer()) {
       if (blobularBuffer) {
         audioSource.setBuffer(blobularBuffer);
       } else {
-        const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
-        const resp = await fetch(url);
-        const abuf = await resp.arrayBuffer();
-        const decoded = await ctx.decodeAudioData(abuf);
-        audioSource.setBuffer(decoded);
+        console.warn(
+          "No audio buffer available - please select an audio file from the menu"
+        );
+        return;
       }
     }
 

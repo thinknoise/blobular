@@ -23,9 +23,18 @@ export type ScaleControl = {
 
 type BlobControlsProps = {
   bufferLength: number;
-  duration: RangeControl & { setRange: (range: [number, number]) => void };
-  fade: RangeControl & { setRange: (range: [number, number]) => void };
-  playbackRate: RangeControl & { setRange: (range: [number, number]) => void };
+  duration: RangeControl & {
+    setRange: (range: [number, number]) => void;
+    commitRange: (range: [number, number]) => void;
+  };
+  fade: RangeControl & {
+    setRange: (range: [number, number]) => void;
+    commitRange: (range: [number, number]) => void;
+  };
+  playbackRate: RangeControl & {
+    setRange: (range: [number, number]) => void;
+    commitRange: (range: [number, number]) => void;
+  };
   numBlobs: CountControl & { setValue: (val: number) => void };
   selectedScale: ScaleControl;
 };
@@ -43,7 +52,8 @@ const BlobControls = ({
     const durationStart = duration.range[0];
     const fadeEnd = fade.range[1];
 
-    if (fadeEnd > durationStart) {
+    // Only apply guardrail if buffer is loaded and fade actually exceeds duration
+    if (bufferLength > 0 && fadeEnd > durationStart) {
       fade.setRange([fade.min, durationStart]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,7 +63,8 @@ const BlobControls = ({
     const durationStart = duration.range[0];
     const fadeEnd = fade.range[1];
 
-    if (fadeEnd > durationStart) {
+    // Only apply guardrail if buffer is loaded and fade actually exceeds duration
+    if (bufferLength > 0 && fadeEnd > durationStart) {
       duration.setRange([fadeEnd, duration.max]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,19 +78,48 @@ const BlobControls = ({
             label="Fade"
             range={fade.range}
             setRange={fade.setRange}
+            onRangeCommit={fade.commitRange}
             min={fade.min}
             max={fade.max}
             step={fade.step}
           />
         </div>
-        <BlobRangeSlider
-          label="Duration"
-          range={duration.range}
-          setRange={duration.setRange}
-          min={0.3}
-          max={Math.min(18, bufferLength)}
-          step={duration.step}
-        />
+        {bufferLength > 0 ? (
+          <BlobRangeSlider
+            label="Duration"
+            range={duration.range}
+            setRange={duration.setRange}
+            onRangeCommit={duration.commitRange}
+            min={duration.min}
+            max={bufferLength}
+            step={duration.step}
+            showMaxAsRightValue={true}
+          />
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              opacity: 0.5,
+            }}
+          >
+            <label style={{ fontSize: "12px", fontWeight: "bold" }}>
+              Duration
+            </label>
+            <div
+              style={{
+                height: "40px",
+                display: "flex",
+                alignItems: "center",
+                fontSize: "12px",
+                color: "#666",
+              }}
+            >
+              Loading...
+            </div>
+          </div>
+        )}
       </div>
       <div className={controlRow}>
         <div className={selectionRow}>
@@ -100,6 +140,7 @@ const BlobControls = ({
           label="Sample Rate"
           range={playbackRate.range}
           setRange={playbackRate.setRange}
+          onRangeCommit={playbackRate.commitRange}
           min={playbackRate.min}
           max={playbackRate.max}
           step={playbackRate.step}

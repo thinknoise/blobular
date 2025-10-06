@@ -22,7 +22,10 @@ function updateUrlFromControls(
 
   const [minPlayback, maxPlayback] = controls.playbackRate.range ?? [];
   if (minPlayback != null && maxPlayback != null) {
-    params.set("rate", `${minPlayback.toFixed(2)}-${maxPlayback.toFixed(2)}`);
+    params.set(
+      "sampleRate",
+      `${minPlayback.toFixed(2)}-${maxPlayback.toFixed(2)}`
+    );
   }
 
   if (controls.selectedScale) {
@@ -81,7 +84,8 @@ export function useControls(initial?: PartialControlsState) {
 
   const updateControl = <K extends keyof ControlsState>(
     key: K,
-    updateFn: (prev: ControlsState[K]) => ControlsState[K]
+    updateFn: (prev: ControlsState[K]) => ControlsState[K],
+    shouldUpdateUrl: boolean = false
   ) => {
     setControls((prev) => {
       const next = {
@@ -89,7 +93,7 @@ export function useControls(initial?: PartialControlsState) {
         [key]: updateFn(prev[key]),
       };
 
-      if (hasInitializedFromUrl) {
+      if (hasInitializedFromUrl && shouldUpdateUrl) {
         updateUrlFromControls({
           numBlobs: next.numBlobs,
           duration: next.duration,
@@ -105,19 +109,30 @@ export function useControls(initial?: PartialControlsState) {
     key: keyof Pick<ControlsState, "duration" | "fade" | "playbackRate">,
     range: Range
   ) => {
-    updateControl(key, (prev) => ({ ...prev, range }));
+    updateControl(key, (prev) => ({ ...prev, range }), false); // Don't update URL during drag
+  };
+
+  const commitRangeControl = (
+    key: keyof Pick<ControlsState, "duration" | "fade" | "playbackRate">,
+    range: Range
+  ) => {
+    updateControl(key, (prev) => ({ ...prev, range }), true); // Update URL when committed
   };
 
   const setNumBlobs = (value: number) => {
-    updateControl("numBlobs", (prev) => ({ ...prev, value }));
+    updateControl("numBlobs", (prev) => ({ ...prev, value }), true);
   };
 
   const setPlaybackRate = (range: Range) => {
-    updateControl("playbackRate", (prev) => ({ ...prev, range }));
+    updateControl("playbackRate", (prev) => ({ ...prev, range }), false);
+  };
+
+  const commitPlaybackRate = (range: Range) => {
+    updateControl("playbackRate", (prev) => ({ ...prev, range }), true);
   };
 
   const setSelectedScale = (scale: ScaleName) => {
-    updateControl("selectedScale", () => scale);
+    updateControl("selectedScale", () => scale, true);
   };
 
   return {
@@ -125,23 +140,29 @@ export function useControls(initial?: PartialControlsState) {
       duration: {
         ...controls.duration,
         setRange: (range: Range) => setRangeControl("duration", range),
+        commitRange: (range: Range) => commitRangeControl("duration", range),
       },
       fade: {
         ...controls.fade,
         setRange: (range: Range) => setRangeControl("fade", range),
+        commitRange: (range: Range) => commitRangeControl("fade", range),
       },
       playbackRate: {
         ...controls.playbackRate,
         setRange: (range: Range) => setRangeControl("playbackRate", range),
+        commitRange: (range: Range) =>
+          commitRangeControl("playbackRate", range),
       },
       numBlobs: controls.numBlobs,
       selectedScale: controls.selectedScale,
     },
     setRangeControl,
+    commitRangeControl,
     setNumBlobs,
     setSelectedScale,
     setControls,
     setPlaybackRate,
+    commitPlaybackRate,
     hasInitializedFromUrl,
     setHasInitializedFromUrl,
   };
