@@ -15,32 +15,25 @@ type BufferStatus = {
 export function useAudioPond() {
   const [buffers, setBuffers] = useState<Record<string, BufferStatus>>({});
 
+  /**
+   * Fetch all S3 audio keys and decode them as AudioBuffers
+   * This is the main initialization function for the audio pond
+   */
   const fetchAudioKeysAndBuffers = async () => {
-    console.log("🔄 fetchAudioKeysAndBuffers called");
-    
-    // Basic connectivity test
-    console.log("🔄 Testing basic fetch API...");
     try {
-      const testResponse = await fetch("https://httpbin.org/get");
-      console.log("✅ Basic fetch works:", testResponse.ok);
-    } catch (fetchError) {
-      console.error("❌ Basic fetch failed:", fetchError);
-    }
-    
-    try {
+      // Step 1: Get list of all audio file keys from S3
       const keys = await listAudioKeys();
-      console.log("🗝️ Found audio keys:", keys);
-      console.log("🗝️ Keys length:", keys.length);
 
+      // Step 2: Initialize loading state for all keys
       const initialMap: Record<string, BufferStatus> = {};
       keys.forEach((key) => {
         initialMap[key] = { loading: true };
       });
       setBuffers(initialMap);
 
+      // Step 3: Decode each audio file in parallel
       for (const key of keys) {
         try {
-          console.log(`🔄 Loading buffer for key: ${key}`);
           const arrayBuffer = await getAudioArrayBuffer(key);
           const cloned = arrayBuffer.slice(0);
           const audioCtx = getAudioCtx();
@@ -50,9 +43,8 @@ export function useAudioPond() {
             ...prev,
             [key]: { buffer: decoded, loading: false },
           }));
-          console.log(`✅ Loaded buffer for key: ${key}`);
         } catch (err) {
-          console.error(`❌ Failed to load ${key}`, err);
+          console.error(`Failed to load audio file: ${key}`, err);
           setBuffers((prev) => ({
             ...prev,
             [key]: { loading: false, error: String(err) },
@@ -60,12 +52,7 @@ export function useAudioPond() {
         }
       }
     } catch (err) {
-      console.error("❌ Failed to list audio keys:", err);
-      console.error("❌ Error details for listAudioKeys:", {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : 'No stack',
-      });
+      console.error("Failed to fetch S3 audio keys:", err);
       throw err;
     }
   };

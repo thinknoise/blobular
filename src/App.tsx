@@ -55,6 +55,9 @@ function App() {
         </div>
       )}
       {userInteraction && (
+        // Provider order matters for initialization:
+        // AudioBufferProvider must wrap AudioSourceProvider to ensure
+        // buffer context is available when audio source initializes
         <AudioBufferProvider>
           <AudioSourceProvider>
             <div className="version-text">version: {packageJson.version}</div>

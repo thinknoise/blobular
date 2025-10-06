@@ -16,6 +16,17 @@ import "./AudioBlobularPlayer.css";
 import { useAudioSource } from "../engine";
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 
+/**
+ * AudioBlobularPlayer - Main audio synthesis interface
+ *
+ * This component uses a dual buffer system:
+ * - useAudioBuffer(): Gets buffers from S3/AudioBufferProvider (for UI/URL handling)
+ * - useAudioSource(): Legacy audio engine interface (for synthesis)
+ * - Synchronization happens in useBlobularEngine via useEffect
+ *
+ * URL parameters are applied after buffer loads to ensure proper constraints.
+ */
+
 const AudioBlobularPlayer = () => {
   // Don't parse URL parameters initially - wait for buffer to load
   const {
@@ -45,22 +56,21 @@ const AudioBlobularPlayer = () => {
   const audioSource = useAudioSource();
   const buffer = audioSource.getBuffer();
 
-  // Apply URL parameters after buffer is loaded
+  /**
+   * Apply URL parameters after audio buffer is loaded
+   * This ensures URL params are applied with correct buffer constraints
+   */
   useEffect(() => {
     if (!buffer) return;
-
-    console.log("🎵 Buffer loaded, applying URL parameters...", {
-      bufferDuration: buffer.duration,
-    });
 
     setControls((prev) => {
       const next = { ...prev };
 
-      // Update duration max to buffer length and clamp URL parameters if needed
+      // Update duration constraints and apply URL parameters
       const durationFromUrl = getDurationRangeFromUrl();
       if (durationFromUrl) {
         const [urlMin, urlMax] = durationFromUrl;
-        // Clamp URL values to valid range
+        // Clamp URL values to valid buffer range
         const clampedMin = Math.max(
           prev.duration.min,
           Math.min(urlMin, buffer.duration)
@@ -70,13 +80,7 @@ const AudioBlobularPlayer = () => {
           Math.min(urlMax, buffer.duration)
         );
 
-        console.log("🎵 Clamping URL duration:", {
-          original: [urlMin, urlMax],
-          clamped: [clampedMin, clampedMax],
-          bufferDuration: buffer.duration,
-        });
-
-        // If we had to clamp the values, update the URL to reflect the corrected parameters
+        // Update URL if we had to clamp values
         if (urlMax > buffer.duration || urlMin !== clampedMin) {
           const params = new URLSearchParams(window.location.search);
           params.set(
@@ -85,7 +89,6 @@ const AudioBlobularPlayer = () => {
           );
           const newUrl = `${window.location.pathname}?${params.toString()}`;
           window.history.replaceState({}, "", newUrl);
-          console.log("🔧 Corrected URL parameters:", newUrl);
         }
 
         next.duration = {
@@ -94,7 +97,7 @@ const AudioBlobularPlayer = () => {
           max: buffer.duration,
         };
       } else {
-        // No URL params, just update the max
+        // No URL params, just update max constraint
         next.duration = {
           ...prev.duration,
           max: buffer.duration,
@@ -104,7 +107,6 @@ const AudioBlobularPlayer = () => {
       // Apply playback rate from URL
       const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
       if (playbackRateFromUrl) {
-        console.log("🎵 Applying URL playback rate:", playbackRateFromUrl);
         next.playbackRate = {
           ...prev.playbackRate,
           range: playbackRateFromUrl,
@@ -114,7 +116,6 @@ const AudioBlobularPlayer = () => {
       // Apply scale from URL
       const scaleFromUrl = getScaleFromUrl();
       if (scaleFromUrl) {
-        console.log("🎵 Applying URL scale:", scaleFromUrl);
         next.selectedScale = scaleFromUrl;
       }
 

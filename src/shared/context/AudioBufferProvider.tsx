@@ -13,10 +13,6 @@ export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const wrappedSetBlobularBuffer = (buffer: AudioBuffer | null) => {
-    console.log("🔄 AudioBufferProvider.setBlobularBuffer called", {
-      buffer: !!buffer,
-      duration: buffer?.duration,
-    });
     setBlobularBuffer(buffer);
   };
 
@@ -24,15 +20,13 @@ export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const loadDefaultBuffer = async () => {
       try {
-        console.log("🎵 Loading default audio buffer...");
         const response = await fetch(DEFAULT_AUDIO_URL);
         const arrayBuffer = await response.arrayBuffer();
         const audioContext = getAudioCtx();
         const decoded = await audioContext.decodeAudioData(arrayBuffer);
         wrappedSetBlobularBuffer(decoded);
-        console.log("✅ Default audio buffer loaded successfully");
       } catch (error) {
-        console.error("❌ Failed to load default audio buffer:", error);
+        console.error("Failed to load default audio buffer:", error);
       }
     };
 
@@ -42,7 +36,9 @@ export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [blobularBuffer]);
 
   return (
-    <AudioBufferContext.Provider value={{ blobularBuffer, setBlobularBuffer: wrappedSetBlobularBuffer }}>
+    <AudioBufferContext.Provider
+      value={{ blobularBuffer, setBlobularBuffer: wrappedSetBlobularBuffer }}
+    >
       {children}
     </AudioBufferContext.Provider>
   );

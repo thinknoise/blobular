@@ -84,73 +84,53 @@ const AudioPondMenu: React.FC = () => {
 
   function getBufferKeyFromUrl(): string | null {
     const params = new URLSearchParams(window.location.search);
-    const bufferKey = params.get("buffer");
-    console.log("🔍 Raw buffer key from URL:", bufferKey);
-    console.log("🔍 Full URL:", window.location.href);
-    console.log("🔍 Search params:", window.location.search);
-
-    // Also log the encoded version to see what we're working with
-    const encodedKey = new URL(window.location.href).searchParams.get("buffer");
-    console.log("🔍 Encoded buffer key:", encodedKey);
-
-    return bufferKey;
+    return params.get("buffer");
   }
 
+  // Initialize S3 audio pond on component mount
   useEffect(() => {
     const loadAudioPond = async () => {
       if (isLoading) return; // Prevent multiple simultaneous loads
       setIsLoading(true);
       try {
-        console.log("🔄 Loading audio pond...");
-        console.log("🔄 About to call fetchAudioKeysAndBuffers");
         await fetchAudioKeysAndBuffers();
-        console.log("✅ Audio pond loaded successfully");
       } catch (error) {
-        console.error("❌ Failed to load audio pond:", error);
-        console.log("❌ Full error details:", error);
+        console.error("Failed to load audio pond:", error);
         setError("Failed to load audio pond. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
-    console.log("🔄 AudioPondMenu useEffect triggered");
+
     loadAudioPond();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
   const bufferArray = Object.entries(buffers);
 
-  // Initialize blobularBuffer from URL param or first available buffer
-  // This logic runs once on component mount
-  // and also when buffers change
-  // to ensure blobularBuffer is set correctly
-  // based on URL param or first available buffer
+  /**
+   * Buffer initialization effect - runs when S3 buffers change
+   *
+   * Loading priority:
+   * 1. URL parameter buffer (if specified and available)
+   * 2. First available S3 buffer (if no URL param)
+   * 3. Fallback handling for missing/failed buffers
+   *
+   * This effect only runs once per S3 load to avoid overriding user selections
+   */
   useEffect(() => {
-    console.log("🔍 Buffer initialization effect triggered");
-    console.log(`Current blobularBuffer: ${!!blobularBuffer}`);
-    console.log(`Available buffers: ${Object.keys(buffers).length}`);
-    console.log(`Buffer array length: ${bufferArray.length}`);
-    console.log(`Has initialized from S3: ${hasInitializedFromS3.current}`);
-
-    // Don't re-initialize if we already have
+    // Don't re-initialize if we already have initialized from S3
     if (hasInitializedFromS3.current && Object.keys(buffers).length > 0) {
-      console.log("⏭️ Already initialized from S3, skipping");
       return;
     }
 
-    // Check URL parameters first
+    // Get buffer selection sources
     const bufferKey = getBufferKeyFromUrl();
     const urlBuffer = bufferKey ? buffers[bufferKey]?.buffer : null;
     const firstBuffer = bufferArray[0]?.[1]?.buffer;
 
-    console.log(`🔍 URL buffer key: "${bufferKey || "none"}"`);
-    console.log(`🔍 Available S3 keys:`, Object.keys(buffers));
-    console.log(`🔍 URL buffer found: ${!!urlBuffer}`);
-    console.log(`🔍 First buffer found: ${!!firstBuffer}`);
-
-    // Priority 1: URL buffer parameter
+    // Priority 1: Use URL-specified buffer if available
     if (bufferKey && urlBuffer) {
-      console.log(`🎯 Setting blobularBuffer from URL param: ${bufferKey}`);
       setBlobularBuffer(urlBuffer);
       const displayTitle = getDisplayTitle(bufferKey);
       setPageTitle(displayTitle);
@@ -158,32 +138,31 @@ const AudioPondMenu: React.FC = () => {
       return;
     }
 
-    // Priority 2: First S3 buffer if no URL param
+    // Priority 2: Use first available buffer if no URL param
     if (firstBuffer && !bufferKey) {
-      console.log("🎵 Setting blobularBuffer from first S3 buffer");
       setBlobularBuffer(firstBuffer);
       hasInitializedFromS3.current = true;
       return;
     }
 
-    // Handle URL param cases
+    // Handle URL parameter edge cases
     if (bufferKey) {
       const bufferStatus = buffers[bufferKey];
       if (bufferStatus?.loading) {
-        console.log(`⏳ Waiting for URL buffer to load: ${bufferKey}`);
+        // Wait for URL buffer to finish loading
         return;
       } else if (bufferStatus?.error) {
-        console.log(`❌ URL buffer failed: ${bufferKey}, falling back to first available`);
+        // URL buffer failed, fallback to first available
         if (firstBuffer) {
           setBlobularBuffer(firstBuffer);
           hasInitializedFromS3.current = true;
         }
         return;
       } else if (Object.keys(buffers).length === 0) {
-        console.log(`⏳ S3 buffers not loaded yet, waiting...`);
+        // S3 buffers not loaded yet, wait
         return;
       } else {
-        console.log(`❌ URL buffer not found: ${bufferKey}, falling back to first available`);
+        // URL buffer not found, fallback to first available
         if (firstBuffer) {
           setBlobularBuffer(firstBuffer);
           hasInitializedFromS3.current = true;
@@ -191,8 +170,6 @@ const AudioPondMenu: React.FC = () => {
         return;
       }
     }
-
-    console.log("⚠️ No S3 buffer available to set");
   }, [buffers, bufferArray, setBlobularBuffer, blobularBuffer]);
 
   const uploadRecording = async (blob: Blob) => {
@@ -360,10 +337,6 @@ const AudioPondMenu: React.FC = () => {
 
       <ul className="audio-list">
         <h3 className="audio-list-title">Audio Pond </h3>
-        
-        <div style={{backgroundColor: 'red', color: 'white', padding: '10px', margin: '5px'}}>
-          DEBUG: S3 Status - Keys: {Object.keys(buffers).length}, Loading: {isLoading ? 'YES' : 'NO'}, Error: {error || 'NONE'}
-        </div>
 
         {error && (
           <div
