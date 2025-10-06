@@ -96,20 +96,26 @@ const BlobControls = ({
             showMaxAsRightValue={true}
           />
         ) : (
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '8px',
-            opacity: 0.5 
-          }}>
-            <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Duration</label>
-            <div style={{ 
-              height: '40px', 
-              display: 'flex', 
-              alignItems: 'center',
-              fontSize: '12px',
-              color: '#666'
-            }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              opacity: 0.5,
+            }}
+          >
+            <label style={{ fontSize: "12px", fontWeight: "bold" }}>
+              Duration
+            </label>
+            <div
+              style={{
+                height: "40px",
+                display: "flex",
+                alignItems: "center",
+                fontSize: "12px",
+                color: "#666",
+              }}
+            >
               Loading...
             </div>
           </div>

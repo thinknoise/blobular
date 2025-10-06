@@ -26,7 +26,7 @@ import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 const AudioBlobularPlayer = () => {
   // Parse URL parameters early and use them for initial controls
   const initialControls = getInitialControlsFromUrl();
-  
+
   const {
     controls,
     setRangeControl,
@@ -51,13 +51,9 @@ const AudioBlobularPlayer = () => {
 
   const audioSource = useAudioSource();
   const buffer = audioSource.getBuffer();
-  
-  // Also check the AudioBufferProvider buffer for debugging
+
+  // Also check the AudioBufferProvider buffer for dual buffer system
   const { blobularBuffer } = useAudioBuffer();
-  
-  console.log('AudioBlobularPlayer render - audioSource buffer:', buffer ? `${buffer.duration}s` : 'null');
-  console.log('AudioBlobularPlayer render - blobularBuffer:', blobularBuffer ? `${blobularBuffer.duration}s` : 'null');
-  console.log('AudioBlobularPlayer render - duration.range:', controls.duration.range);
 
   /**
    * Update duration constraints when audio buffer is loaded
@@ -80,9 +76,9 @@ const AudioBlobularPlayer = () => {
       if (currentMax > buffer.duration) {
         const clampedMax = Math.min(currentMax, buffer.duration);
         const clampedMin = Math.min(currentMin, clampedMax);
-        
+
         next.duration.range = [clampedMin, clampedMax];
-        
+
         // Update URL if we had to clamp values
         const params = new URLSearchParams(window.location.search);
         params.set(

@@ -242,7 +242,9 @@ export const useBlobularEngine = (
       if (blobularBuffer) {
         audioSource.setBuffer(blobularBuffer);
       } else {
-        console.warn("No audio buffer available - please select an audio file from the menu");
+        console.warn(
+          "No audio buffer available - please select an audio file from the menu"
+        );
         return;
       }
     }
