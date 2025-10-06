@@ -7,13 +7,10 @@ import BlobPanel from "./BlobDisplay/BlobPanel";
 import BlobControls from "./BlobControls/BlobControls";
 import CompactWaveform from "./CompactWaveform/CompactWaveform";
 
-import {
-  getDurationRangeFromUrl,
-  getPlaybackRateRangeFromUrl,
-  getScaleFromUrl,
-} from "@/shared/utils/url/urlHelpers";
+import { getInitialControlsFromUrl } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
 import { useAudioSource } from "../engine";
+import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 
 /**
  * AudioBlobularPlayer - Main audio synthesis interface
@@ -27,7 +24,9 @@ import { useAudioSource } from "../engine";
  */
 
 const AudioBlobularPlayer = () => {
-  // Don't parse URL parameters initially - wait for buffer to load
+  // Parse URL parameters early and use them for initial controls
+  const initialControls = getInitialControlsFromUrl();
+  
   const {
     controls,
     setRangeControl,
@@ -36,7 +35,7 @@ const AudioBlobularPlayer = () => {
     setControls,
     setPlaybackRate,
     setHasInitializedFromUrl,
-  } = useControls();
+  } = useControls(initialControls);
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
@@ -52,10 +51,17 @@ const AudioBlobularPlayer = () => {
 
   const audioSource = useAudioSource();
   const buffer = audioSource.getBuffer();
+  
+  // Also check the AudioBufferProvider buffer for debugging
+  const { blobularBuffer } = useAudioBuffer();
+  
+  console.log('AudioBlobularPlayer render - audioSource buffer:', buffer ? `${buffer.duration}s` : 'null');
+  console.log('AudioBlobularPlayer render - blobularBuffer:', blobularBuffer ? `${blobularBuffer.duration}s` : 'null');
+  console.log('AudioBlobularPlayer render - duration.range:', controls.duration.range);
 
   /**
-   * Apply URL parameters after audio buffer is loaded
-   * This ensures URL params are applied with correct buffer constraints
+   * Update duration constraints when audio buffer is loaded
+   * URL parameters are already applied during initialization
    */
   useEffect(() => {
     if (!buffer) return;
@@ -63,57 +69,28 @@ const AudioBlobularPlayer = () => {
     setControls((prev) => {
       const next = { ...prev };
 
-      // Update duration constraints and apply URL parameters
-      const durationFromUrl = getDurationRangeFromUrl();
-      if (durationFromUrl) {
-        const [urlMin, urlMax] = durationFromUrl;
-        // Clamp URL values to valid buffer range
-        const clampedMin = Math.max(
-          prev.duration.min,
-          Math.min(urlMin, buffer.duration)
-        );
-        const clampedMax = Math.max(
-          clampedMin,
-          Math.min(urlMax, buffer.duration)
-        );
+      // Update duration max constraint based on buffer duration
+      next.duration = {
+        ...prev.duration,
+        max: buffer.duration,
+      };
 
+      // Clamp current duration range to buffer length if needed
+      const [currentMin, currentMax] = prev.duration.range;
+      if (currentMax > buffer.duration) {
+        const clampedMax = Math.min(currentMax, buffer.duration);
+        const clampedMin = Math.min(currentMin, clampedMax);
+        
+        next.duration.range = [clampedMin, clampedMax];
+        
         // Update URL if we had to clamp values
-        if (urlMax > buffer.duration || urlMin !== clampedMin) {
-          const params = new URLSearchParams(window.location.search);
-          params.set(
-            "duration",
-            `${clampedMin.toFixed(2)}-${clampedMax.toFixed(2)}`
-          );
-          const newUrl = `${window.location.pathname}?${params.toString()}`;
-          window.history.replaceState({}, "", newUrl);
-        }
-
-        next.duration = {
-          ...prev.duration,
-          range: [clampedMin, clampedMax],
-          max: buffer.duration,
-        };
-      } else {
-        // No URL params, just update max constraint
-        next.duration = {
-          ...prev.duration,
-          max: buffer.duration,
-        };
-      }
-
-      // Apply playback rate from URL
-      const playbackRateFromUrl = getPlaybackRateRangeFromUrl();
-      if (playbackRateFromUrl) {
-        next.playbackRate = {
-          ...prev.playbackRate,
-          range: playbackRateFromUrl,
-        };
-      }
-
-      // Apply scale from URL
-      const scaleFromUrl = getScaleFromUrl();
-      if (scaleFromUrl) {
-        next.selectedScale = scaleFromUrl;
+        const params = new URLSearchParams(window.location.search);
+        params.set(
+          "duration",
+          `${clampedMin.toFixed(2)}-${clampedMax.toFixed(2)}`
+        );
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, "", newUrl);
       }
 
       return next;
@@ -152,8 +129,8 @@ const AudioBlobularPlayer = () => {
         </div>
 
         <BlobControls
-          key={`controls-${buffer?.duration || 0}`}
-          bufferLength={buffer ? buffer.duration : 0}
+          key={`controls-${buffer?.duration || blobularBuffer?.duration || 0}`}
+          bufferLength={blobularBuffer ? blobularBuffer.duration : 0}
           duration={{
             ...controls.duration,
             setRange: (r: Range) => setRangeControl("duration", r),

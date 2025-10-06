@@ -237,15 +237,13 @@ export const useBlobularEngine = (
     const ctx = audioCtxRef.current;
     ensureBus(ctx);
 
+    // Ensure audio buffer is available from dual buffer system
     if (!audioSource.getBuffer()) {
       if (blobularBuffer) {
         audioSource.setBuffer(blobularBuffer);
       } else {
-        const url = `${import.meta.env.BASE_URL}audio/LongHorn.wav`;
-        const resp = await fetch(url);
-        const abuf = await resp.arrayBuffer();
-        const decoded = await ctx.decodeAudioData(abuf);
-        audioSource.setBuffer(decoded);
+        console.warn("No audio buffer available - please select an audio file from the menu");
+        return;
       }
     }
 
