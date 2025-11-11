@@ -1,45 +1,54 @@
-# blobular
+# Blobular
 
-granular synthesis in blobs
+A little browser experiment where I started playing with granular audio and blobs drifting around the screen. Nothing serious — mostly me testing ideas in React, Web Audio, and timing.
 
-# Repository Overview
+## What this repo is
 
-The repository is a TypeScript/React project built with Vite. It implements an audio “blob” player and recorder that let users explore granular synthesis, record live audio, and manage audio files in S3.
+It’s a small TypeScript + React project built on Vite. The app loads an audio file, chops it into tiny bits (“blobs”), and fires them off with random timing, pitch, and pan. You can also record your own sounds and toss them into the mix.
 
-Key entry points:
+## Live demo
+https://modelglue.com/blobular/?blobs=13&duration=2.53-5.58&sampleRate=0.90-1.40&scale=Blues&buffer=audio-pond%2FLongHorn.wav
 
-- `src/main.tsx` bootstraps React’s root.
-- `src/App.tsx` handles the welcome screen and, once the user proceeds, wires up the main providers and feature components.
+## Running it locally
 
-## Source Layout
+This is a Vite project.
 
-```
+Install and start:
+
+npm install
+npm run dev
+
+Then open the link Vite prints out (usually http://localhost:5173).
+
+To build:
+
+npm run build
+npm run preview
+## Where the interesting parts live
+
 src/
-├─ features/
-│ ├─ audioBlobular/ // core blob player
-│ │ ├─ components/ // UI pieces (controls, display, waveform)
-│ │ ├─ engine/ // audio source context and BlobularAudioSource class
-│ │ ├─ hooks/ // hooks such as useBlobularEngine, useAudioSource
-│ │ └─ types/
-│ └─ audioMenu/ // “Audio Pond” recorder & S3 browser
-│ ├─ components/ // menu UI and recording/upload widgets
-│ └─ hooks/ // recording and S3‑loading helpers
-├─ hooks/ // project‑wide hooks (e.g., useAudioBuffer)
-├─ shared/
-│ ├─ constants/ // scales, control limits, URLs
-│ ├─ context/ // audio buffer context/provider
-│ ├─ styles/ // shared style helpers (vanilla‑extract)
-│ ├─ types/ // common TypeScript types
-│ └─ utils/ // audio utilities, AWS helpers, URL helpers
-└─ test/ // Vitest setup and sample tests
-```
-Other top-level files include `vite.config.ts`, `tsconfig.json`, ESLint configuration, and CSS assets.
+  features/
+    audioBlobular/     <- the core engine + blob playback
+      components/      <- the little UI bits
+      engine/          <- BlobularAudioSource + scheduling logic
+      hooks/           <- useBlobularEngine, useAudioSource
+    audioMenu/         <- the recorder and S3 browser (“Audio Pond”)
 
-## Basis of Blobular
+  shared/
+    utils/             <- audio utils, URL helpers, AWS upload code
+    constants/         <- scales and limits
+    context/           <- shared audio buffer/context providers
+    styles/            <- vanilla-extract styles
 
-- **Audio context management** – `shared/utils/audio/audioCtx.ts` centralizes creation and reuse of a single `AudioContext` (48 kHz, suspended until user interaction).
-- **Granular playback engine** – `useBlobularEngine` schedules “blobs” of audio with randomized timing, pan, and pitch, optionally driven by scales defined in `shared/constants/scales.ts`. Playback is triggered through `playBlobAtTime`.
-- **Recording & S3 integration** – `audioMenu` uses an `AudioWorklet` (`public/worklets/recorder.js`) for microphone recording, converts chunks to WAV blobs, and uploads/loads audio from an S3 bucket using AWS SDK helpers (`shared/utils/aws`).
-- **State and context** – `AudioBufferProvider` and `AudioSourceProvider` supply current buffers and audio source control across the app.
-- **Styling** – Components frequently use vanilla‑extract (`*.css.ts` files) for type‑safe CSS, with traditional `.css` files where appropriate.
-- **Testing** – Vitest with Testing Library (`src/test/setup.ts`) and component tests under feature folders.
+There’s also a basic Vitest setup and a couple test files.
+
+## How it works
+
+- A single (<- the important part) `AudioContext` lives under `shared/utils/audio/audioCtx.ts`.  
+- `useBlobularEngine` is what actually schedules the little audio blobs.  
+- The recorder uses an AudioWorklet and saves snippets as WAV blobs.  
+- Uploading/load-from-S3 is in `shared/utils/aws`.  
+
+
+---
+Blobular doesn’t solve anything other than my own aural curiosity.
