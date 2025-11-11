@@ -16,6 +16,7 @@ This is a Vite project.
 Install and start:
 
 npm install
+
 npm run dev
 
 Then open the link Vite prints out (usually http://localhost:5173).
@@ -23,7 +24,10 @@ Then open the link Vite prints out (usually http://localhost:5173).
 To build:
 
 npm run build
+
 npm run preview
+
+
 ## Where the interesting parts live
 
 src/
