@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
 import { WaveformViewer } from "@/features/audioBlobular/components";
+import type { SoundRecord } from "@/features/sounds/types";
+import { getSoundListLabel } from "@/features/sounds/utils/soundMetadata";
 import {
   AudioLines,
   Play,
@@ -18,7 +20,7 @@ import {
 } from "./Items.css"; // Import the styles
 
 interface PondItemProps {
-  keyName: string;
+  sound: SoundRecord;
   status: {
     loading: boolean;
     error: boolean;
@@ -30,13 +32,12 @@ interface PondItemProps {
 }
 
 const PondItem: React.FC<PondItemProps> = ({
-  keyName,
+  sound,
   status,
   isSelected,
   onSelect,
   // onDelete,
 }) => {
-  const filename = keyName.replace(/^.*\//, "");
   const [audioContext] = useState(() => getAudioCtx());
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -47,7 +48,7 @@ const PondItem: React.FC<PondItemProps> = ({
     if (isPlaying && sourceRef.current) {
       sourceRef.current.stop();
       setIsPlaying(false);
-      console.log(`Stopped playing buffer for key: ${keyName}`);
+      console.log(`Stopped playing buffer for key: ${sound.storageKey}`);
       return;
     }
 
@@ -63,7 +64,7 @@ const PondItem: React.FC<PondItemProps> = ({
     source.start();
     sourceRef.current = source;
     setIsPlaying(true);
-    console.log(`Playing buffer for key: ${keyName}`);
+    console.log(`Playing buffer for key: ${sound.storageKey}`);
   };
 
   return (
@@ -87,7 +88,7 @@ const PondItem: React.FC<PondItemProps> = ({
         <span className={errorText}>Failed to load: {status.error}</span>
       )}
       {status.buffer && <WaveformViewer buffer={status.buffer} />}
-      <span className={audioLabel}>{filename}</span>
+      <span className={audioLabel}>{getSoundListLabel(sound)}</span>
     </li>
   );
 };

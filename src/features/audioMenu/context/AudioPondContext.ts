@@ -1,5 +1,7 @@
 import { createContext } from "react";
 
+import type { SoundRecord } from "@/features/sounds/types";
+
 export type BufferStatus = {
   loading: boolean;
   buffer?: AudioBuffer;
@@ -7,15 +9,16 @@ export type BufferStatus = {
 };
 
 export type AudioPondContextType = {
+  sounds: SoundRecord[];
   buffers: Record<string, BufferStatus>;
   isLoading: boolean;
   isUploading: boolean;
   error: string | null;
   clearError: () => void;
   refreshAudioPond: () => Promise<void>;
-  uploadRecordedBlob: (blob: Blob) => Promise<string | null>;
-  uploadAudioFile: (file: File) => Promise<string | null>;
-  deleteAudioItem: (key: string) => Promise<void>;
+  uploadRecordedBlob: (blob: Blob) => Promise<SoundRecord | null>;
+  uploadAudioFile: (file: File) => Promise<SoundRecord | null>;
+  deleteAudioItem: (sound: SoundRecord) => Promise<void>;
 };
 
 export const AudioPondContext = createContext<

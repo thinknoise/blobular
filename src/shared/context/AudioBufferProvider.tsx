@@ -9,16 +9,16 @@ export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
   const [blobularBuffer, setBlobularBuffer] = useState<AudioBuffer | null>(
     null
   );
-  const [blobularBufferKey, setBlobularBufferKey] = useState<string | null>(
+  const [blobularSoundId, setBlobularSoundId] = useState<string | null>(
     null
   );
 
   const wrappedSetBlobularBuffer = (
     buffer: AudioBuffer | null,
-    key: string | null = null
+    soundId: string | null = null
   ) => {
     setBlobularBuffer(buffer);
-    setBlobularBufferKey(key);
+    setBlobularSoundId(soundId);
   };
 
   // No default loading - buffers are loaded through AudioPondMenu S3 integration
@@ -27,7 +27,7 @@ export const AudioBufferProvider: React.FC<{ children: React.ReactNode }> = ({
     <AudioBufferContext.Provider
       value={{
         blobularBuffer,
-        blobularBufferKey,
+        blobularSoundId,
         setBlobularBuffer: wrappedSetBlobularBuffer,
       }}
     >

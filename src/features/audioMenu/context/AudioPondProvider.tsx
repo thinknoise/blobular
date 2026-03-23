@@ -1,29 +1,20 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { soundLibraryClient } from "@/features/sounds/api/soundLibraryClient";
+import type { SoundRecord } from "@/features/sounds/types";
 import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
-import {
-  deleteAudio,
-  getAudioArrayBuffer,
-  listAudioKeys,
-  uploadAudio,
-} from "@/shared/utils/aws/awsS3Helpers";
 
 import {
   AudioPondContext,
   type BufferStatus,
 } from "./AudioPondContext";
 
-function getUploadKey(filename: string): string {
-  return `audio-pond/${Date.now()}-${filename}`;
-}
-
-function getRecordingKey(): string {
-  return `audio-pond/recording-${Date.now()}.wav`;
-}
-
 export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { user } = useAuth();
+  const [sounds, setSounds] = useState<SoundRecord[]>([]);
   const [buffers, setBuffers] = useState<Record<string, BufferStatus>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -40,31 +31,35 @@ export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
 
     try {
-      const keys = await listAudioKeys();
+      const nextSounds = await soundLibraryClient.listSounds({ user });
       const initialState: Record<string, BufferStatus> = {};
 
-      for (const key of keys) {
-        initialState[key] = { loading: true };
+      for (const sound of nextSounds) {
+        initialState[sound.id] = { loading: true };
       }
 
+      setSounds(nextSounds);
       setBuffers(initialState);
 
-      for (const key of keys) {
+      for (const sound of nextSounds) {
         try {
-          const arrayBuffer = await getAudioArrayBuffer(key);
+          const arrayBuffer = await soundLibraryClient.getSoundArrayBuffer(sound);
           const decoded = await getAudioCtx().decodeAudioData(
             arrayBuffer.slice(0)
           );
 
           setBuffers((prev) => ({
             ...prev,
-            [key]: { loading: false, buffer: decoded },
+            [sound.id]: { loading: false, buffer: decoded },
           }));
         } catch (decodeError) {
-          console.error(`Failed to load audio file: ${key}`, decodeError);
+          console.error(
+            `Failed to load audio file: ${sound.storageKey}`,
+            decodeError
+          );
           setBuffers((prev) => ({
             ...prev,
-            [key]: { loading: false, error: String(decodeError) },
+            [sound.id]: { loading: false, error: String(decodeError) },
           }));
         }
       }
@@ -77,7 +72,7 @@ export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
       isRefreshingRef.current = false;
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     void refreshAudioPond();
@@ -85,14 +80,18 @@ export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const uploadRecordedBlob = useCallback(
     async (blob: Blob) => {
-      const key = getRecordingKey();
       setIsUploading(true);
       setError(null);
 
       try {
-        await uploadAudio(key, blob);
+        const sound = await soundLibraryClient.uploadSound({
+          blob,
+          filename: "recording.wav",
+          kind: "recording",
+          owner: user,
+        });
         await refreshAudioPond();
-        return key;
+        return sound;
       } catch (uploadError) {
         console.error("Failed to upload recorded audio:", uploadError);
         const message =
@@ -105,19 +104,23 @@ export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsUploading(false);
       }
     },
-    [refreshAudioPond]
+    [refreshAudioPond, user]
   );
 
   const uploadAudioFile = useCallback(
     async (file: File) => {
-      const key = getUploadKey(file.name);
       setIsUploading(true);
       setError(null);
 
       try {
-        await uploadAudio(key, file);
+        const sound = await soundLibraryClient.uploadSound({
+          blob: file,
+          filename: file.name,
+          kind: "upload",
+          owner: user,
+        });
         await refreshAudioPond();
-        return key;
+        return sound;
       } catch (uploadError) {
         console.error("Failed to upload audio file:", uploadError);
         const message =
@@ -130,18 +133,21 @@ export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsUploading(false);
       }
     },
-    [refreshAudioPond]
+    [refreshAudioPond, user]
   );
 
   const deleteAudioItem = useCallback(
-    async (key: string) => {
+    async (sound: SoundRecord) => {
       setError(null);
 
       try {
-        await deleteAudio(key);
+        await soundLibraryClient.deleteSound(sound, user);
         await refreshAudioPond();
       } catch (deleteError) {
-        console.error(`Failed to delete audio file: ${key}`, deleteError);
+        console.error(
+          `Failed to delete audio file: ${sound.storageKey}`,
+          deleteError
+        );
         const message =
           deleteError instanceof Error
             ? deleteError.message
@@ -149,12 +155,13 @@ export const AudioPondProvider: React.FC<{ children: React.ReactNode }> = ({
         setError(`Delete failed: ${message}`);
       }
     },
-    [refreshAudioPond]
+    [refreshAudioPond, user]
   );
 
   return (
     <AudioPondContext.Provider
       value={{
+        sounds,
         buffers,
         isLoading,
         isUploading,

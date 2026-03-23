@@ -1,0 +1,310 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Blobular auth, sounds metadata, and API scaffold
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: blobular
+  ExistingAudioBucketName:
+    Type: String
+    Description: Existing S3 bucket that stores audio files.
+  AppOrigin:
+    Type: String
+    Description: Public app origin, for example https://modelglue.com
+  AppCallbackUrl:
+    Type: String
+    Description: Full callback URL for the SPA, for example https://modelglue.com/blobular/
+  CognitoDomainPrefix:
+    Type: String
+    Description: Unique prefix for the Cognito managed login domain.
+  LambdaArtifactBucket:
+    Type: String
+    Description: S3 bucket containing the packaged Lambda zip.
+  LambdaArtifactKey:
+    Type: String
+    Description: S3 key for the packaged Lambda zip.
+
+Resources:
+  BlobularUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${ProjectName}-users
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+
+  BlobularUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${ProjectName}-web
+      UserPoolId: !Ref BlobularUserPool
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - !Ref AppCallbackUrl
+      LogoutURLs:
+        - !Ref AppCallbackUrl
+      SupportedIdentityProviders:
+        - COGNITO
+
+  BlobularUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoDomainPrefix
+      UserPoolId: !Ref BlobularUserPool
+
+  BlobularSoundsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-sounds
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: soundId
+          AttributeType: S
+        - AttributeName: ownerSub
+          AttributeType: S
+        - AttributeName: visibility
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: soundId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ownerSub-createdAt-index
+          KeySchema:
+            - AttributeName: ownerSub
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: visibility-createdAt-index
+          KeySchema:
+            - AttributeName: visibility
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  BlobularSoundsFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-sounds-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-sounds-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt BlobularSoundsTable.Arn
+                  - !Sub ${BlobularSoundsTable.Arn}/index/*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::${ExistingAudioBucketName}/*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub arn:${AWS::Partition}:s3:::${ExistingAudioBucketName}
+
+  BlobularSoundsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-sounds-api
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt BlobularSoundsFunctionRole.Arn
+      Timeout: 15
+      MemorySize: 512
+      Environment:
+        Variables:
+          AUDIO_BUCKET_NAME: !Ref ExistingAudioBucketName
+          SOUND_TABLE_NAME: !Ref BlobularSoundsTable
+          USER_POOL_ID: !Ref BlobularUserPool
+      Code:
+        S3Bucket: !Ref LambdaArtifactBucket
+        S3Key: !Ref LambdaArtifactKey
+
+  BlobularHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${ProjectName}-http-api
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AppOrigin
+          - http://localhost:5173
+          - http://localhost:5174
+          - http://localhost:5175
+          - http://127.0.0.1:5173
+          - http://127.0.0.1:5174
+          - http://127.0.0.1:5175
+        AllowHeaders:
+          - authorization
+          - content-type
+        AllowMethods:
+          - GET
+          - POST
+          - PATCH
+          - DELETE
+          - OPTIONS
+
+  BlobularHttpAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      AuthorizerType: JWT
+      IdentitySource:
+        - $request.header.Authorization
+      Name: !Sub ${ProjectName}-jwt
+      JwtConfiguration:
+        Audience:
+          - !Ref BlobularUserPoolClient
+        Issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${BlobularUserPool}
+
+  BlobularSoundsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationMethod: POST
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BlobularSoundsFunction.Arn}/invocations
+      PayloadFormatVersion: "2.0"
+
+  BlobularSoundsRouteList:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      RouteKey: GET /sounds
+      AuthorizationType: JWT
+      AuthorizerId: !Ref BlobularHttpAuthorizer
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref BlobularSoundsIntegration
+
+  BlobularSoundsRouteCreate:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      RouteKey: POST /sounds
+      AuthorizationType: JWT
+      AuthorizerId: !Ref BlobularHttpAuthorizer
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref BlobularSoundsIntegration
+
+  BlobularSoundsRouteUpdate:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      RouteKey: PATCH /sounds/{soundId}
+      AuthorizationType: JWT
+      AuthorizerId: !Ref BlobularHttpAuthorizer
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref BlobularSoundsIntegration
+
+  BlobularSoundsRouteDelete:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      RouteKey: DELETE /sounds/{soundId}
+      AuthorizationType: JWT
+      AuthorizerId: !Ref BlobularHttpAuthorizer
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref BlobularSoundsIntegration
+
+  BlobularSoundsRouteDownload:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      RouteKey: GET /sounds/{soundId}/download
+      AuthorizationType: JWT
+      AuthorizerId: !Ref BlobularHttpAuthorizer
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref BlobularSoundsIntegration
+
+  BlobularHttpStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref BlobularHttpApi
+      StageName: $default
+      AutoDeploy: true
+
+  BlobularSoundsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BlobularSoundsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${BlobularHttpApi}/*/*
+
+Outputs:
+  UserPoolId:
+    Value: !Ref BlobularUserPool
+  UserPoolClientId:
+    Value: !Ref BlobularUserPoolClient
+  UserPoolDomain:
+    Value: !Sub https://${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com
+  SoundsTableName:
+    Value: !Ref BlobularSoundsTable
+  SoundsApiBaseUrl:
+    Value: !Sub https://${BlobularHttpApi}.execute-api.${AWS::Region}.amazonaws.com
