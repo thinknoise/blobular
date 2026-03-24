@@ -149,6 +149,14 @@
   color: #ffd8d8;
 }
 
+.auth-success {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(73, 171, 152, 0.18);
+  color: #d8fff3;
+}
+
 .auth-form {
   display: grid;
   gap: 16px;
@@ -178,6 +186,55 @@
 .auth-form input:focus {
   outline: 2px solid rgba(209, 156, 67, 0.55);
   outline-offset: 2px;
+}
+
+.auth-remember {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-remember input {
+  width: auto;
+  margin: 0;
+}
+
+.auth-link-button {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e6b866;
+}
+
+.auth-criteria-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-criteria-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(243, 238, 226, 0.78);
+}
+
+.auth-criteria-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.auth-criteria-dot.is-met {
+  background: #49ab98;
+}
+
+.auth-criteria-dot.is-unmet {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .auth-submit {
@@ -246,7 +303,8 @@
 
 .auth-submit:hover,
 .signout-button:hover,
-.auth-toggle button:hover {
+.auth-toggle button:hover,
+.auth-link-button:hover {
   transform: translateY(-1px);
 }
 

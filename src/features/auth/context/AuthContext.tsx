@@ -6,8 +6,11 @@ import {
   useState,
 } from "react";
 
+import { BLOBULAR_AUTH_MODE } from "@/shared/config/appConfig";
+
 import type {
   AuthCredentials,
+  AuthPasswordReset,
   AuthRegistration,
   AuthStatus,
   AuthUser,
@@ -18,12 +21,47 @@ import {
   signInWithLocalAuth,
   signUpWithLocalAuth,
 } from "../utils/localAuthStore";
+import {
+  clearModelglueSession,
+  getCurrentModelglueUser,
+  resetPasswordWithModelglueAuth,
+  signInWithModelglueAuth,
+  signUpWithModelglueAuth,
+} from "../utils/modelglueAuthStore";
+
+type AuthStore = {
+  getCurrentUser: () => AuthUser | null;
+  signIn: (credentials: AuthCredentials) => Promise<AuthUser> | AuthUser;
+  signUp: (registration: AuthRegistration) => Promise<AuthUser> | AuthUser;
+  resetPassword: (payload: AuthPasswordReset) => Promise<void>;
+  clearSession: () => void;
+};
+
+const authStore: AuthStore =
+  BLOBULAR_AUTH_MODE === "local-dev"
+    ? {
+        getCurrentUser,
+        signIn: signInWithLocalAuth,
+        signUp: signUpWithLocalAuth,
+        resetPassword: async () => {
+          throw new Error("Password reset is unavailable in local auth mode.");
+        },
+        clearSession,
+      }
+    : {
+        getCurrentUser: getCurrentModelglueUser,
+        signIn: signInWithModelglueAuth,
+        signUp: signUpWithModelglueAuth,
+        resetPassword: resetPasswordWithModelglueAuth,
+        clearSession: clearModelglueSession,
+      };
 
 type AuthContextValue = {
   status: AuthStatus;
   user: AuthUser | null;
   signIn: (credentials: AuthCredentials) => Promise<void>;
   signUp: (registration: AuthRegistration) => Promise<void>;
+  resetPassword: (payload: AuthPasswordReset) => Promise<void>;
   signOut: () => void;
 };
 
@@ -36,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
+    const currentUser = authStore.getCurrentUser();
     startTransition(() => {
       setUser(currentUser);
       setStatus(currentUser ? "authenticated" : "unauthenticated");
@@ -48,21 +86,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       status,
       user,
       signIn: async (credentials) => {
-        const nextUser = signInWithLocalAuth(credentials);
+        const nextUser = await authStore.signIn(credentials);
         startTransition(() => {
           setUser(nextUser);
           setStatus("authenticated");
         });
       },
       signUp: async (registration) => {
-        const nextUser = signUpWithLocalAuth(registration);
+        const nextUser = await authStore.signUp(registration);
         startTransition(() => {
           setUser(nextUser);
           setStatus("authenticated");
         });
       },
+      resetPassword: async (payload) => {
+        await authStore.resetPassword(payload);
+      },
       signOut: () => {
-        clearSession();
+        authStore.clearSession();
         startTransition(() => {
           setUser(null);
           setStatus("unauthenticated");

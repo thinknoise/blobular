@@ -1,5 +1,7 @@
 import type { AuthCredentials, AuthRegistration, AuthUser } from "../types";
 
+import { normalizeEmail } from "./authValidation";
+
 type StoredLocalAuthUser = AuthUser & {
   password: string;
 };
@@ -10,10 +12,6 @@ type StoredLocalAuthSession = {
 
 const USERS_KEY = "blobular.localAuth.users";
 const SESSION_KEY = "blobular.localAuth.session";
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
 
 function loadUsers(): StoredLocalAuthUser[] {
   try {
@@ -53,6 +51,7 @@ function toAuthUser(user: StoredLocalAuthUser): AuthUser {
 function makeUser(email: string, password: string): StoredLocalAuthUser {
   return {
     id: crypto.randomUUID(),
+    userId: null,
     email: normalizeEmail(email),
     password,
     createdAt: new Date().toISOString(),
