@@ -1,0 +1,29 @@
+# Blobular Auth API
+
+These PHP endpoints mirror the Modelglue/Fabrick8r account flow for Blobular:
+
+- `login-user.php`
+- `create-user.php`
+- `reset-password.php`
+
+They are meant to be deployed with Blobular under `/blobular/api/`.
+
+## Config
+
+Create `config.php` next to these files, based on `config.example.php`, and
+fill in the real database credentials. That file is ignored by git.
+
+You can also provide these values through server environment variables:
+
+- `BLOBULAR_DB_HOST`
+- `BLOBULAR_DB_NAME`
+- `BLOBULAR_DB_USER`
+- `BLOBULAR_DB_PASS`
+- `BLOBULAR_USERS_TABLE`
+
+## Notes
+
+- The user table will be created automatically if it does not exist.
+- Passwords are stored with PHP `password_hash()`.
+- Blobular stores only a browser-side session flag after login. There is still
+  no server-issued session token in this branch.

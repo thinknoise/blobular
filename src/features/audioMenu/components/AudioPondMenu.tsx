@@ -1,11 +1,10 @@
 // src/components/AudioPondMenu.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 
+import type { SoundRecord } from "@/features/sounds/types";
+import { getSoundDisplayTitle } from "@/features/sounds/utils/soundMetadata";
 import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
-import { s3, BUCKET } from "@/shared/utils/aws/awsConfig";
-import { deleteAudio, listAudioKeys } from "@/shared/utils/aws/awsS3Helpers";
-import { getDisplayTitle, setPageTitle } from "@/shared/utils/url/urlHelpers";
+import { setPageTitle } from "@/shared/utils/url/urlHelpers";
 
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 import { useAudioPond } from "../hooks/useAudioPond";
@@ -55,10 +54,37 @@ function useRecordingLoop(
   }, [isRecording, handleUpdateRecordedBuffer, interval]);
 }
 
-const AudioPondMenu: React.FC = () => {
-  const { blobularBuffer, setBlobularBuffer } = useAudioBuffer();
+function updateSelectedSoundInUrl(sound: SoundRecord | null): void {
+  const params = new URLSearchParams(window.location.search);
 
-  const { buffers, fetchAudioKeysAndBuffers } = useAudioPond();
+  if (sound) {
+    params.set("sound", sound.id);
+    params.delete("buffer");
+  } else {
+    params.delete("sound");
+    params.delete("buffer");
+  }
+
+  const queryString = params.toString();
+  const newUrl = queryString
+    ? `${window.location.pathname}?${queryString}`
+    : window.location.pathname;
+  window.history.replaceState(null, "", newUrl);
+}
+
+const AudioPondMenu: React.FC = () => {
+  const { blobularSoundId, setBlobularBuffer } = useAudioBuffer();
+
+  const {
+    sounds,
+    buffers,
+    isLoading,
+    isUploading,
+    error,
+    clearError,
+    uploadRecordedBlob,
+    deleteAudioItem,
+  } = useAudioPond();
   const [pondMenuOpen, setPondMenuOpen] = useState(false);
 
   const audioContext = getAudioCtx();
@@ -74,137 +100,113 @@ const AudioPondMenu: React.FC = () => {
     []
   );
   const [updatingRecording, setUpdatingRecording] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const hasInitializedFromS3 = useRef(false);
+
   const togglePondMenu = () => {
     setPondMenuOpen(!pondMenuOpen);
   };
 
-  function getBufferKeyFromUrl(): string | null {
+  function getSoundIdFromUrl(soundList: SoundRecord[]): string | null {
     const params = new URLSearchParams(window.location.search);
-    return params.get("buffer");
+    const soundId = params.get("sound");
+    if (soundId) {
+      return soundId;
+    }
+
+    const legacyStorageKey = params.get("buffer");
+    if (!legacyStorageKey) {
+      return null;
+    }
+
+    return soundList.find((sound) => sound.storageKey === legacyStorageKey)?.id ?? null;
   }
 
-  // Initialize S3 audio pond on component mount
   useEffect(() => {
-    const loadAudioPond = async () => {
-      if (isLoading) return; // Prevent multiple simultaneous loads
-      setIsLoading(true);
-      try {
-        await fetchAudioKeysAndBuffers();
-      } catch (error) {
-        console.error("Failed to load audio pond:", error);
-        setError("Failed to load audio pond. Please try again.");
-      } finally {
-        setIsLoading(false);
+    const firstReadySound = sounds.find((sound) => !!buffers[sound.id]?.buffer);
+    const firstReadyBuffer = firstReadySound
+      ? buffers[firstReadySound.id]?.buffer
+      : undefined;
+    const hasPendingBuffers = sounds.some((sound) => buffers[sound.id]?.loading);
+
+    if (blobularSoundId) {
+      const selectedSound = sounds.find((sound) => sound.id === blobularSoundId);
+      const selectedStatus = selectedSound
+        ? buffers[selectedSound.id]
+        : undefined;
+
+      if (selectedSound && selectedStatus?.buffer) {
+        setBlobularBuffer(selectedStatus.buffer, selectedSound.id);
+        return;
       }
-    };
 
-    loadAudioPond();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+      if (selectedStatus?.loading) {
+        return;
+      }
 
-  const bufferArray = Object.entries(buffers);
+      if (firstReadySound && firstReadyBuffer) {
+        setBlobularBuffer(firstReadyBuffer, firstReadySound.id);
+        updateSelectedSoundInUrl(firstReadySound);
+        setPageTitle(getSoundDisplayTitle(firstReadySound));
+        hasInitializedFromS3.current = true;
+        return;
+      }
 
-  /**
-   * Buffer initialization effect - runs when S3 buffers change
-   *
-   * Loading priority:
-   * 1. URL parameter buffer (if specified and available)
-   * 2. First available S3 buffer (if no URL param)
-   * 3. Fallback handling for missing/failed buffers
-   *
-   * This effect only runs once per S3 load to avoid overriding user selections
-   */
-  useEffect(() => {
-    // Don't re-initialize if we already have initialized from S3
-    if (hasInitializedFromS3.current && Object.keys(buffers).length > 0) {
+      if (!hasPendingBuffers) {
+        setBlobularBuffer(null, null);
+        updateSelectedSoundInUrl(null);
+        hasInitializedFromS3.current = true;
+        return;
+      }
+    }
+
+    if (hasInitializedFromS3.current && sounds.length > 0) {
       return;
     }
 
-    // Get buffer selection sources
-    const bufferKey = getBufferKeyFromUrl();
-    const urlBuffer = bufferKey ? buffers[bufferKey]?.buffer : null;
-    const firstBuffer = bufferArray[0]?.[1]?.buffer;
+    const soundId = getSoundIdFromUrl(sounds);
+    const urlSound = soundId
+      ? sounds.find((sound) => sound.id === soundId)
+      : undefined;
+    const urlStatus = urlSound ? buffers[urlSound.id] : undefined;
 
-    // Priority 1: Use URL-specified buffer if available
-    if (bufferKey && urlBuffer) {
-      setBlobularBuffer(urlBuffer);
-      const displayTitle = getDisplayTitle(bufferKey);
-      setPageTitle(displayTitle);
+    if (urlSound && urlStatus?.buffer) {
+      setBlobularBuffer(urlStatus.buffer, urlSound.id);
+      setPageTitle(getSoundDisplayTitle(urlSound));
       hasInitializedFromS3.current = true;
       return;
     }
 
-    // Priority 2: Use first available buffer if no URL param
-    if (firstBuffer && !bufferKey) {
-      setBlobularBuffer(firstBuffer);
+    if (!soundId && firstReadySound && firstReadyBuffer) {
+      setBlobularBuffer(firstReadyBuffer, firstReadySound.id);
+      updateSelectedSoundInUrl(firstReadySound);
+      setPageTitle(getSoundDisplayTitle(firstReadySound));
       hasInitializedFromS3.current = true;
       return;
     }
 
-    // Handle URL parameter edge cases
-    if (bufferKey) {
-      const bufferStatus = buffers[bufferKey];
-      if (bufferStatus?.loading) {
-        // Wait for URL buffer to finish loading
+    if (soundId) {
+      if (urlStatus?.loading || hasPendingBuffers) {
         return;
-      } else if (bufferStatus?.error) {
-        // URL buffer failed, fallback to first available
-        if (firstBuffer) {
-          setBlobularBuffer(firstBuffer);
-          hasInitializedFromS3.current = true;
-        }
+      }
+
+      if (firstReadySound && firstReadyBuffer) {
+        setBlobularBuffer(firstReadyBuffer, firstReadySound.id);
+        updateSelectedSoundInUrl(firstReadySound);
+        setPageTitle(getSoundDisplayTitle(firstReadySound));
+        hasInitializedFromS3.current = true;
         return;
-      } else if (Object.keys(buffers).length === 0) {
-        // S3 buffers not loaded yet, wait
-        return;
-      } else {
-        // URL buffer not found, fallback to first available
-        if (firstBuffer) {
-          setBlobularBuffer(firstBuffer);
-          hasInitializedFromS3.current = true;
-        }
+      }
+
+      if (sounds.length === 0) {
         return;
       }
     }
-  }, [buffers, bufferArray, setBlobularBuffer, blobularBuffer]);
-
-  const uploadRecording = async (blob: Blob) => {
-    const key = `audio-pond/recording-${Date.now()}.wav`;
-    setIsUploading(true);
-    setError(null); // Clear any previous errors
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      const command = new PutObjectCommand({
-        Bucket: BUCKET,
-        Key: key,
-        Body: new Uint8Array(arrayBuffer),
-        ContentType: blob.type || "audio/wav",
-      });
-
-      await s3.send(command);
-      console.log(" Uploaded recording to S3:", key);
-      // alert("Upload complete!");
-      listAudioKeys(); // Refresh the audio pond list after upload
-      fetchAudioKeysAndBuffers(); // Refresh the audio pond list after upload
-      setRecordings((prev) => prev.filter((rec) => rec.blob !== blob)); // Remove the recording from the list
-      return key;
-    } catch (err) {
-      console.error("❌ Upload failed:", err);
-      setError("Upload failed. Please try again.");
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  }, [buffers, blobularSoundId, setBlobularBuffer, sounds]);
 
   const handleSaveClick = async (blob: Blob) => {
-    const key = await uploadRecording(blob);
-    if (key) {
-      console.log("Recording saved:", key);
+    const sound = await uploadRecordedBlob(blob);
+    if (sound) {
+      setRecordings((prev) => prev.filter((rec) => rec.blob !== blob));
     }
   };
 
@@ -225,8 +227,17 @@ const AudioPondMenu: React.FC = () => {
     }
   };
 
+  const handleRecordingSelect = async (blob: Blob) => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    setBlobularBuffer(audioBuffer, null);
+    updateSelectedSoundInUrl(null);
+    setPageTitle("recording preview");
+    hasInitializedFromS3.current = true;
+  };
+
   const handleUpdateRecordedBuffer = async () => {
-    const blob = await updateWavBlob(); // uses all chunks so far
+    const blob = await updateWavBlob();
 
     if (!blob) {
       console.error("Failed to update recorded buffer: No blob returned");
@@ -240,32 +251,16 @@ const AudioPondMenu: React.FC = () => {
     });
 
     setUpdatingRecording(true);
-    handleRecordingSelect(blob);
+    await handleRecordingSelect(blob);
   };
 
-  useRecordingLoop(isRecording, handleUpdateRecordedBuffer, 200); // 200ms interval
+  useRecordingLoop(isRecording, handleUpdateRecordedBuffer, 200);
 
-  const handleRecordingSelect = async (blob: Blob) => {
-    console.log("Selected recording:", blob);
-    const arrayBuffer = await blob.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    setBlobularBuffer(audioBuffer);
-  };
-
-  //////////////////////
-  // click on a pond item
-  const handleSelection = (buffer: AudioBuffer | null, key?: string) => {
+  const handleSelection = (sound: SoundRecord, buffer: AudioBuffer | null) => {
     if (buffer) {
-      setBlobularBuffer(buffer);
-
-      if (key) {
-        const params = new URLSearchParams(window.location.search);
-        params.set("buffer", key);
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState(null, "", newUrl);
-        const displayTitle = getDisplayTitle(key);
-        setPageTitle(displayTitle);
-      }
+      setBlobularBuffer(buffer, sound.id);
+      updateSelectedSoundInUrl(sound);
+      setPageTitle(getSoundDisplayTitle(sound));
       setPondMenuOpen(false);
     }
   };
@@ -354,7 +349,7 @@ const AudioPondMenu: React.FC = () => {
           >
             {error}
             <button
-              onClick={() => setError(null)}
+              onClick={clearError}
               style={{
                 background: "none",
                 border: "none",
@@ -430,24 +425,19 @@ const AudioPondMenu: React.FC = () => {
             onSelect={handleRecordingSelect}
           />
         ))}
-        {/* uploaded recordings and audio items */}
-        {bufferArray.map(([key, status]) => (
+        {sounds.map((sound) => (
           <PondItem
-            key={key}
-            keyName={key}
+            key={sound.id}
+            sound={sound}
             status={{
-              loading: status.loading,
-              error: !!status.error,
-              buffer: status.buffer ?? null,
+              loading: buffers[sound.id]?.loading ?? false,
+              error: !!buffers[sound.id]?.error,
+              buffer: buffers[sound.id]?.buffer ?? null,
             }}
-            isSelected={blobularBuffer === status.buffer}
-            onSelect={() => handleSelection(status.buffer ?? null, key)}
+            isSelected={blobularSoundId === sound.id}
+            onSelect={() => handleSelection(sound, buffers[sound.id]?.buffer ?? null)}
             onDelete={() => {
-              // Implement delete functionality if needed
-              console.log(`Delete audio item with key: ${key}`);
-              deleteAudio(key);
-              listAudioKeys(); // Refresh the audio pond list after deletion
-              fetchAudioKeysAndBuffers(); // Refresh the audio pond list after deletion
+              void deleteAudioItem(sound);
             }}
           />
         ))}

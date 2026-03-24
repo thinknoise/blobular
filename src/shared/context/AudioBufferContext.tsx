@@ -4,7 +4,11 @@ import { createContext } from "react";
 
 export type AudioBufferContextType = {
   blobularBuffer: AudioBuffer | null;
-  setBlobularBuffer: (buffer: AudioBuffer | null) => void;
+  blobularSoundId: string | null;
+  setBlobularBuffer: (
+    buffer: AudioBuffer | null,
+    soundId?: string | null
+  ) => void;
 };
 
 export const AudioBufferContext = createContext<
