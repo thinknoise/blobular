@@ -1,0 +1,79 @@
+name: Deploy Blobular
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-blobular-main
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Write PHP config from secrets
+        env:
+          BLOBULAR_DB_HOST: ${{ secrets.BLOBULAR_DB_HOST }}
+          BLOBULAR_DB_NAME: ${{ secrets.BLOBULAR_DB_NAME }}
+          BLOBULAR_DB_USER: ${{ secrets.BLOBULAR_DB_USER }}
+          BLOBULAR_DB_PASS: ${{ secrets.BLOBULAR_DB_PASS }}
+          BLOBULAR_USERS_TABLE: ${{ secrets.BLOBULAR_USERS_TABLE }}
+        run: |
+          test -n "$BLOBULAR_DB_HOST" || (echo "Missing BLOBULAR_DB_HOST secret" >&2; exit 1)
+          test -n "$BLOBULAR_DB_NAME" || (echo "Missing BLOBULAR_DB_NAME secret" >&2; exit 1)
+          test -n "$BLOBULAR_DB_USER" || (echo "Missing BLOBULAR_DB_USER secret" >&2; exit 1)
+          test -n "$BLOBULAR_DB_PASS" || (echo "Missing BLOBULAR_DB_PASS secret" >&2; exit 1)
+
+          mkdir -p dist/api
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const escapePhp = (value = "") =>
+            String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+          const usersTable = process.env.BLOBULAR_USERS_TABLE || "blobular_users";
+          const config = `<?php
+
+          declare(strict_types=1);
+
+          return [
+              'db_host' => '${escapePhp(process.env.BLOBULAR_DB_HOST)}',
+              'db_name' => '${escapePhp(process.env.BLOBULAR_DB_NAME)}',
+              'db_user' => '${escapePhp(process.env.BLOBULAR_DB_USER)}',
+              'db_pass' => '${escapePhp(process.env.BLOBULAR_DB_PASS)}',
+              'users_table' => '${escapePhp(usersTable)}',
+          ];
+          `;
+
+          fs.writeFileSync("dist/api/config.php", config);
+          NODE
+
+      - name: Deploy dist to FTP /blobular/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT || 21 }}
+          protocol: ftp
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_BLOBULAR_SERVER_DIR || '/blobular/' }}
