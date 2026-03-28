@@ -27,6 +27,31 @@ npm run build
 
 npm run preview
 
+## Deployment
+
+Blobular now has a GitHub Actions deploy workflow at
+`.github/workflows/deploy.yml`.
+
+On pushes to `main`, it:
+
+- installs dependencies
+- builds `dist/`
+- writes `dist/api/config.php` from GitHub repository secrets
+- FTP deploys the built site to `/blobular/`
+
+Required GitHub secrets:
+
+- `FTP_SERVER`
+- `FTP_USERNAME`
+- `FTP_PASSWORD`
+- `FTP_PORT` (optional, defaults to `21`)
+- `FTP_BLOBULAR_SERVER_DIR` (optional, defaults to `/blobular/`)
+- `BLOBULAR_DB_HOST`
+- `BLOBULAR_DB_NAME`
+- `BLOBULAR_DB_USER`
+- `BLOBULAR_DB_PASS`
+- `BLOBULAR_USERS_TABLE` (optional, otherwise the PHP API fallback is used)
+
 
 ## Where the interesting parts live
 

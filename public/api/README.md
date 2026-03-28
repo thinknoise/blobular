@@ -13,6 +13,11 @@ They are meant to be deployed with Blobular under `/blobular/api/`.
 Create `config.php` next to these files, based on `config.example.php`, and
 fill in the real database credentials. That file is ignored by git.
 
+For GitHub Actions deploys, Blobular also supports generating `config.php`
+into `dist/api/` from repository secrets at build time. If
+`BLOBULAR_USERS_TABLE` is omitted there, the generated config leaves that key
+out and the PHP API fallback is used.
+
 You can also provide these values through server environment variables:
 
 - `BLOBULAR_DB_HOST`
