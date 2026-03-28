@@ -50,7 +50,10 @@ jobs:
           const escapePhp = (value = "") =>
             String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
-          const usersTable = process.env.BLOBULAR_USERS_TABLE || "blobular_users";
+          const usersTable = (process.env.BLOBULAR_USERS_TABLE || "").trim();
+          const usersTableLine = usersTable
+            ? `    'users_table' => '${escapePhp(usersTable)}',\n`
+            : "";
           const config = `<?php
 
           declare(strict_types=1);
@@ -60,8 +63,7 @@ jobs:
               'db_name' => '${escapePhp(process.env.BLOBULAR_DB_NAME)}',
               'db_user' => '${escapePhp(process.env.BLOBULAR_DB_USER)}',
               'db_pass' => '${escapePhp(process.env.BLOBULAR_DB_PASS)}',
-              'users_table' => '${escapePhp(usersTable)}',
-          ];
+          ${usersTableLine}];
           `;
 
           fs.writeFileSync("dist/api/config.php", config);

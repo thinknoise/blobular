@@ -50,7 +50,7 @@ Required GitHub secrets:
 - `BLOBULAR_DB_NAME`
 - `BLOBULAR_DB_USER`
 - `BLOBULAR_DB_PASS`
-- `BLOBULAR_USERS_TABLE` (optional, defaults to `blobular_users`)
+- `BLOBULAR_USERS_TABLE` (optional, otherwise the PHP API fallback is used)
 
 
 ## Where the interesting parts live
