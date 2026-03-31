@@ -7,9 +7,9 @@ Blobular now has the frontend seam for a real user-backed sound library:
 - user-scoped S3 prefixes are now possible without another UI rewrite
 
 Account auth is no longer planned around Cognito on this branch. Blobular is
-instead moving toward the existing Modelglue PHP + database auth flow used by
-Fabrick8r. The files in this folder are kept only as a future option for a
-dedicated sounds API once private/public sound enforcement moves server-side.
+instead using the PHP + database flow under `public/api/`. The files in this
+folder are kept only as a future option for a dedicated sounds API once
+private/public sound enforcement moves server-side.
 
 What is still missing is the real backend enforcement for sounds. The goal
 state for that dedicated sounds layer is:

@@ -147,7 +147,7 @@ async function postJson<T extends ApiResponse>(
       body: JSON.stringify(payload),
     });
   } catch {
-    throw new Error("Unable to reach the Modelglue account service.");
+    throw new Error("Unable to reach the sign-in service.");
   }
 
   const data = (await response.json().catch(() => ({}))) as T;

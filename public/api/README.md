@@ -1,6 +1,6 @@
 # Blobular Auth API
 
-These PHP endpoints mirror the Modelglue/Fabrick8r account flow for Blobular:
+These PHP endpoints power Blobular account auth:
 
 - `login-user.php`
 - `create-user.php`

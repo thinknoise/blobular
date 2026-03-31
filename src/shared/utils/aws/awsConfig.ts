@@ -9,6 +9,7 @@ export const IDENTITY_POOL_ID =
 
 export const s3 = new S3Client({
   region: REGION,
+  requestChecksumCalculation: "WHEN_REQUIRED",
   credentials: fromCognitoIdentityPool({
     identityPoolId: IDENTITY_POOL_ID,
     clientConfig: { region: REGION },
