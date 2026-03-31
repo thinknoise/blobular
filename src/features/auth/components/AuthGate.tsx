@@ -192,8 +192,8 @@ export default function AuthGate({ version }: AuthGateProps) {
 
           <p className="auth-note">
             {BLOBULAR_AUTH_MODE === "local-dev"
-              ? "Local auth mode is enabled for development. Switch to Modelglue DB auth when you want real shared accounts."
-              : "Blobular is using the shared Modelglue account endpoints. These credentials come from the same PHP + database flow as Fabrick8r."}
+              ? "Development sign-in mode is enabled on this build."
+              : "Sign in or create an account to access your Blobular workspace."}
           </p>
 
           {error && <div className="auth-error">{error}</div>}
