@@ -22,3 +22,11 @@ export type ControlsState = {
   numBlobs: CountControl;
   selectedScale: ScaleName;
 };
+
+export type PartialControlsState = {
+  duration?: Partial<ControlsState["duration"]>;
+  fade?: Partial<ControlsState["fade"]>;
+  playbackRate?: Partial<ControlsState["playbackRate"]>;
+  numBlobs?: ControlsState["numBlobs"];
+  selectedScale?: ControlsState["selectedScale"];
+};

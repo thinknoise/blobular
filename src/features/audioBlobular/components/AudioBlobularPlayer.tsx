@@ -1,41 +1,60 @@
-import { useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Play, Square } from "lucide-react";
-import type { Range } from "../types/AudioBlobularPlayer.types";
+import type {
+  ControlsState,
+  Range,
+} from "../types/AudioBlobularPlayer.types";
 import { useBlobularEngine } from "../hooks/useBlobularEngine";
 import { useControls } from "../hooks/useControls";
 import BlobPanel from "./BlobDisplay/BlobPanel";
 import BlobControls from "./BlobControls/BlobControls";
 import CompactWaveform from "./CompactWaveform/CompactWaveform";
 
-import { getInitialControlsFromUrl } from "@/shared/utils/url/urlHelpers";
 import "./AudioBlobularPlayer.css";
-import { useAudioSource } from "../engine";
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
+import {
+  buildControlsUrl,
+  getInitialControlsFromSearch,
+} from "../utils/controlUrlState";
 
 /**
  * AudioBlobularPlayer - Main audio synthesis interface
  *
  * This component uses a dual buffer system:
- * - useAudioBuffer(): Gets buffers from S3/AudioBufferProvider (for UI/URL handling)
- * - useAudioSource(): Legacy audio engine interface (for synthesis)
- * - Synchronization happens in useBlobularEngine via useEffect
+ * - useAudioBuffer(): Gets buffers from AudioBufferProvider (for control bounds)
+ * - useBlobularEngine(): Synchronizes the selected buffer into the audio engine
  *
  * URL parameters are applied after buffer loads to ensure proper constraints.
  */
 
 const AudioBlobularPlayer = () => {
-  // Parse URL parameters early and use them for initial controls
-  const initialControls = getInitialControlsFromUrl();
+  const initialControls = useMemo(
+    () => getInitialControlsFromSearch(window.location.search),
+    []
+  );
+
+  const syncControlsToUrl = useCallback((nextControls: ControlsState) => {
+    const nextUrl = buildControlsUrl(
+      window.location.pathname,
+      window.location.search,
+      nextControls
+    );
+    window.history.replaceState({}, "", nextUrl);
+  }, []);
+
+  const { blobularBuffer } = useAudioBuffer();
 
   const {
     controls,
     setRangeControl,
     setNumBlobs,
     setSelectedScale,
-    setControls,
     setPlaybackRate,
-    setHasInitializedFromUrl,
-  } = useControls(initialControls);
+  } = useControls({
+    initial: initialControls,
+    bufferDuration: blobularBuffer?.duration,
+    onCommittedControlsChange: syncControlsToUrl,
+  });
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
@@ -48,53 +67,6 @@ const AudioBlobularPlayer = () => {
   );
 
   const [isPlaying, setIsPlaying] = useState(false);
-
-  const audioSource = useAudioSource();
-  const buffer = audioSource.getBuffer();
-
-  // Also check the AudioBufferProvider buffer for dual buffer system
-  const { blobularBuffer } = useAudioBuffer();
-
-  /**
-   * Update duration constraints when audio buffer is loaded
-   * URL parameters are already applied during initialization
-   */
-  useEffect(() => {
-    if (!buffer) return;
-
-    setControls((prev) => {
-      const next = { ...prev };
-
-      // Update duration max constraint based on buffer duration
-      next.duration = {
-        ...prev.duration,
-        max: buffer.duration,
-      };
-
-      // Clamp current duration range to buffer length if needed
-      const [currentMin, currentMax] = prev.duration.range;
-      if (currentMax > buffer.duration) {
-        const clampedMax = Math.min(currentMax, buffer.duration);
-        const clampedMin = Math.min(currentMin, clampedMax);
-
-        next.duration.range = [clampedMin, clampedMax];
-
-        // Update URL if we had to clamp values
-        const params = new URLSearchParams(window.location.search);
-        params.set(
-          "duration",
-          `${clampedMin.toFixed(2)}-${clampedMax.toFixed(2)}`
-        );
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, "", newUrl);
-      }
-
-      return next;
-    });
-
-    // Enable URL updates for future control changes
-    setHasInitializedFromUrl(true);
-  }, [buffer, setControls, setHasInitializedFromUrl]);
 
   function handleClick(): void {
     if (isPlaying) {
@@ -125,7 +97,7 @@ const AudioBlobularPlayer = () => {
         </div>
 
         <BlobControls
-          key={`controls-${buffer?.duration || blobularBuffer?.duration || 0}`}
+          key={`controls-${blobularBuffer?.duration || 0}`}
           bufferLength={blobularBuffer ? blobularBuffer.duration : 0}
           duration={{
             ...controls.duration,

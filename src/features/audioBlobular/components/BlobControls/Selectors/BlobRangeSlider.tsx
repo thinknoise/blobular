@@ -1,5 +1,4 @@
 import * as Slider from "@radix-ui/react-slider";
-import { useEffect } from "react";
 import {
   blobRangeSlider,
   sliderLabel,
@@ -31,15 +30,6 @@ const BlobRangeSlider = ({
   step,
   showMaxAsRightValue = false,
 }: BlobRangeSliderProps) => {
-  useEffect(() => {
-    if (range[0] < min) {
-      setRange([min, range[1]]);
-    }
-    if (range[1] > max) {
-      setRange([range[0], max]);
-    }
-  }, [min, max, range, setRange]);
-
   const handleChange = (values: number[]) => {
     setRange([values[0], values[1]]);
   };

@@ -2,30 +2,14 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { playBlobAtTime } from "@/shared/utils/audio/playBlobAtTime";
 import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
 import type { BlobEvent } from "@/shared/types/types";
-import { ALL_SCALES, type ScaleName } from "@/shared/constants/scales";
+import type { ScaleName } from "@/shared/constants/scales";
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
 import { controlLimits } from "@/shared/constants/controlLimits";
 import { useAudioSource } from "../engine";
-
-// helper for random major-scale note between minRate…maxRate
-const MAJOR_DEGREES = new Set([0, 2, 4, 5, 7, 9, 11]);
-function getRandomScalePlaybackRate(
-  minRate: number,
-  maxRate: number,
-  degrees: ReadonlySet<number> = MAJOR_DEGREES
-): number {
-  const minSemi = Math.ceil(12 * Math.log2(minRate));
-  const maxSemi = Math.floor(12 * Math.log2(maxRate));
-  const candidates: number[] = [];
-  for (let n = minSemi; n <= maxSemi; n++) {
-    const mod12 = ((n % 12) + 12) % 12;
-    if (degrees.has(mod12)) candidates.push(n);
-  }
-  const semi = candidates.length
-    ? candidates[Math.floor(Math.random() * candidates.length)]
-    : 0;
-  return 2 ** (semi / 12);
-}
+import {
+  blobularEngineConfig,
+  createBlobSchedule,
+} from "../engine/blobularScheduling";
 
 export const useBlobularEngine = (
   numBlobs: number = controlLimits.DEFAULT_BLOBS,
@@ -35,7 +19,7 @@ export const useBlobularEngine = (
     number,
   ] = controlLimits.DEFAULT_PLAYBACK_RATE_RANGE,
   fadeRange: [number, number] = controlLimits.DEFAULT_FADE_RANGE,
-  selectedScale: ScaleName = "Fifths"
+  selectedScale: ScaleName = controlLimits.DEFAULT_SCALE
 ) => {
   const { blobularBuffer } = useAudioBuffer();
 
@@ -79,48 +63,23 @@ export const useBlobularEngine = (
         const buffer = audioSource.getBuffer()!;
         const compressor = compressorRef.current;
 
-        const scheduleAheadTime = 0.1;
         const blob = blobRefs.current[blobIndex];
 
         while (
           blob?.nextBlobTime &&
-          blob.nextBlobTime < ctx.currentTime + scheduleAheadTime
+          blob.nextBlobTime <
+            ctx.currentTime + blobularEngineConfig.scheduleAheadTime
         ) {
-          const [minDur, maxDur] = durationRangeRef.current;
-          const randomDuration = Math.random() * (maxDur - minDur) + minDur;
-
-          const [minRate, maxRate] = playbackRateRangeRef.current;
-          const degrees = ALL_SCALES.find(
-            (s) => s.name === (scaleRef.current as ScaleName)
-          )?.degrees;
-          const randomPlaybackRate = getRandomScalePlaybackRate(
-            minRate,
-            maxRate,
-            degrees
-          );
-          const actualPlayTime = randomDuration / randomPlaybackRate;
-
-          const [minFade, maxFade] = fadeRangeRef.current;
-          const randomFade = Math.random() * (maxFade - minFade) + minFade;
-          const fadeTime = Math.min(randomFade, actualPlayTime / 2);
-
-          const coinFlip = Math.random() < 0.5;
-          const pan = { start: coinFlip ? -1 : 1, rampTo: coinFlip ? 1 : -1 };
-
-          const maxOffset = Math.max(0, buffer.duration - actualPlayTime);
-          const randomOffset = Math.random() * maxOffset;
-          const gain = 0.8;
-
-          const event: BlobEvent = {
+          const { event, nextBlobTime, gain } = createBlobSchedule({
             blobIndex,
             scheduledTime: blob.nextBlobTime,
-            duration: randomDuration,
-            playbackRate: randomPlaybackRate,
-            fadeTime,
-            pan,
-            timestamp: Date.now(),
-            offset: randomOffset,
-          };
+            durationRange: durationRangeRef.current,
+            playbackRateRange: playbackRateRangeRef.current,
+            fadeRange: fadeRangeRef.current,
+            bufferDuration: buffer.duration,
+            selectedScale: scaleRef.current,
+          });
+
           setBlobEvents((prev) => {
             const u = [...prev];
             u[blobIndex] = event;
@@ -131,16 +90,16 @@ export const useBlobularEngine = (
             ctx,
             buffer,
             blob.nextBlobTime,
-            randomDuration,
-            randomPlaybackRate,
+            event.duration,
+            event.playbackRate,
             gain,
             compressor,
-            fadeTime,
-            pan,
-            randomOffset
+            event.fadeTime,
+            event.pan,
+            event.offset
           );
 
-          blob.nextBlobTime += randomDuration - fadeTime;
+          blob.nextBlobTime = nextBlobTime;
         }
 
         requestAnimationFrame(scheduler);
@@ -203,11 +162,26 @@ export const useBlobularEngine = (
     }
     if (!compressorRef.current) {
       const comp = ctx.createDynamicsCompressor();
-      comp.threshold.setValueAtTime(-24, ctx.currentTime);
-      comp.knee.setValueAtTime(30, ctx.currentTime);
-      comp.ratio.setValueAtTime(12, ctx.currentTime);
-      comp.attack.setValueAtTime(0.003, ctx.currentTime);
-      comp.release.setValueAtTime(0.25, ctx.currentTime);
+      comp.threshold.setValueAtTime(
+        blobularEngineConfig.compressor.threshold,
+        ctx.currentTime
+      );
+      comp.knee.setValueAtTime(
+        blobularEngineConfig.compressor.knee,
+        ctx.currentTime
+      );
+      comp.ratio.setValueAtTime(
+        blobularEngineConfig.compressor.ratio,
+        ctx.currentTime
+      );
+      comp.attack.setValueAtTime(
+        blobularEngineConfig.compressor.attack,
+        ctx.currentTime
+      );
+      comp.release.setValueAtTime(
+        blobularEngineConfig.compressor.release,
+        ctx.currentTime
+      );
       comp.connect(masterRef.current);
       compressorRef.current = comp;
     }
@@ -271,11 +245,7 @@ export const useBlobularEngine = (
     if (micNodeRef.current) return; // already started
 
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-      },
+      audio: blobularEngineConfig.micConstraints,
     });
 
     micNodeRef.current = new MediaStreamAudioSourceNode(ctx, {

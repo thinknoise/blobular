@@ -10,7 +10,6 @@ import type {
   CountControl,
 } from "../../types/AudioBlobularPlayer.types";
 import type { ScaleName } from "@/shared/constants/scales";
-import { useEffect } from "react";
 import { blobControls, controlRow, selectionRow } from "./BlobControls.css";
 
 // note: range values are in seconds, so we use for the blobs duration
@@ -47,29 +46,6 @@ const BlobControls = ({
   numBlobs,
   selectedScale,
 }: BlobControlsProps) => {
-  // fade guardrail against duration being less than fade
-  useEffect(() => {
-    const durationStart = duration.range[0];
-    const fadeEnd = fade.range[1];
-
-    // Only apply guardrail if buffer is loaded and fade actually exceeds duration
-    if (bufferLength > 0 && fadeEnd > durationStart) {
-      fade.setRange([fade.min, durationStart]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [duration.range]); // respond only to duration change
-
-  useEffect(() => {
-    const durationStart = duration.range[0];
-    const fadeEnd = fade.range[1];
-
-    // Only apply guardrail if buffer is loaded and fade actually exceeds duration
-    if (bufferLength > 0 && fadeEnd > durationStart) {
-      duration.setRange([fadeEnd, duration.max]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fade.range]); // respond only to fade change
-
   return (
     <div className={blobControls}>
       <div className={controlRow}>
