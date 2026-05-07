@@ -7,7 +7,7 @@ import {
 import type { AuthUser } from "@/features/auth/types";
 
 import type { SoundLibraryClient } from "./soundLibraryClient";
-import type { SoundRecord, SoundUploadInput } from "../types";
+import type { SoundRecord } from "../types";
 import {
   buildRecordingStorageKey,
   buildSoundStorageKey,

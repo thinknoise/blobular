@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Play, Square } from "lucide-react";
 import type {
   ControlsState,
@@ -58,7 +58,7 @@ const AudioBlobularPlayer = () => {
 
   const { numBlobs, duration, playbackRate, fade, selectedScale } = controls;
 
-  const { start, stop, blobEvents } = useBlobularEngine(
+  const { start, stop, isPlaying, blobEvents } = useBlobularEngine(
     numBlobs.value,
     duration.range,
     playbackRate.range,
@@ -66,15 +66,12 @@ const AudioBlobularPlayer = () => {
     selectedScale
   );
 
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  function handleClick(): void {
+  async function handleClick(): Promise<void> {
     if (isPlaying) {
       stop();
     } else {
-      start();
+      await start();
     }
-    setIsPlaying(!isPlaying);
   }
 
   return (

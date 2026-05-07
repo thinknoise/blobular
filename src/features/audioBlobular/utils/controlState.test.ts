@@ -25,7 +25,7 @@ describe("controlState", () => {
 
   it("pushes duration up when fade exceeds the current duration start", () => {
     const controls = createControlsState({
-      duration: { range: [0.8, 5] },
+      duration: { range: [0.8, 5], max: 5 },
       fade: { range: [0.1, 0.4] },
     });
 
@@ -37,7 +37,7 @@ describe("controlState", () => {
 
   it("clamps duration to the loaded buffer length", () => {
     const controls = createControlsState({
-      duration: { range: [2, 8] },
+      duration: { range: [2, 8], max: 8 },
       fade: { range: [0.1, 1.5] },
     });
 

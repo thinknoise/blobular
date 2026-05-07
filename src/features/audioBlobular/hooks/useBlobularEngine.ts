@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { playBlobAtTime } from "@/shared/utils/audio/playBlobAtTime";
-import { getAudioCtx } from "@/shared/utils/audio/audioCtx";
+import { getAudioCtx, resumeAudioCtx } from "@/shared/utils/audio/audioCtx";
 import type { BlobEvent } from "@/shared/types/types";
 import type { ScaleName } from "@/shared/constants/scales";
 import { useAudioBuffer } from "@/hooks/useAudioBuffer";
@@ -27,6 +27,7 @@ export const useBlobularEngine = (
   const compressorRef = useRef<DynamicsCompressorNode | null>(null);
   const masterRef = useRef<GainNode | null>(null);
   const isPlayingRef = useRef(false);
+  const pendingStartRef = useRef(false);
 
   // NEW: mic + recorder refs
   const micNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -45,6 +46,7 @@ export const useBlobularEngine = (
   const [blobEvents, setBlobEvents] = useState<(BlobEvent | null)[]>(() =>
     Array(numBlobs).fill(null)
   );
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const audioSource = useAudioSource();
 
@@ -194,20 +196,13 @@ export const useBlobularEngine = (
     );
   };
 
-  /**
-   * Synchronize blobularBuffer (from S3/AudioBufferProvider) with audioSource (legacy system)
-   * This ensures that when users select S3 audio files, they're available to the audio engine
-   */
-  useEffect(() => {
-    if (blobularBuffer) {
-      audioSource.setBuffer(blobularBuffer);
-    }
-  }, [blobularBuffer, audioSource]);
-
-  const start = async () => {
+  const start = useCallback(async (): Promise<boolean> => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = getAudioCtx(); // shared 48k context
     }
+
+    await resumeAudioCtx();
+
     const ctx = audioCtxRef.current;
     ensureBus(ctx);
 
@@ -216,24 +211,47 @@ export const useBlobularEngine = (
       if (blobularBuffer) {
         audioSource.setBuffer(blobularBuffer);
       } else {
+        pendingStartRef.current = true;
         console.warn(
           "No audio buffer available - please select an audio file from the menu"
         );
-        return;
+        setIsPlaying(false);
+        return false;
       }
     }
 
+    pendingStartRef.current = false;
     isPlayingRef.current = true;
+    setIsPlaying(true);
     const t = ctx.currentTime;
     blobRefs.current.forEach((blob, index) => {
       blob.nextBlobTime = t;
       createScheduler(index)();
     });
-  };
+
+    return true;
+  }, [audioSource, blobularBuffer, createScheduler]);
 
   const stop = () => {
+    pendingStartRef.current = false;
     isPlayingRef.current = false;
+    setIsPlaying(false);
   };
+
+  /**
+   * Synchronize blobularBuffer (from S3/AudioBufferProvider) with audioSource (legacy system)
+   * This ensures that when users select S3 audio files, they're available to the audio engine
+   */
+  useEffect(() => {
+    if (blobularBuffer) {
+      audioSource.setBuffer(blobularBuffer);
+
+      if (pendingStartRef.current) {
+        pendingStartRef.current = false;
+        void start();
+      }
+    }
+  }, [audioSource, blobularBuffer, start]);
 
   // ----- MIC-ONLY RECORDING API -----
 
@@ -296,6 +314,7 @@ export const useBlobularEngine = (
   return {
     start,
     stop,
+    isPlaying,
     blobEvents,
     // mic-only recording controls
     startMic,

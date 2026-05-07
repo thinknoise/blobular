@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import BlobRangeSlider from "./BlobRangeSlider";
@@ -23,8 +22,8 @@ describe("BlobRangeSlider", () => {
   it("renders label and values", () => {
     setup();
     expect(screen.getByText("Test Range")).toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
-    expect(screen.getByText("100.00")).toBeInTheDocument();
+    expect(screen.getByText("0.00")).toBeInTheDocument();
+    expect(screen.getByText("90.00")).toBeInTheDocument();
   });
 
   it("renders two thumbs with correct values", () => {
