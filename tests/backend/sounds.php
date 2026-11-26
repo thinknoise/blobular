@@ -23,6 +23,8 @@ final class FixtureAudioStore implements AudioObjectStore
 
 function runAudioLibraryChecks(PDO $pdo, array $config, callable $assert): void
 {
+    // Synthetic fixture IDs only; inherited by disposable concurrency children.
+    putenv('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS=1,2');
     $store = new FixtureAudioStore();
     $library = new CloudAudioLibrary($pdo, $config, $store);
     $table = $config['users_table'] . '_sounds';
@@ -34,6 +36,11 @@ function runAudioLibraryChecks(PDO $pdo, array $config, callable $assert): void
         try { $operation(); } catch (AudioApiError $error) { $assert($error->status === $status, $description); return; }
         throw new RuntimeException($description);
     };
+    putenv('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS=');
+    $expectError(fn() => $library->beginUpload(1, $input), 403, 'Service denies upload without allowlist');
+    $expectError(fn() => $library->complete(1, '00000000-0000-4000-8000-000000000001'), 403, 'Service denies completion without allowlist');
+    $assert($store->calls === 0, 'Denied service writes never reach storage');
+    putenv('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS=1,2');
     $headStatus = 403;
     $storageRequests = [];
     $restrictedStore = new S3AudioObjectStore(['bucket'=>'fixture-bucket','region'=>'us-east-2',

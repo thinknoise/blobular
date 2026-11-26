@@ -1,8 +1,8 @@
 # Blobular Cloud Audio Library API
 
-Backend only, on branch `codex/blobular-cloud-audio-library` from merged PR #16.
-The existing web UI, authentication contracts, direct-S3 library, and bundled
-native instrument are unchanged. This API is not deployed or connected to a client.
+Backend API shared by future Web and Native clients. The existing Web frontend
+and direct-S3 library are unchanged. Cloud saving remains restricted to dedicated
+test accounts until subscription enforcement is implemented.
 
 ## Runtime and server configuration
 
@@ -11,12 +11,69 @@ Reuse the PHP/MySQL account configuration in `public/api/README.md`. Requires
 Composer dependency are introduced. S3 Signature V4 signing uses PHP's native
 hash functions and is tested against AWS's published query-signing vector.
 
-Provide these **server environment variables**, never Vite variables, browser
+Provide these **server-only settings**, never Vite variables, browser
 configuration, tracked files, or a public PHP response:
 
 - `BLOBULAR_S3_ACCESS_KEY_ID`
 - `BLOBULAR_S3_SECRET_ACCESS_KEY`
 - `BLOBULAR_S3_SESSION_TOKEN` when using temporary credentials (optional otherwise)
+
+### Host-managed configuration and restricted testing
+
+Keep credentials in the existing **production** `config.php` beside `login.php`,
+`_bootstrap.php`, and `_s3.php`: the deployed `/blobular/api/config.php` filesystem
+location (relative to the hosting site's document root). Do not replace the whole
+file or remove its existing database settings. Add these entries inside its
+existing returned array:
+
+```php
+'cloud_test_account_ids' => '6',
+'s3_access_key_id' => 'YOUR_BLOBULAR_CLOUD_ACCESS_KEY_ID',
+'s3_secret_access_key' => 'YOUR_BLOBULAR_CLOUD_SECRET_ACCESS_KEY',
+'s3_session_token' => '', // Permanent IAM keys do not need a session token.
+```
+
+These correspond to `BLOBULAR_CLOUD_TEST_ACCOUNT_IDS`,
+`BLOBULAR_S3_ACCESS_KEY_ID`, `BLOBULAR_S3_SECRET_ACCESS_KEY`, and optional
+`BLOBULAR_S3_SESSION_TOKEN`. File values take precedence, including explicit empty
+strings, matching the database configuration convention. Environment variables
+are fallback values only for keys absent from the file. No bucket/region setting
+is required. Temporary STS credentials also need their token and external refresh.
+
+Only account **6** may create or complete uploads with the configuration above.
+Absent, empty, or malformed allowlists deny writes; there is no hardcoded account
+fallback. Listing, downloading, and deletion retain authentication and ownership
+checks. Removing an ID prevents completion but cannot revoke a previously issued
+five-minute staging PUT URL; hidden abandoned bytes need the existing cleanup.
+This restriction does not change legacy Web uploads or implement subscriptions.
+
+For local development the corresponding file is `public/api/config.php` in this
+Web checkout. Git ignores that file and common backup/editor copies. Never put
+real credentials in `config.example.php`, Vite settings, a commit, or a PR.
+Use the hosting file manager or authorized encrypted transfer to edit the server
+file; keep permissions limited to the hosting account/PHP service. No credentials
+or allowlist need to be placed in GitHub Actions secrets.
+
+The workflow no longer generates `config.php` or reads database/S3 secrets. It
+removes any local config and common backup copies from `dist/api` after building,
+and excludes them from both publish **and deletion** during FTPS synchronization.
+`dangerous-clean-slate` remains false. The existing host file, including its DB
+settings, is preserved even if an earlier deployment tracked it. Existing `FTP_*`
+connection secrets remain necessary. No migration runs in this workflow.
+
+`public/api/.htaccess` denies HTTP access to `config.php` and common backups,
+including when PHP execution is unavailable. It does not prevent PHP includes.
+The production Apache-compatible host must honor `.htaccess` with `AllowOverride
+AuthConfig` (or equivalent). After a reviewed deployment, confirm direct requests
+return **403** and the existing APIs still work. If the host ignores `.htaccess`,
+configure the equivalent HTTP deny rule in its control panel before adding keys;
+PHP's empty response alone is not an HTTP access restriction. Host behavior cannot
+be verified by local tests and was not modified for this PR.
+
+Deployment remains **manual only** and requires explicit FTPS with trusted
+certificate validation (`protocol: ftps`, `security: strict`). Confirm FTPS support
+and the certificate matching `FTP_SERVER` before deployment; do not fall back to
+plaintext or loose validation. See the [transfer action's exclusion and TLS options](https://github.com/SamKirkland/FTP-Deploy-Action/tree/v4.3.5).
 
 The host is fixed to `blobular-audio.s3.us-east-2.amazonaws.com`, reusing the
 existing bucket/region. There is no user-controlled endpoint, bucket, prefix,
@@ -25,7 +82,9 @@ there is no role-discovery/refresh service in this increment. A URL can expire
 before its five-minute limit if the signing credentials expire first.
 
 Use a dedicated backend principal limited to the new `cloud-library/*` prefix.
-It needs object PUT (including CopyObject), GET/HEAD, and DELETE there. Listing
+Its IAM policy needs `s3:PutObject` (including CopyObject destination),
+`s3:GetObject` (GET/HEAD and copy source), and `s3:DeleteObject`, scoped to
+`arn:aws:s3:::blobular-audio/cloud-library/*`. Listing
 uses MySQL; the API does not require bucket-wide ListBucket. Applicable SSE-KMS
 keys may also require decrypt/generate-data-key access for checksums and copy.
 No permissions, keys, CORS, lifecycle rules, bucket settings, or data were changed.
@@ -54,7 +113,7 @@ and owner/state/ID plus cleanup indexes to the existing metadata table.
 
 DDL auto-commits; take backups and inspect a partial migration before resuming.
 Do not enable the endpoints until both schemas and server credentials are ready.
-There are no migration/deployment hooks, new jobs, or workflow changes. Existing
+There are no automatic migration hooks or scheduled cleanup jobs. Existing
 rows are not backfilled, moved, inferred from S3 keys, or automatically exposed.
 A future migration must verify actual legacy ownership and bytes first.
 
@@ -187,6 +246,7 @@ an operations plan that also accounts for late transfers.
 ## Local verification
 
 ```sh
+python3 tests/backend/cloud_config.py
 python3 tests/backend/run.py
 python3 tests/backend/sounds_http.py
 php tests/backend/sounds.php
