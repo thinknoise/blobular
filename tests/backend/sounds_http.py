@@ -112,6 +112,26 @@ class SoundHTTPTests(auth.AuthHTTPTests):
         self.assertEqual(self.request('sounds.php', token=token)[1]['sounds'], [])
         self.assertEqual(self.request('sound.php?id='+record_id, token=token)[0], 409)
 
+    def test_missing_upload_without_listbucket_returns_409(self):
+        token = self.login()['sessionToken']
+        record_id = self.begin_upload(token)
+        (self.api/'objects.json').write_text(json.dumps({'objects':{}, 'headForbidden':True}))
+        status, body, _ = self.request('sound.php?id='+record_id, 'POST', {}, token)
+        self.assertEqual(status, 409)
+        self.assertFalse(body['ok'])
+        self.assertEqual(self.request('sounds.php', token=token)[1]['sounds'], [])
+        self.put_fixture(record_id)
+        self.assertEqual(self.request('sound.php?id='+record_id, 'POST', {}, token)[0], 200)
+
+    def test_saved_copy_head_denial_remains_503(self):
+        token = self.login()['sessionToken']
+        record_id = self.begin_upload(token)
+        self.put_fixture(record_id)
+        state = json.loads((self.api/'objects.json').read_text()); state['savedHeadForbidden'] = True
+        (self.api/'objects.json').write_text(json.dumps(state))
+        self.assertEqual(self.request('sound.php?id='+record_id, 'POST', {}, token)[0], 503)
+        self.assertEqual(self.request('sounds.php', token=token)[1]['sounds'], [])
+
     def test_storage_failure_is_generic_and_retryable(self):
         token = self.login()['sessionToken']
         record_id = self.complete_upload(token)

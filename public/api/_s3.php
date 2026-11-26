@@ -118,7 +118,7 @@ final class S3AudioObjectStore implements AudioObjectStore
     {
         $result = $this->request('HEAD', $key, ['x-amz-checksum-mode' => 'ENABLED']);
         if ($result['status'] === 404) { return null; }
-        if ($result['status'] !== 200) { throw new ObjectStoreFailure('Unable to inspect upload.'); }
+        if ($result['status'] !== 200) { throw new ObjectStoreFailure('Unable to inspect upload.', $result['status']); }
         $headers = $result['headers'];
         return ['bytes' => (int) ($headers['content-length'] ?? -1), 'mime' => $headers['content-type'] ?? '',
             'checksum' => $headers['x-amz-checksum-sha256'] ?? '', 'etag' => $headers['etag'] ?? ''];

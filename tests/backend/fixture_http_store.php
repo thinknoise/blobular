@@ -12,7 +12,14 @@ final class FixtureHttpStore implements AudioObjectStore
     public function upload(string $key, int $bytes, string $mime, string $checksum, int $expires): array {
         $this->state(); return ['url' => 'https://example.invalid/' . $key, 'method' => 'PUT', 'headers' => []];
     }
-    public function inspect(string $key): ?array { return $this->state()['objects'][$key] ?? null; }
+    public function inspect(string $key): ?array {
+        $state = $this->state();
+        if ((($state['headForbidden'] ?? false) && str_contains($key, '/staging/'))
+            || (($state['savedHeadForbidden'] ?? false) && str_contains($key, '/saved/'))) {
+            throw new ObjectStoreFailure('fixture HEAD denied or missing', 403);
+        }
+        return $state['objects'][$key] ?? null;
+    }
     public function publish(string $source, string $destination, string $etag): void {
         $state = $this->state(); $state['objects'][$destination] = $state['objects'][$source]; $this->save($state);
     }

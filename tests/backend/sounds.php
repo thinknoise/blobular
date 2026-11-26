@@ -34,6 +34,23 @@ function runAudioLibraryChecks(PDO $pdo, array $config, callable $assert): void
         try { $operation(); } catch (AudioApiError $error) { $assert($error->status === $status, $description); return; }
         throw new RuntimeException($description);
     };
+    $headStatus = 403;
+    $storageRequests = [];
+    $restrictedStore = new S3AudioObjectStore(['bucket'=>'fixture-bucket','region'=>'us-east-2',
+        'key'=>'fixture-key','secret'=>'fixture-secret','token'=>''],
+        static function ($method, $url, $headers) use (&$headStatus, &$storageRequests): array {
+            $storageRequests[] = $method;
+            return ['status'=>$headStatus, 'headers'=>[], 'body'=>''];
+        });
+    $restrictedLibrary = new CloudAudioLibrary($pdo, $config, $restrictedStore);
+    $unfinished = $restrictedLibrary->beginUpload(1, $input, 1000);
+    $expectError(fn() => $restrictedLibrary->complete(1, $unfinished['id'], 1100), 409,
+        'missing staging object without ListBucket returns retryable conflict');
+    $assert($storageRequests === ['HEAD'], 'ambiguous staging 403 never copies an object');
+    $assert($restrictedLibrary->list(1)['sounds'] === [], 'ambiguous staging 403 keeps metadata hidden');
+    $headStatus = 500;
+    try { $restrictedLibrary->complete(1, $unfinished['id'], 1100); throw new RuntimeException('storage error expected'); }
+    catch (ObjectStoreFailure $error) { $assert($error->getCode() === 500, 'actual storage outage remains a storage failure'); }
     $pending = $library->beginUpload(1, $input, 1000);
     $id = $pending['id']; $stage = "cloud-library/staging/1/$id"; $saved = "cloud-library/saved/1/$id";
     $assert($pending['expiresAt'] === 1300 && str_contains($pending['upload']['url'], $stage), 'upload is short-lived and scoped to server-generated staging key');
