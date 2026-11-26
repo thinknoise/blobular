@@ -16,7 +16,13 @@ import run as auth
 class SoundHTTPTests(auth.AuthHTTPTests):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
+        inherited_allowlist = os.environ.pop('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS', None)
+        try:
+            super().setUpClass()
+        finally:
+            if inherited_allowlist is not None:
+                os.environ['BLOBULAR_CLOUD_TEST_ACCOUNT_IDS'] = inherited_allowlist
+        cls.base_config = (cls.api / 'config.php').read_text()
         schema = '''CREATE TABLE fixture_users_sounds (id TEXT PRIMARY KEY,owner_user_id INTEGER,
             storage_bucket TEXT,storage_key TEXT,title TEXT,original_filename TEXT,mime_type TEXT,
             byte_size INTEGER,source_kind TEXT,visibility TEXT,state TEXT,staging_key TEXT,
@@ -39,8 +45,16 @@ class SoundHTTPTests(auth.AuthHTTPTests):
         with sqlite3.connect(self.database) as db:
             db.execute('DELETE FROM fixture_users_sounds')
         (self.api / 'objects.json').write_text('{"objects":{}}')
+        self.set_allowlist('1,2')
         self.input = {'filename':'one.wav', 'mimeType':'audio/wav', 'byteSize':32,
             'checksumSha256':hashlib.sha256(b'fixture').hexdigest()}
+
+    def set_allowlist(self, value):
+        config = self.base_config
+        if value is not None:
+            escaped = value.replace('\\', '\\\\').replace("'", "\\'")
+            config = config.replace('return [', "return ['cloud_test_account_ids'=>'" + escaped + "',", 1)
+        (self.api / 'config.php').write_text(config)
 
     def begin_upload(self, token):
         status, body, _ = self.request('sounds.php', 'POST', self.input, token)
@@ -175,6 +189,36 @@ class SoundHTTPTests(auth.AuthHTTPTests):
             self.assertNotIn(str(self.directory), result.stdout)
         finally:
             config.write_text(original)
+
+    def test_absent_allowlist_denies_writes_but_preserves_read_and_delete(self):
+        token = self.login()['sessionToken']
+        record_id = self.complete_upload(token)
+        self.set_allowlist(None)
+        self.assertEqual(self.request('sounds.php', 'POST', self.input, token)[0], 403)
+        self.assertEqual(self.request('sound.php?id='+record_id, 'POST', {}, token)[0], 403)
+        self.assertEqual(self.request('sounds.php', token=token)[0], 200)
+        self.assertEqual(self.request('sound.php?id='+record_id, token=token)[0], 200)
+        self.assertEqual(self.request('sound.php?id='+record_id, 'DELETE', token=token)[0], 200)
+
+    def test_empty_and_malformed_allowlists_fail_closed(self):
+        token = self.login()['sessionToken']
+        for value in ('', ' ', '1,*', '1,', '01', '0', '4294967296', '1,2x', '1 2'):
+            with self.subTest(value=value):
+                self.set_allowlist(value)
+                self.assertEqual(self.request('sounds.php', 'POST', self.input, token)[0], 403)
+        with sqlite3.connect(self.database) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM fixture_users_sounds').fetchone()[0], 0)
+
+    def test_only_allowlisted_session_identity_can_create_or_complete(self):
+        one = self.login()['sessionToken']
+        two = self.login('two@example.com')['sessionToken']
+        other_record = self.begin_upload(two)
+        self.set_allowlist(' 1 ')
+        forged = {**self.input, 'userId':1, 'owner_user_id':1, 'cloud_test_account_ids':'2'}
+        self.assertEqual(self.request('sounds.php?userId=1', 'POST', forged, two)[0], 403)
+        self.assertEqual(self.request('sound.php?id='+other_record, 'POST', forged, two)[0], 403)
+        record_id = self.complete_upload(one)
+        self.assertEqual(self.request('sound.php?id='+record_id, token=one)[0], 200)
 
     def test_database_failure_is_generic(self):
         token = self.login()['sessionToken']

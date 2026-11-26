@@ -1,8 +1,8 @@
 # Blobular Cloud Audio Library API
 
-Backend only, on branch `codex/blobular-cloud-audio-library` from merged PR #16.
-The existing web UI, authentication contracts, direct-S3 library, and bundled
-native instrument are unchanged. This API is not deployed or connected to a client.
+Backend API shared by future Web and Native clients. The existing Web frontend
+and direct-S3 library are unchanged. Cloud saving remains restricted to dedicated
+test accounts until subscription enforcement is implemented.
 
 ## Runtime and server configuration
 
@@ -11,12 +11,54 @@ Reuse the PHP/MySQL account configuration in `public/api/README.md`. Requires
 Composer dependency are introduced. S3 Signature V4 signing uses PHP's native
 hash functions and is tested against AWS's published query-signing vector.
 
-Provide these **server environment variables**, never Vite variables, browser
+Provide these **server-only settings**, never Vite variables, browser
 configuration, tracked files, or a public PHP response:
 
 - `BLOBULAR_S3_ACCESS_KEY_ID`
 - `BLOBULAR_S3_SECRET_ACCESS_KEY`
 - `BLOBULAR_S3_SESSION_TOKEN` when using temporary credentials (optional otherwise)
+
+### Restricted testing and GitHub Actions secrets
+
+Configure these repository Actions secrets before a reviewed, manual deployment:
+
+| Secret | Value |
+| --- | --- |
+| `BLOBULAR_CLOUD_TEST_ACCOUNT_IDS` | Comma-separated positive MySQL account IDs for dedicated test accounts only (for example `123,456`; no wildcard or range). |
+| `BLOBULAR_S3_ACCESS_KEY_ID` | Dedicated backend IAM access key. |
+| `BLOBULAR_S3_SECRET_ACCESS_KEY` | Matching secret key. |
+| `BLOBULAR_S3_SESSION_TOKEN` | Required with temporary STS credentials; otherwise leave unset. |
+
+Existing `BLOBULAR_DB_HOST`, `BLOBULAR_DB_NAME`, `BLOBULAR_DB_USER`,
+`BLOBULAR_DB_PASS`, optional `BLOBULAR_USERS_TABLE`, and existing `FTP_*`
+connection secrets remain in use. No bucket/region secret is required.
+
+The workflow runs `scripts/write-php-config.mjs` **after** the frontend build,
+writing only `dist/api/config.php`. The PHP array keys are `cloud_test_account_ids`,
+`s3_access_key_id`, `s3_secret_access_key`, and `s3_session_token`. Secrets are not
+build environment variables, browser bundles, or uploaded workflow artifacts.
+Base64 inside the executable PHP file safely encodes JSON; it is not encryption.
+The hosting server must execute PHP and deny source/backup-file disclosure.
+
+For cloud settings, runtime environment variables override the PHP file, even
+when explicitly empty. An absent, empty, or malformed allowlist denies upload
+creation **and completion** with 403, using validated session identity only.
+Listing, downloading, and deletion retain existing authentication and ownership
+rules. Revoking an ID does not invalidate a previously issued five-minute staging
+PUT URL, but prevents completion and publication. Such data remains hidden and
+needs the existing cleanup process. This gate does not change legacy Web uploads.
+
+Config generation fails before transfer if a nonempty allowlist lacks S3 key or
+secret, or contains malformed IDs. To disable new saves, redeploy with the list
+empty or set an explicitly empty runtime value. Do not allowlist ordinary users.
+
+Deployment remains **manual only**; merging this PR runs no deployment or SQL.
+The existing transfer action now requires explicit FTPS with certificate checking
+(`protocol: ftps`, `security: strict`), including the credential-bearing config.
+Confirm the hosting FTP endpoint supports explicit TLS and presents a trusted
+certificate matching `FTP_SERVER`; use its FTPS port (normally 21). This has not
+been tested against the production host. Do not fall back to plaintext FTP or
+loose certificate validation. See the [action options](https://github.com/SamKirkland/FTP-Deploy-Action/tree/v4.3.5).
 
 The host is fixed to `blobular-audio.s3.us-east-2.amazonaws.com`, reusing the
 existing bucket/region. There is no user-controlled endpoint, bucket, prefix,
@@ -25,7 +67,9 @@ there is no role-discovery/refresh service in this increment. A URL can expire
 before its five-minute limit if the signing credentials expire first.
 
 Use a dedicated backend principal limited to the new `cloud-library/*` prefix.
-It needs object PUT (including CopyObject), GET/HEAD, and DELETE there. Listing
+Its IAM policy needs `s3:PutObject` (including CopyObject destination),
+`s3:GetObject` (GET/HEAD and copy source), and `s3:DeleteObject`, scoped to
+`arn:aws:s3:::blobular-audio/cloud-library/*`. Listing
 uses MySQL; the API does not require bucket-wide ListBucket. Applicable SSE-KMS
 keys may also require decrypt/generate-data-key access for checksums and copy.
 No permissions, keys, CORS, lifecycle rules, bucket settings, or data were changed.
@@ -54,7 +98,7 @@ and owner/state/ID plus cleanup indexes to the existing metadata table.
 
 DDL auto-commits; take backups and inspect a partial migration before resuming.
 Do not enable the endpoints until both schemas and server credentials are ready.
-There are no migration/deployment hooks, new jobs, or workflow changes. Existing
+There are no automatic migration hooks or scheduled cleanup jobs. Existing
 rows are not backfilled, moved, inferred from S3 keys, or automatically exposed.
 A future migration must verify actual legacy ownership and bytes first.
 
@@ -187,6 +231,7 @@ an operations plan that also accounts for late transfers.
 ## Local verification
 
 ```sh
+python3 tests/backend/cloud_config.py
 python3 tests/backend/run.py
 python3 tests/backend/sounds_http.py
 php tests/backend/sounds.php

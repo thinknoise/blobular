@@ -12,6 +12,25 @@ final class AudioApiError extends RuntimeException
     public function __construct(int $status, string $message) { parent::__construct($message); $this->status = $status; }
 }
 
+function requireCloudAudioWriteAccess(int $owner): void
+{
+    $configured = trim(cloudSetting('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS', 'cloud_test_account_ids'));
+    $allowed = [];
+    if ($configured !== '') {
+        foreach (explode(',', $configured) as $entry) {
+            $entry = trim($entry);
+            // Any malformed entry invalidates the entire list; no wildcard/range.
+            if (!preg_match('/^[1-9][0-9]{0,9}$/D', $entry) || (int) $entry > 4294967295) {
+                throw new AudioApiError(403, 'Cloud saving is restricted to dedicated test accounts.');
+            }
+            $allowed[] = $entry;
+        }
+    }
+    if (!in_array((string) $owner, $allowed, true)) {
+        throw new AudioApiError(403, 'Cloud saving is restricted to dedicated test accounts.');
+    }
+}
+
 function audioId($value): string
 {
     if (!is_string($value) || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/D', $value)) {
@@ -97,6 +116,7 @@ final class CloudAudioLibrary
 
     public function beginUpload(int $owner, array $input, ?int $now = null): array
     {
+        requireCloudAudioWriteAccess($owner);
         $now = $now ?? time();
         $filename = audioText($input['filename'] ?? null, 'filename');
         $title = audioText($input['title'] ?? $filename, 'title');
@@ -136,6 +156,7 @@ final class CloudAudioLibrary
 
     public function complete(int $owner, string $id, ?int $now = null): array
     {
+        requireCloudAudioWriteAccess($owner);
         $now = $now ?? time();
         $this->pdo->beginTransaction();
         try {
@@ -240,6 +261,8 @@ function cloudAudioEndpoint(bool $collection): void
         $pdo = createPdo($config);
         $session = requireAuthSession($pdo, $config);
         $owner = (int) $session['id'];
+        // Deny writes before storage configuration, signing, parsing or DB mutation.
+        if ($method === 'POST') { requireCloudAudioWriteAccess($owner); }
         $library = new CloudAudioLibrary($pdo, $config, new S3AudioObjectStore(cloudStorageConfig()));
         if ($collection) {
             if ($method === 'GET') {

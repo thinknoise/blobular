@@ -33,46 +33,21 @@ jobs:
           BLOBULAR_DB_USER: ${{ secrets.BLOBULAR_DB_USER }}
           BLOBULAR_DB_PASS: ${{ secrets.BLOBULAR_DB_PASS }}
           BLOBULAR_USERS_TABLE: ${{ secrets.BLOBULAR_USERS_TABLE }}
-        run: |
-          test -n "$BLOBULAR_DB_HOST" || (echo "Missing BLOBULAR_DB_HOST secret" >&2; exit 1)
-          test -n "$BLOBULAR_DB_NAME" || (echo "Missing BLOBULAR_DB_NAME secret" >&2; exit 1)
-          test -n "$BLOBULAR_DB_USER" || (echo "Missing BLOBULAR_DB_USER secret" >&2; exit 1)
-          test -n "$BLOBULAR_DB_PASS" || (echo "Missing BLOBULAR_DB_PASS secret" >&2; exit 1)
+          BLOBULAR_CLOUD_TEST_ACCOUNT_IDS: ${{ secrets.BLOBULAR_CLOUD_TEST_ACCOUNT_IDS }}
+          BLOBULAR_S3_ACCESS_KEY_ID: ${{ secrets.BLOBULAR_S3_ACCESS_KEY_ID }}
+          BLOBULAR_S3_SECRET_ACCESS_KEY: ${{ secrets.BLOBULAR_S3_SECRET_ACCESS_KEY }}
+          BLOBULAR_S3_SESSION_TOKEN: ${{ secrets.BLOBULAR_S3_SESSION_TOKEN }}
+        run: node scripts/write-php-config.mjs
 
-          mkdir -p dist/api
-
-          node <<'NODE'
-          const fs = require("fs");
-
-          const escapePhp = (value = "") =>
-            String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-
-          const usersTable = (process.env.BLOBULAR_USERS_TABLE || "").trim();
-          const usersTableLine = usersTable
-            ? `    'users_table' => '${escapePhp(usersTable)}',\n`
-            : "";
-          const config = `<?php
-
-          declare(strict_types=1);
-
-          return [
-              'db_host' => '${escapePhp(process.env.BLOBULAR_DB_HOST)}',
-              'db_name' => '${escapePhp(process.env.BLOBULAR_DB_NAME)}',
-              'db_user' => '${escapePhp(process.env.BLOBULAR_DB_USER)}',
-              'db_pass' => '${escapePhp(process.env.BLOBULAR_DB_PASS)}',
-          ${usersTableLine}];
-          `;
-
-          fs.writeFileSync("dist/api/config.php", config);
-          NODE
-
-      - name: Deploy dist to FTP /blobular/
+      - name: Deploy dist to FTPS /blobular/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT || 21 }}
-          protocol: ftp
+          protocol: ftps
+          security: strict
+          log-level: minimal
           local-dir: ./dist/
           server-dir: ${{ secrets.FTP_BLOBULAR_SERVER_DIR || '/blobular/' }}
