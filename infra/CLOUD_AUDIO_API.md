@@ -18,47 +18,62 @@ configuration, tracked files, or a public PHP response:
 - `BLOBULAR_S3_SECRET_ACCESS_KEY`
 - `BLOBULAR_S3_SESSION_TOKEN` when using temporary credentials (optional otherwise)
 
-### Restricted testing and GitHub Actions secrets
+### Host-managed configuration and restricted testing
 
-Configure these repository Actions secrets before a reviewed, manual deployment:
+Keep credentials in the existing **production** `config.php` beside `login.php`,
+`_bootstrap.php`, and `_s3.php`: the deployed `/blobular/api/config.php` filesystem
+location (relative to the hosting site's document root). Do not replace the whole
+file or remove its existing database settings. Add these entries inside its
+existing returned array:
 
-| Secret | Value |
-| --- | --- |
-| `BLOBULAR_CLOUD_TEST_ACCOUNT_IDS` | Comma-separated positive MySQL account IDs for dedicated test accounts only (for example `123,456`; no wildcard or range). |
-| `BLOBULAR_S3_ACCESS_KEY_ID` | Dedicated backend IAM access key. |
-| `BLOBULAR_S3_SECRET_ACCESS_KEY` | Matching secret key. |
-| `BLOBULAR_S3_SESSION_TOKEN` | Required with temporary STS credentials; otherwise leave unset. |
+```php
+'cloud_test_account_ids' => '6',
+'s3_access_key_id' => 'YOUR_BLOBULAR_CLOUD_ACCESS_KEY_ID',
+'s3_secret_access_key' => 'YOUR_BLOBULAR_CLOUD_SECRET_ACCESS_KEY',
+'s3_session_token' => '', // Permanent IAM keys do not need a session token.
+```
 
-Existing `BLOBULAR_DB_HOST`, `BLOBULAR_DB_NAME`, `BLOBULAR_DB_USER`,
-`BLOBULAR_DB_PASS`, optional `BLOBULAR_USERS_TABLE`, and existing `FTP_*`
-connection secrets remain in use. No bucket/region secret is required.
+These correspond to `BLOBULAR_CLOUD_TEST_ACCOUNT_IDS`,
+`BLOBULAR_S3_ACCESS_KEY_ID`, `BLOBULAR_S3_SECRET_ACCESS_KEY`, and optional
+`BLOBULAR_S3_SESSION_TOKEN`. File values take precedence, including explicit empty
+strings, matching the database configuration convention. Environment variables
+are fallback values only for keys absent from the file. No bucket/region setting
+is required. Temporary STS credentials also need their token and external refresh.
 
-The workflow runs `scripts/write-php-config.mjs` **after** the frontend build,
-writing only `dist/api/config.php`. The PHP array keys are `cloud_test_account_ids`,
-`s3_access_key_id`, `s3_secret_access_key`, and `s3_session_token`. Secrets are not
-build environment variables, browser bundles, or uploaded workflow artifacts.
-Base64 inside the executable PHP file safely encodes JSON; it is not encryption.
-The hosting server must execute PHP and deny source/backup-file disclosure.
+Only account **6** may create or complete uploads with the configuration above.
+Absent, empty, or malformed allowlists deny writes; there is no hardcoded account
+fallback. Listing, downloading, and deletion retain authentication and ownership
+checks. Removing an ID prevents completion but cannot revoke a previously issued
+five-minute staging PUT URL; hidden abandoned bytes need the existing cleanup.
+This restriction does not change legacy Web uploads or implement subscriptions.
 
-For cloud settings, runtime environment variables override the PHP file, even
-when explicitly empty. An absent, empty, or malformed allowlist denies upload
-creation **and completion** with 403, using validated session identity only.
-Listing, downloading, and deletion retain existing authentication and ownership
-rules. Revoking an ID does not invalidate a previously issued five-minute staging
-PUT URL, but prevents completion and publication. Such data remains hidden and
-needs the existing cleanup process. This gate does not change legacy Web uploads.
+For local development the corresponding file is `public/api/config.php` in this
+Web checkout. Git ignores that file and common backup/editor copies. Never put
+real credentials in `config.example.php`, Vite settings, a commit, or a PR.
+Use the hosting file manager or authorized encrypted transfer to edit the server
+file; keep permissions limited to the hosting account/PHP service. No credentials
+or allowlist need to be placed in GitHub Actions secrets.
 
-Config generation fails before transfer if a nonempty allowlist lacks S3 key or
-secret, or contains malformed IDs. To disable new saves, redeploy with the list
-empty or set an explicitly empty runtime value. Do not allowlist ordinary users.
+The workflow no longer generates `config.php` or reads database/S3 secrets. It
+removes any local config and common backup copies from `dist/api` after building,
+and excludes them from both publish **and deletion** during FTPS synchronization.
+`dangerous-clean-slate` remains false. The existing host file, including its DB
+settings, is preserved even if an earlier deployment tracked it. Existing `FTP_*`
+connection secrets remain necessary. No migration runs in this workflow.
 
-Deployment remains **manual only**; merging this PR runs no deployment or SQL.
-The existing transfer action now requires explicit FTPS with certificate checking
-(`protocol: ftps`, `security: strict`), including the credential-bearing config.
-Confirm the hosting FTP endpoint supports explicit TLS and presents a trusted
-certificate matching `FTP_SERVER`; use its FTPS port (normally 21). This has not
-been tested against the production host. Do not fall back to plaintext FTP or
-loose certificate validation. See the [action options](https://github.com/SamKirkland/FTP-Deploy-Action/tree/v4.3.5).
+`public/api/.htaccess` denies HTTP access to `config.php` and common backups,
+including when PHP execution is unavailable. It does not prevent PHP includes.
+The production Apache-compatible host must honor `.htaccess` with `AllowOverride
+AuthConfig` (or equivalent). After a reviewed deployment, confirm direct requests
+return **403** and the existing APIs still work. If the host ignores `.htaccess`,
+configure the equivalent HTTP deny rule in its control panel before adding keys;
+PHP's empty response alone is not an HTTP access restriction. Host behavior cannot
+be verified by local tests and was not modified for this PR.
+
+Deployment remains **manual only** and requires explicit FTPS with trusted
+certificate validation (`protocol: ftps`, `security: strict`). Confirm FTPS support
+and the certificate matching `FTP_SERVER` before deployment; do not fall back to
+plaintext or loose validation. See the [transfer action's exclusion and TLS options](https://github.com/SamKirkland/FTP-Deploy-Action/tree/v4.3.5).
 
 The host is fixed to `blobular-audio.s3.us-east-2.amazonaws.com`, reusing the
 existing bucket/region. There is no user-controlled endpoint, bucket, prefix,

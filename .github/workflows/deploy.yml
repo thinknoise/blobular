@@ -26,18 +26,9 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Write PHP config from secrets
-        env:
-          BLOBULAR_DB_HOST: ${{ secrets.BLOBULAR_DB_HOST }}
-          BLOBULAR_DB_NAME: ${{ secrets.BLOBULAR_DB_NAME }}
-          BLOBULAR_DB_USER: ${{ secrets.BLOBULAR_DB_USER }}
-          BLOBULAR_DB_PASS: ${{ secrets.BLOBULAR_DB_PASS }}
-          BLOBULAR_USERS_TABLE: ${{ secrets.BLOBULAR_USERS_TABLE }}
-          BLOBULAR_CLOUD_TEST_ACCOUNT_IDS: ${{ secrets.BLOBULAR_CLOUD_TEST_ACCOUNT_IDS }}
-          BLOBULAR_S3_ACCESS_KEY_ID: ${{ secrets.BLOBULAR_S3_ACCESS_KEY_ID }}
-          BLOBULAR_S3_SECRET_ACCESS_KEY: ${{ secrets.BLOBULAR_S3_SECRET_ACCESS_KEY }}
-          BLOBULAR_S3_SESSION_TOKEN: ${{ secrets.BLOBULAR_S3_SESSION_TOKEN }}
-        run: node scripts/write-php-config.mjs
+      # config.php is managed on the host; never upload or delete it during sync.
+      - name: Remove host-managed config from deployment files
+        run: rm -f dist/api/config.php dist/api/config.php.* dist/api/config.php~ dist/api/.config.php*
 
       - name: Deploy dist to FTPS /blobular/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -51,3 +42,10 @@ jobs:
           log-level: minimal
           local-dir: ./dist/
           server-dir: ${{ secrets.FTP_BLOBULAR_SERVER_DIR || '/blobular/' }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/config.php*
+            **/.config.php*

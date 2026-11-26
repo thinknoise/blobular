@@ -13,18 +13,19 @@ interface AudioObjectStore
     public function remove(string $key): void;
 }
 
-// Actions secrets are delivered in the existing PHP-only config after the Vite
-// build. Runtime environment values override that file, including explicit empty.
+// Match the existing database configuration: explicit file values take precedence
+// over environment values. An empty file value deliberately disables that setting.
 function cloudSetting(string $environmentName, string $fileKey): string
 {
-    $environment = getenv($environmentName);
-    if ($environment !== false) { return $environment; }
     $path = __DIR__ . '/config.php';
     $config = is_file($path) ? require $path : [];
     if (!is_array($config)) { throw new ObjectStoreFailure('Invalid server configuration.'); }
-    $value = $config[$fileKey] ?? '';
-    if (!is_string($value)) { throw new ObjectStoreFailure('Invalid server configuration.'); }
-    return $value;
+    if (array_key_exists($fileKey, $config)) {
+        if (!is_string($config[$fileKey])) { throw new ObjectStoreFailure('Invalid server configuration.'); }
+        return $config[$fileKey];
+    }
+    $environment = getenv($environmentName);
+    return $environment === false ? '' : $environment;
 }
 
 function cloudStorageConfig(): array

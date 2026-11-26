@@ -135,12 +135,13 @@ only limits table growth. No cleanup job is installed by this task.
   DynamoDB concept; Lambda IAM includes bucket-wide read/write/delete and list.
   `infra/lambda/sounds/index.mjs` returns 501. These are not the new PHP backend
   or proof of any currently deployed permissions.
-- `.github/workflows/deploy.yml`: builds Vite, then generates server-only
-  `dist/api/config.php` from repository secrets. Manual dispatch is required;
+- `.github/workflows/deploy.yml`: builds Vite and excludes the host-managed
+  `api/config.php` from upload and deletion; it no longer generates credentials. Manual dispatch is required;
   merge/push does not deploy, and no workflow applies migrations. Transfer now
   requires certificate-verified explicit FTPS; production host support is unverified.
   See [cloud configuration and restricted testing](../../infra/CLOUD_AUDIO_API.md)
-  for the S3 credentials and default-deny test-account allowlist. No deployment
+  for the host-managed S3 credentials, HTTP denial rules, and default-deny
+  test-account allowlist. No deployment
   was run for this change. Default session TTL remains unchanged.
 - Live IAM/identity-pool policies, bucket policy/ACL/CORS/encryption, deployed
   objects, production DB configuration, grants, TLS and PHP routing were not

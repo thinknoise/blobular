@@ -1,0 +1,11 @@
+# Host-managed credentials and common editor/backup copies must never be served.
+# PHP includes still work; Apache authorization applies only to HTTP requests.
+<FilesMatch "(?i)^\.?config\.php(?:[.~_-].*)?$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
