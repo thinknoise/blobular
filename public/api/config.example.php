@@ -8,4 +8,6 @@ return [
     'db_user' => 'your-db-user',
     'db_pass' => 'your-db-password',
     'users_table' => 'blobular_users',
+    // Absolute lifetime; no automatic extension or refresh token.
+    'session_ttl_seconds' => 3600,
 ];

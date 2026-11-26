@@ -16,9 +16,9 @@ validateEmail($email);
 validatePasswordStrength($password, 'Password');
 
 $pdo = createPdo($config);
-ensureUsersTable($pdo, $config['users_table']);
 
 try {
+    ensureUsersTable($pdo, $config['users_table']);
     $insertSql = sprintf(
         'INSERT INTO `%s` (`username`, `password_hash`) VALUES (:username, :password_hash)',
         $config['users_table']
@@ -35,7 +35,7 @@ try {
         'message' => 'User created.',
         'userId' => (int) $pdo->lastInsertId(),
     ]);
-} catch (PDOException $exception) {
+} catch (Throwable $exception) {
     if ((string) $exception->getCode() === '23000') {
         respond(409, ['ok' => false, 'message' => 'Email already exists.']);
     }

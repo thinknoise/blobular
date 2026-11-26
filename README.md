@@ -9,6 +9,12 @@ It’s a small TypeScript + React project built on Vite. The app loads an audio 
 ## Live demo
 https://modelglue.com/blobular/?blobs=13&duration=2.53-5.58&sampleRate=0.90-1.40&scale=Blues&buffer=audio-pond%2FLongHorn.wav
 
+## Deployment
+
+The GitHub Actions workflow in `.github/workflows/deploy.yml` runs only when
+manually dispatched. Merging a PR or pushing a branch does not trigger deployment. Database migrations
+are never run by this workflow and must be reviewed and applied separately.
+
 ## Where the interesting parts live
 
 src/
