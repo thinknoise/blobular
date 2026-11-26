@@ -3,6 +3,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { cp } from "node:fs/promises";
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
 export default defineConfig(({ mode }) => {
@@ -23,7 +24,28 @@ export default defineConfig(({ mode }) => {
         };
 
   return {
-    plugins: [react(), vanillaExtractPlugin()],
+    plugins: [
+      react(),
+      vanillaExtractPlugin(),
+      {
+        name: "copy-web-public-assets",
+        apply: "build",
+        async writeBundle(output) {
+          if (!output.dir) throw new Error("Missing build output directory.");
+          // Filter before copying: host credentials must never enter build output.
+          await cp(path.resolve(__dirname, "public"), output.dir, {
+            recursive: true,
+            filter(source) {
+              const name = path.basename(source);
+              return !/^\.?config\.php/i.test(name) &&
+                name !== "config.example.php" && name !== ".DS_Store" &&
+                path.relative(path.resolve(__dirname, "public/api"), source) !== "README.md";
+            },
+          });
+        },
+      },
+    ],
+    build: { copyPublicDir: false },
     base: "/blobular/",
     server: apiProxy
       ? {

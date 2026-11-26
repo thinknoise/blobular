@@ -55,7 +55,7 @@ its browser-stored ID as proof of account ownership in a cloud API.
 Requires PHP 8+, PDO MySQL, and MySQL 8/InnoDB with an InnoDB page size
 of at least 8 KiB. The migration explicitly selects DYNAMIC row format. Keep `config.php` server-only,
 ignored by Git, and out of mobile/static distributions. No AWS credentials are
-needed by the authentication endpoints; audio uses separate server environment
+needed by the authentication endpoints; audio uses server-only file settings or environment
 credentials as described in the linked API.
 
 Existing configuration keys/environment variables remain:
@@ -135,12 +135,14 @@ only limits table growth. No cleanup job is installed by this task.
   DynamoDB concept; Lambda IAM includes bucket-wide read/write/delete and list.
   `infra/lambda/sounds/index.mjs` returns 501. These are not the new PHP backend
   or proof of any currently deployed permissions.
-- `.github/workflows/deploy.yml`: builds Vite, generates `dist/api/config.php`
-  from repository secrets, and deploys only when manually dispatched using
-  **plain FTP**. The push-to-main trigger is removed in this PR; merging or
-  pushing does not deploy, and no workflow applies migrations. It was not run. Before deployment, replace that transport with an
-  encrypted option. Default TTL works with existing generated config; overriding
-  it requires a server environment variable or future workflow configuration.
+- `.github/workflows/deploy.yml`: builds Vite and excludes the host-managed
+  `api/config.php` from upload and deletion; it no longer generates credentials. Manual dispatch is required;
+  merge/push does not deploy, and no workflow applies migrations. Transfer now
+  requires certificate-verified explicit FTPS; production host support is unverified.
+  See [cloud configuration and restricted testing](../../infra/CLOUD_AUDIO_API.md)
+  for the host-managed S3 credentials, HTTP denial rules, and default-deny
+  test-account allowlist. No deployment
+  was run for this change. Default session TTL remains unchanged.
 - Live IAM/identity-pool policies, bucket policy/ACL/CORS/encryption, deployed
   objects, production DB configuration, grants, TLS and PHP routing were not
   accessed or verified. No production connection or permission change was made.
@@ -185,3 +187,43 @@ unchanged; the new `/me` and logout endpoints return no account data without a
 valid session.
 
 Session design reference: [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+
+
+## Host-owned production configuration
+
+The existing `api/config.php` on the PHP host is authoritative and must be
+provisioned/edited privately. Deployment never generates, uploads or deletes it.
+The build also excludes this README, `config.example.php`, and config backups.
+Apache denial rules prevent direct HTTP access to config and its backup copies;
+PHP includes still work. Verify the host honors `.htaccess` before deployment.
+
+The returned PHP array supports:
+
+| Key | Purpose |
+| --- | --- |
+| `db_host`, `db_name`, `db_user`, `db_pass` | Existing MySQL connection; retain current values. |
+| `users_table` | Existing account table; must match both migrations. Default `app_users`; do not change an existing table selection. |
+| `session_ttl_seconds` | Absolute bearer-token lifetime; integer 60–172800, default 3600. |
+| `s3_access_key_id`, `s3_secret_access_key` | Backend-only AWS credentials for the fixed `blobular-audio` bucket in `us-east-2`. |
+| `s3_session_token` | Temporary credential token, or an explicit empty string for permanent credentials. |
+
+Explicit file values override corresponding `BLOBULAR_*` environment settings.
+S3 keys must be strings; explicit empty credentials disable storage rather than
+falling back to environment credentials. Never use `VITE_*` variables for secrets.
+Database, session and storage settings never enter the frontend bundle.
+
+Cloud-test-account write restrictions belong to [PR #19](https://github.com/thinknoise/blobular/pull/19).
+The shared file-setting loader can read `cloud_test_account_ids` with fallback to
+`BLOBULAR_CLOUD_TEST_ACCOUNT_IDS`, but this PR does not introduce that restriction.
+A host entry alone does not restrict writes until PR #19 is reconciled and merged.
+Do not enable production S3 credentials before that separate merge.
+
+Verification (dummy credentials and disposable databases only):
+
+```sh
+npm run build
+python3 tests/backend/deployment.py
+python3 tests/backend/run.py
+python3 tests/backend/sounds_http.py
+php tests/backend/sounds.php
+```

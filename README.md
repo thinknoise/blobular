@@ -15,6 +15,16 @@ The GitHub Actions workflow in `.github/workflows/deploy.yml` runs only when
 manually dispatched. Merging a PR or pushing a branch does not trigger deployment. Database migrations
 are never run by this workflow and must be reviewed and applied separately.
 
+The host-owned `/blobular/api/config.php` is authoritative. Actions does not
+create it or use database/AWS secrets. Build output excludes that file, its
+backup copies, API documentation and config examples; FTP exclusions also keep
+remote config copies out of both upload and deletion. Never enable a clean-slate
+deploy. Configure the server privately using `public/api/config.example.php` and
+`public/api/README.md` as references; neither reference is shipped.
+
+The separate native app lives in `thinknoise/blobular-native`. Web `main` has no
+Capacitor dependencies, mobile build scripts, or iOS wrapper project.
+
 ## Where the interesting parts live
 
 src/

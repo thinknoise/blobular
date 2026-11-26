@@ -11,7 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
-public/api/config.php
+public/api/config.php*
+public/api/.config.php*
 
 # Test coverage reports
 coverage/
