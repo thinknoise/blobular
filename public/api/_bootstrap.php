@@ -80,7 +80,8 @@ function loadApiConfig(): array
     if (strlen($config['users_table']) > 55) {
         respond(500, ['ok' => false, 'message' => 'Configured table name is too long.']);
     }
-    $ttl = $fileConfig['session_ttl_seconds'] ?? (getenv('BLOBULAR_SESSION_TTL_SECONDS') ?: 3600);
+    $environmentTtl = getenv('BLOBULAR_SESSION_TTL_SECONDS');
+    $ttl = $fileConfig['session_ttl_seconds'] ?? ($environmentTtl === false ? 3600 : $environmentTtl);
     $ttl = filter_var($ttl, FILTER_VALIDATE_INT, ['options' => ['min_range' => 60, 'max_range' => 172800]]);
     if ($ttl === false) {
         respond(500, ['ok' => false, 'message' => 'Session lifetime must be 60–172800 seconds.']);

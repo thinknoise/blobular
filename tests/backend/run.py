@@ -21,6 +21,56 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[2]
 
 
+class AuthConfigTests(unittest.TestCase):
+    def load_config(self, environment_ttl=None, file_ttl=None):
+        with tempfile.TemporaryDirectory(prefix='blobular-config-tests-') as directory:
+            api = Path(directory)
+            for name in ('_bootstrap.php', '_sessions.php'):
+                shutil.copyfile(ROOT / 'public/api' / name, api / name)
+            ttl_setting = '' if file_ttl is None else f"'session_ttl_seconds'=>{file_ttl},"
+            (api / 'config.php').write_text(
+                "<?php return ['db_host'=>'fixture', 'db_name'=>'fixture', "
+                "'db_user'=>'fixture', 'db_pass'=>'fixture', " + ttl_setting + "];")
+            environment = dict(os.environ)
+            environment.pop('BLOBULAR_SESSION_TTL_SECONDS', None)
+            if environment_ttl is not None:
+                environment['BLOBULAR_SESSION_TTL_SECONDS'] = environment_ttl
+            # Calls the real config loader without ever opening a DB connection.
+            code = """require $argv[1];
+            register_shutdown_function(static function () {
+                fwrite(STDERR, (string) (http_response_code() ?: 200));
+            });
+            $config = loadApiConfig();
+            echo json_encode(['ttl' => $config['session_ttl_seconds']]);
+            """
+            result = subprocess.run(['php', '-r', code, str(api / '_bootstrap.php')],
+                env=environment, capture_output=True, text=True, check=True)
+            return int(result.stderr), json.loads(result.stdout)
+
+    def test_unset_environment_ttl_uses_default(self):
+        self.assertEqual(self.load_config(), (200, {'ttl': 3600}))
+
+    def test_zero_environment_ttl_is_rejected(self):
+        status, body = self.load_config('0')
+        self.assertEqual(status, 500)
+        self.assertFalse(body['ok'])
+
+    def test_invalid_environment_ttl_is_rejected(self):
+        for value in ('', 'invalid', '-1', '59', '172801', '1.5'):
+            with self.subTest(value=value):
+                status, body = self.load_config(value)
+                self.assertEqual(status, 500)
+                self.assertFalse(body['ok'])
+
+    def test_valid_environment_ttl_is_used(self):
+        for value in ('60', '900', '3600', '172800'):
+            with self.subTest(value=value):
+                self.assertEqual(self.load_config(value), (200, {'ttl': int(value)}))
+
+    def test_file_configuration_still_takes_precedence(self):
+        self.assertEqual(self.load_config('0', file_ttl=900), (200, {'ttl': 900}))
+
+
 class AuthHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
