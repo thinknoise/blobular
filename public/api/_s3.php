@@ -13,15 +13,30 @@ interface AudioObjectStore
     public function remove(string $key): void;
 }
 
+// Match the existing database configuration: explicit file values take precedence
+// over environment values. An empty file value deliberately disables that setting.
+function cloudSetting(string $environmentName, string $fileKey): string
+{
+    $path = __DIR__ . '/config.php';
+    $config = is_file($path) ? require $path : [];
+    if (!is_array($config)) { throw new ObjectStoreFailure('Invalid server configuration.'); }
+    if (array_key_exists($fileKey, $config)) {
+        if (!is_string($config[$fileKey])) { throw new ObjectStoreFailure('Invalid server configuration.'); }
+        return $config[$fileKey];
+    }
+    $environment = getenv($environmentName);
+    return $environment === false ? '' : $environment;
+}
+
 function cloudStorageConfig(): array
 {
-    $key = getenv('BLOBULAR_S3_ACCESS_KEY_ID');
-    $secret = getenv('BLOBULAR_S3_SECRET_ACCESS_KEY');
-    if ($key === false || $key === '' || $secret === false || $secret === '') {
+    $key = cloudSetting('BLOBULAR_S3_ACCESS_KEY_ID', 's3_access_key_id');
+    $secret = cloudSetting('BLOBULAR_S3_SECRET_ACCESS_KEY', 's3_secret_access_key');
+    if ($key === '' || $secret === '') {
         throw new ObjectStoreFailure('Cloud storage is not configured.');
     }
     return ['bucket' => 'blobular-audio', 'region' => 'us-east-2', 'key' => $key,
-        'secret' => $secret, 'token' => getenv('BLOBULAR_S3_SESSION_TOKEN') ?: ''];
+        'secret' => $secret, 'token' => cloudSetting('BLOBULAR_S3_SESSION_TOKEN', 's3_session_token')];
 }
 
 // SigV4 query signing; keys are server-generated, and the production host is fixed.
