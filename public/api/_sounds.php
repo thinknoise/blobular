@@ -143,7 +143,17 @@ final class CloudAudioLibrary
             if ($row['state'] !== 'ready') {
                 if ($row['state'] !== 'uploading') { throw new AudioApiError(409, 'Recording is not awaiting upload.'); }
                 if ($now >= (int) $row['upload_expires_at'] + 86400) { throw new AudioApiError(410, 'Upload completion window expired.'); }
-                $object = $this->storage->inspect($row['staging_key']);
+                try {
+                    $object = $this->storage->inspect($row['staging_key']);
+                } catch (ObjectStoreFailure $exception) {
+                    // Without ListBucket, S3 uses 403 for missing objects too.
+                    // This cannot distinguish an unfinished PUT from denied read
+                    // access. Keep it unpublished; the caller can retry completion.
+                    if ($exception->getCode() === 403) {
+                        throw new AudioApiError(409, 'Upload is not available or readable yet.');
+                    }
+                    throw $exception;
+                }
                 $this->verifyObject($row, $object);
                 $this->storage->publish($row['staging_key'], $row['storage_key'], $object['etag']);
                 $this->verifyObject($row, $this->storage->inspect($row['storage_key']));

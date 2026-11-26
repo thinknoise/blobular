@@ -30,6 +30,12 @@ uses MySQL; the API does not require bucket-wide ListBucket. Applicable SSE-KMS
 keys may also require decrypt/generate-data-key access for checksums and copy.
 No permissions, keys, CORS, lifecycle rules, bucket settings, or data were changed.
 
+Without ListBucket, S3 can report a missing staging object as HEAD 403. Completion
+treats that ambiguous staging response as retryable 409 and leaves it hidden. It
+cannot distinguish an unfinished PUT from denied read access; persistent 409 after
+a successful PUT requires checking backend object permissions. Other storage
+failures, including a denied HEAD on the saved copy, remain 503.
+
 **Production prerequisite:** audit existing browser Cognito identity-pool IAM,
 bucket policy, ACLs, and public-access settings. Its old direct-S3 credentials
 must not grant access to `cloud-library/*`. API ownership checks cannot protect
