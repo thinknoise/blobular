@@ -22,11 +22,12 @@ if ($currentPassword === '') {
 validatePasswordStrength($newPassword, 'New password');
 
 $pdo = createPdo($config);
-ensureUsersTable($pdo, $config['users_table']);
 
 try {
+    ensureUsersTable($pdo, $config['users_table']);
+    $pdo->beginTransaction();
     $querySql = sprintf(
-        'SELECT `id`, `password_hash` FROM `%s` WHERE `username` = :username LIMIT 1',
+        'SELECT `id`, `password_hash` FROM `%s` WHERE `username` = :username LIMIT 1 FOR UPDATE',
         $config['users_table']
     );
 
@@ -35,15 +36,18 @@ try {
     $row = $queryStatement->fetch();
 
     if (!$row || !is_array($row)) {
+        $pdo->rollBack();
         respond(404, ['ok' => false, 'message' => 'User not found.']);
     }
 
     $currentHash = (string) ($row['password_hash'] ?? '');
     if ($currentHash === '' || !password_verify($currentPassword, $currentHash)) {
+        $pdo->rollBack();
         respond(401, ['ok' => false, 'message' => 'Current password is incorrect.']);
     }
 
     if (password_verify($newPassword, $currentHash)) {
+        $pdo->rollBack();
         respond(400, ['ok' => false, 'message' => 'New password must be different from current password.']);
     }
 
@@ -58,7 +62,11 @@ try {
         ':id' => (int) ($row['id'] ?? 0),
     ]);
 
+    revokeUserSessions($pdo, $config, (int) $row['id']);
+    $pdo->commit();
+
     respond(200, ['ok' => true, 'message' => 'Password updated.']);
-} catch (PDOException $exception) {
+} catch (Throwable $exception) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
     respond(500, ['ok' => false, 'message' => 'Database error while resetting password.']);
 }

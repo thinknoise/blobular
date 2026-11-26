@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+
+require_once __DIR__ . '/_sessions.php';
 
 function respond(int $status, array $payload): void
 {
@@ -25,6 +29,14 @@ function readJsonBody(): array
 
     if (!is_array($payload)) {
         respond(400, ['ok' => false, 'message' => 'Invalid JSON body.']);
+    }
+
+    // Reject structured/non-string credentials before PHP casts can emit warnings
+    // containing filesystem paths (even when the host enables display_errors).
+    foreach (['email', 'username', 'password', 'currentPassword', 'newPassword'] as $field) {
+        if (array_key_exists($field, $payload) && !is_string($payload[$field])) {
+            respond(400, ['ok' => false, 'message' => 'Account credentials must be strings.']);
+        }
     }
 
     return $payload;
@@ -63,6 +75,17 @@ function loadApiConfig(): array
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $config['users_table'])) {
         respond(500, ['ok' => false, 'message' => 'Configured table name is invalid.']);
     }
+
+    // Derived session table name must fit MySQL's 64-character identifier limit.
+    if (strlen($config['users_table']) > 55) {
+        respond(500, ['ok' => false, 'message' => 'Configured table name is too long.']);
+    }
+    $ttl = $fileConfig['session_ttl_seconds'] ?? (getenv('BLOBULAR_SESSION_TTL_SECONDS') ?: 3600);
+    $ttl = filter_var($ttl, FILTER_VALIDATE_INT, ['options' => ['min_range' => 60, 'max_range' => 172800]]);
+    if ($ttl === false) {
+        respond(500, ['ok' => false, 'message' => 'Session lifetime must be 60–172800 seconds.']);
+    }
+    $config['session_ttl_seconds'] = $ttl;
 
     return $config;
 }
