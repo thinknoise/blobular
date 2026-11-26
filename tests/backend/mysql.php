@@ -100,3 +100,50 @@ $pdo->rollBack();
 check(loginAccount($pdo, $config, 'one@example.com', 'ChangedPassword2!') !== null, 'password transaction rollback preserves prior hash');
 $version = $pdo->query('SELECT VERSION()')->fetchColumn();
 echo "$count MySQL checks passed on $version\n";
+
+// Apply the additive audio lifecycle migration only to this disposable fixture.
+$pdo->exec(file_get_contents(dirname(__DIR__, 2) . '/infra/migrations/002-cloud-audio-lifecycle.sql'));
+require __DIR__ . '/sounds.php';
+runAudioLibraryChecks($pdo, $config, 'check');
+runS3Checks('check');
+echo "$count combined MySQL/audio checks passed on $version\n";
+
+// Completion must re-read lifecycle state after a concurrent cancellation commits.
+$store = new FixtureAudioStore();
+$library = new CloudAudioLibrary($pdo, $config, $store);
+$pending = $library->beginUpload(1, ['filename'=>'race.wav','mimeType'=>'audio/wav','byteSize'=>32,'checksumSha256'=>hash('sha256','fixture')]);
+$rid = $pending['id'];
+$pdo->beginTransaction();
+$lock = $pdo->prepare('SELECT * FROM blobular_users_sounds WHERE id=? FOR UPDATE');
+$lock->execute([$rid]); $lock->fetch();
+$pdo->prepare("UPDATE blobular_users_sounds SET state='deleting' WHERE id=?")->execute([$rid]);
+$childCode = <<<'CODE'
+require $argv[1];
+$pdo = new PDO('mysql:host=127.0.0.1;port=' . $argv[2] . ';dbname=blobular_auth_fixture', 'root', '', [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+$store = new FixtureAudioStore();
+$library = new CloudAudioLibrary($pdo, ['users_table'=>'blobular_users'], $store);
+echo "started\n"; flush();
+try { $library->complete(1, $argv[3]); echo 'unexpected completion'; }
+catch (AudioApiError $error) { echo $error->status . ':' . $store->calls; }
+CODE;
+$process = proc_open([PHP_BINARY, '-r', $childCode, __DIR__ . '/sounds.php', (string) $port, $rid],
+    [0=>['pipe','r'], 1=>['pipe','w'], 2=>['pipe','w']], $pipes);
+try {
+    check(trim(fgets($pipes[1])) === 'started', 'concurrent audio completion starts');
+    $waiting = false;
+    for ($attempt=0; $attempt<100; $attempt++) {
+        if ((int) $pdo->query('SELECT COUNT(*) FROM performance_schema.data_lock_waits')->fetchColumn() > 0) { $waiting=true; break; }
+        usleep(50000);
+    }
+    check($waiting, 'audio completion waits on cancellation row lock');
+    $pdo->commit();
+    check(stream_get_contents($pipes[1]) === '409:0', 'completion cannot resurrect cancelled audio or touch S3');
+    $error = stream_get_contents($pipes[2]);
+    foreach ($pipes as $pipe) { fclose($pipe); }
+    check(proc_close($process) === 0 && $error === '', 'concurrent audio completion exits cleanly');
+    $process = null;
+} finally {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    if (is_resource($process)) { proc_terminate($process); proc_close($process); }
+}
+echo "$count total MySQL/auth/audio checks passed on $version\n";
