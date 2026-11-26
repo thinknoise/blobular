@@ -204,6 +204,7 @@ The returned PHP array supports:
 | `db_host`, `db_name`, `db_user`, `db_pass` | Existing MySQL connection; retain current values. |
 | `users_table` | Existing account table; must match both migrations. Default `app_users`; do not change an existing table selection. |
 | `session_ttl_seconds` | Absolute bearer-token lifetime; integer 60–172800, default 3600. |
+| `cloud_test_account_ids` | Comma-separated dedicated test-account IDs; intended production value `'6'`. Missing, empty, or malformed configuration denies upload creation/completion. |
 | `s3_access_key_id`, `s3_secret_access_key` | Backend-only AWS credentials for the fixed `blobular-audio` bucket in `us-east-2`. |
 | `s3_session_token` | Temporary credential token, or an explicit empty string for permanent credentials. |
 
@@ -212,17 +213,23 @@ S3 keys must be strings; explicit empty credentials disable storage rather than
 falling back to environment credentials. Never use `VITE_*` variables for secrets.
 Database, session and storage settings never enter the frontend bundle.
 
-Cloud-test-account write restrictions belong to [PR #19](https://github.com/thinknoise/blobular/pull/19).
-The shared file-setting loader can read `cloud_test_account_ids` with fallback to
-`BLOBULAR_CLOUD_TEST_ACCOUNT_IDS`, but this PR does not introduce that restriction.
-A host entry alone does not restrict writes until PR #19 is reconciled and merged.
-Do not enable production S3 credentials before that separate merge.
+Upload creation and completion use the validated session identity and the
+`cloud_test_account_ids` setting introduced in [PR #19](https://github.com/thinknoise/blobular/pull/19).
+Set that file entry to the string `'6'` for the intended production test account;
+there is no hardcoded account fallback. File values take precedence over
+`BLOBULAR_CLOUD_TEST_ACCOUNT_IDS`, including an explicit empty string that denies
+all writes. Listing, downloads, and deletion retain existing ownership checks.
+
+Configure production privately only after the combined code is deployed and the
+host's FTPS, config HTTP-denial rules, schema, and storage permissions are verified.
+This reconciliation does not deploy code, enable credentials, or run migrations.
 
 Verification (dummy credentials and disposable databases only):
 
 ```sh
 npm run build
 python3 tests/backend/deployment.py
+python3 tests/backend/cloud_config.py
 python3 tests/backend/run.py
 python3 tests/backend/sounds_http.py
 php tests/backend/sounds.php

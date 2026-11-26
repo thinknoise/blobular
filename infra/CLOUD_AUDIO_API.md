@@ -20,7 +20,7 @@ configuration, tracked files, or a public PHP response:
 
 ### Host-managed configuration and restricted testing
 
-Keep credentials in the existing **production** `config.php` beside `login.php`,
+Keep credentials in the existing **production** `config.php` beside `login-user.php`,
 `_bootstrap.php`, and `_s3.php`: the deployed `/blobular/api/config.php` filesystem
 location (relative to the hosting site's document root). Do not replace the whole
 file or remove its existing database settings. Add these entries inside its
@@ -54,8 +54,9 @@ Use the hosting file manager or authorized encrypted transfer to edit the server
 file; keep permissions limited to the hosting account/PHP service. No credentials
 or allowlist need to be placed in GitHub Actions secrets.
 
-The workflow no longer generates `config.php` or reads database/S3 secrets. It
-removes any local config and common backup copies from `dist/api` after building,
+The workflow no longer generates `config.php` or reads database/S3 secrets. The build
+filters local config, common backup copies, API documentation and examples before
+copying public assets. The workflow also removes config copies from `dist/api` after building,
 and excludes them from both publish **and deletion** during FTPS synchronization.
 `dangerous-clean-slate` remains false. The existing host file, including its DB
 settings, is preserved even if an earlier deployment tracked it. Existing `FTP_*`
