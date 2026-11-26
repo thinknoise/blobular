@@ -1,35 +1,21 @@
-# Blobular Sound API Scaffold
+# Blobular Cloud backend
 
-Blobular now has the frontend seam for a real user-backed sound library:
+The shared PHP/MySQL/S3 backend is documented in [Cloud Audio Library API](CLOUD_AUDIO_API.md).
+Authentication/session contracts are in [the PHP API README](../public/api/README.md).
 
-- the app has an auth boundary
-- new uploads are modeled as `SoundRecord`s instead of raw S3 keys
-- user-scoped S3 prefixes are now possible without another UI rewrite
+- `migrations/001-cloud-foundation.sql`: sessions and owned sound metadata.
+- `migrations/002-cloud-audio-lifecycle.sql`: staging, completion, deletion and cleanup state.
+- `../public/api/sounds.php` and `../public/api/sound.php`: authenticated audio endpoints.
+- `../scripts/cleanup-cloud-audio.php`: manual, dry-run-by-default maintenance.
 
-Account auth is no longer planned around Cognito on this branch. Blobular is
-instead using the PHP + database flow under `public/api/`. The files in this
-folder are kept only as a future option for a dedicated sounds API once
-private/public sound enforcement moves server-side.
+Migrations are manual; nothing is deployed or scheduled by these files.
+The existing React frontend still uses direct S3 access and browser-stored user
+identity. It has not adopted this API and is not a secure account boundary for the
+new prefix until production IAM/bucket settings have been separately verified.
 
-What is still missing is the real backend enforcement for sounds. The goal
-state for that dedicated sounds layer is:
+## Older AWS scaffold
 
-1. A server-side API enforces which sounds a caller can list, mutate, and download.
-2. Sound metadata is stored outside raw S3 object keys.
-3. S3 stays private and files are accessed with presigned URLs.
-
-## Files
-
-- `cloudformation/blobular-auth-sounds.yaml`
-  Previous AWS-oriented concept for a dedicated sounds backend.
-- `lambda/sounds/index.mjs`
-  Placeholder handler entrypoint for the sounds API routes.
-
-## Current limitation
-
-The app still uses the temporary browser-side implementations:
-
-- local browser session persistence after PHP login
-- direct S3 access for sound listing and upload
-
-That means the new user-scoped sound behavior is useful for UI flow and refactoring, but it is not a secure privacy boundary until the Cognito/API path replaces it.
+`cloudformation/blobular-auth-sounds.yaml` is the previous Cognito/API Gateway/
+DynamoDB concept. `lambda/sounds/index.mjs` is its placeholder returning 501.
+Neither is part of the PHP backend or evidence of deployed permissions. These
+files remain unchanged; the PHP implementation reuses existing MySQL accounts.
