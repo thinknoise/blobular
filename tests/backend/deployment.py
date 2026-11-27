@@ -82,6 +82,7 @@ class DeploymentTests(unittest.TestCase):
             for name in ("package.json", "vite.config.ts", "index.html", "tsconfig.json"):
                 shutil.copyfile(ROOT / name, root / name)
             shutil.copytree(ROOT / "src", root / "src")
+            shutil.copytree(ROOT / "support", root / "support")
             # Never open or copy an actual config or a backup from the checkout.
             def ignore_config(directory, names):
                 return [name for name in names if name.lower().startswith(("config.php", ".config.php"))]
@@ -121,7 +122,7 @@ class DeploymentTests(unittest.TestCase):
                     and p.name != "config.example.php"}
         actual = {p.relative_to(api) for p in api.rglob("*") if p.is_file()}
         self.assertEqual(actual, expected | {Path(".htaccess")})
-        for name in ("index.html", "audio/LongHorn.wav", "worklets/recorder.js"):
+        for name in ("index.html", "support/index.html", "audio/LongHorn.wav", "worklets/recorder.js"):
             self.assertTrue((ROOT / "dist" / name).is_file(), name)
 
 
