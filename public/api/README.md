@@ -137,8 +137,8 @@ only limits table growth. No cleanup job is installed by this task.
   or proof of any currently deployed permissions.
 - `.github/workflows/deploy.yml`: builds Vite and excludes the host-managed
   `api/config.php` from upload and deletion; it no longer generates credentials. Manual dispatch is required;
-  merge/push does not deploy, and no workflow applies migrations. Transfer now
-  requires certificate-verified explicit FTPS; production host support is unverified.
+  merge/push does not deploy, and no workflow applies migrations. Transfer uses the existing FTP
+  deployment configuration; server config is maintained separately by the operator.
   See [cloud configuration and restricted testing](../../infra/CLOUD_AUDIO_API.md)
   for the host-managed S3 credentials, HTTP denial rules, and default-deny
   test-account allowlist. No deployment
@@ -221,7 +221,7 @@ there is no hardcoded account fallback. File values take precedence over
 all writes. Listing, downloads, and deletion retain existing ownership checks.
 
 Configure production privately only after the combined code is deployed and the
-host's FTPS, config HTTP-denial rules, schema, and storage permissions are verified.
+host's config HTTP-denial rules, schema, and storage permissions are verified.
 This reconciliation does not deploy code, enable credentials, or run migrations.
 
 Verification (dummy credentials and disposable databases only):

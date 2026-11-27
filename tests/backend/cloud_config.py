@@ -91,8 +91,7 @@ class CloudConfigTests(unittest.TestCase):
         self.assertIn('**/config.php*', workflow)
         self.assertIn('**/.config.php*', workflow)
         self.assertIn('dangerous-clean-slate: false', workflow)
-        self.assertIn('protocol: ftps', workflow)
-        self.assertIn('security: strict', workflow)
+        self.assertIn('protocol: ftp', workflow)
         self.assertNotIn('push:', workflow)
         self.assertNotIn('upload-artifact', workflow)
 

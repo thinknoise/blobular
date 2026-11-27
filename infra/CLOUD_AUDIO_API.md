@@ -57,7 +57,7 @@ or allowlist need to be placed in GitHub Actions secrets.
 The workflow no longer generates `config.php` or reads database/S3 secrets. The build
 filters local config, common backup copies, API documentation and examples before
 copying public assets. The workflow also removes config copies from `dist/api` after building,
-and excludes them from both publish **and deletion** during FTPS synchronization.
+and excludes them from both publish **and deletion** during FTP synchronization.
 `dangerous-clean-slate` remains false. The existing host file, including its DB
 settings, is preserved even if an earlier deployment tracked it. Existing `FTP_*`
 connection secrets remain necessary. No migration runs in this workflow.
@@ -71,10 +71,10 @@ configure the equivalent HTTP deny rule in its control panel before adding keys;
 PHP's empty response alone is not an HTTP access restriction. Host behavior cannot
 be verified by local tests and was not modified for this PR.
 
-Deployment remains **manual only** and requires explicit FTPS with trusted
-certificate validation (`protocol: ftps`, `security: strict`). Confirm FTPS support
-and the certificate matching `FTP_SERVER` before deployment; do not fall back to
-plaintext or loose validation. See the [transfer action's exclusion and TLS options](https://github.com/SamKirkland/FTP-Deploy-Action/tree/v4.3.5).
+Deployment remains **manual only** and uses the existing FTP transport.
+The operator maintains the production `config.php` separately; application
+deployment never generates, uploads, or deletes that file. See the
+[transfer action's exclusion options](https://github.com/SamKirkland/FTP-Deploy-Action/tree/v4.3.5).
 
 The host is fixed to `blobular-audio.s3.us-east-2.amazonaws.com`, reusing the
 existing bucket/region. There is no user-controlled endpoint, bucket, prefix,
