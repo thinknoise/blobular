@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { SignedDataVerifier, Environment, Type, InAppOwnershipType } from '@apple/app-store-server-library';
 import { subscriptionVerifier, InvalidPurchase } from './verification.mjs';
 import { createVerifierServer, loadSettings } from './server.mjs';
-const config={bundleId:'example.fixture',environment:Environment.PRODUCTION,appAppleId:123,productIds:['fixture.monthly']};
+const config={bundleId:'example.fixture',environment:Environment.PRODUCTION,appAppleId:123,productIds:['com.thinknoise.blobular.cloud.monthly']};
 const token='aa71b495-6dcb-423f-8916-0deef17542e9';
 function fixture() {
   const now=Date.now();
   const tx={originalTransactionId:'100',transactionId:'101',appAccountToken:token,bundleId:config.bundleId,
-    environment:config.environment,productId:'fixture.monthly',type:Type.AUTO_RENEWABLE_SUBSCRIPTION,
+    environment:config.environment,productId:'com.thinknoise.blobular.cloud.monthly',type:Type.AUTO_RENEWABLE_SUBSCRIPTION,
     inAppOwnershipType:InAppOwnershipType.PURCHASED,expiresDate:now+3600000,signedDate:now};
   const renewal={originalTransactionId:'100',productId:tx.productId,environment:config.environment,signedDate:now,autoRenewStatus:1};
   const item={originalTransactionId:'100',status:1,signedTransactionInfo:'signed-tx',signedRenewalInfo:'signed-renewal'};

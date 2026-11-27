@@ -2,7 +2,8 @@
 
 No production migration, account grant, configuration change or deployment is
 performed by this PR. The existing test-account upload gate remains the default.
-Configure the $4.99/month auto-renewable product in App Store Connect; no client
+The confirmed StoreKit product is `com.thinknoise.blobular.cloud.monthly`.
+Configure its $4.99/month auto-renewable offer in App Store Connect; no client
 price or entitlement flag is authoritative. No Web checkout is introduced.
 
 ## Existing accounts and Native client
@@ -61,7 +62,9 @@ for authenticated restoration. They cannot grant complimentary access. Failed
 verification returns an error so Apple can retry. Configure Notifications **V2**.
 
 Apple snapshots have a five-minute lease. Notifications revoke earlier; stale
-status/save checks refresh from Apple and fail closed on outages. A missed
+status/save checks refresh from Apple and fail closed on outages when no independent fresh entitlement exists. Failure to
+refresh one old purchase does not veto a different freshly verified subscription.
+Expiry is evaluated again after verification to cover network delays. A missed
 notification can therefore leave a cached privilege effective for at most five
 minutes. Expiry uses the server clock. Completion locks the account and rechecks
 before publishing and before marking ready, serializing with grant/Apple updates.
@@ -89,8 +92,27 @@ mode. Invalid rollout modes fail closed.
 4. Provision the private verifier below and perform genuine Sandbox purchase,
    renewal, expiry, refund and restoration tests. Separate Sandbox from Production;
    the client cannot select the server environment or an automatic fallback.
-5. After approval, run the audited CLI from a private checkout with authorized DB
-   access. These commands are **read-only previews** by default:
+5. Once migration 003 is present in the target database, run the audited CLI from a
+   private checkout with authorized DB access. The owner has confirmed account 5's
+   identity and requested both grants. This command is a **read-only preview** by
+   default and verifies both existing ID/email pairs:
+
+   ```sh
+   php scripts/manage-entitlements.php --action=grant --launch-accounts \
+     --actor=operator --reason='Owner-approved permanent launch subscriptions'
+   ```
+
+   Replace `operator` with the real operator identity; append `--apply` to execute
+   the authorized grants in the intended database. Apply locks both accounts in ID
+   order and verifies both emails again before writing. It grants both permanent
+   entitlements and individual audit records in **one transaction**, or neither if
+   any identity/audit step fails. It never creates users or changes the upload
+   allowlist/configuration. Repeating it cannot duplicate accounts/entitlements.
+   No production grant was executed from this worktree: no authorized production
+   database session is connected here, and production migration status is not
+   verified. Do not install migration 003 as a side effect of the grant command.
+
+   Individual grant/revoke remains available; these examples are also previews:
 
    ```sh
    php scripts/manage-entitlements.php --action=grant --user-id=6 \
@@ -116,7 +138,7 @@ PHP server-owned `api/config.php` settings (examples contain no secrets):
 | --- | --- |
 | `cloud_authorization_mode` | `test-accounts` until rollout; then `entitlements` |
 | `apple_environment` | `Production` or isolated `Sandbox` |
-| `apple_product_ids` | Comma-separated actual monthly product IDs |
+| `apple_product_ids` | `com.thinknoise.blobular.cloud.monthly` |
 | `apple_verifier_url` | Private HTTPS base URL, no userinfo/query |
 | `apple_verifier_secret` | At least 32 random characters shared only with verifier |
 
@@ -139,7 +161,7 @@ folders and are never part of the Web artifact.
 | `APPLE_ENVIRONMENT` | `Production` or `Sandbox`, matching PHP |
 | `APPLE_BUNDLE_ID` | Actual Native bundle ID |
 | `APPLE_APP_ID` | Numeric app ID; mandatory in Production |
-| `APPLE_PRODUCT_IDS` | Same allowed products as PHP |
+| `APPLE_PRODUCT_IDS` | `com.thinknoise.blobular.cloud.monthly`, matching PHP |
 | `APPLE_ISSUER_ID`, `APPLE_KEY_ID` | App Store Connect In-App Purchase API key metadata |
 | `APPLE_PRIVATE_KEY_FILE` | Absolute private `.p8` key path |
 | `APPLE_ROOT_CA_FILES` | Comma-separated trusted Apple Root CA certificate paths |
@@ -162,7 +184,8 @@ private Node service requires its own approved deployment, never FTP publication
 
 ## Remaining Apple and Native rollout work
 
-- Confirm App Store Connect monthly product/$4.99 price, bundle/app IDs, API key and
+- Use the confirmed `com.thinknoise.blobular.cloud.monthly` product; verify its
+  App Store Connect availability/$4.99 price, bundle/app IDs, API key and
   trusted root certificates; provision the private runtime and V2 notifications.
 - Run real Sandbox signed purchase, renewal, restore, refund and expiry flows.
   Automated fixtures verify normalization/binding and actual SDK rejection of
