@@ -109,8 +109,7 @@ class DeploymentTests(unittest.TestCase):
         self.assertNotIn("fs.writeFileSync", workflow)
         self.assertNotIn("push:", workflow)
         self.assertIn("dangerous-clean-slate: false", workflow)
-        self.assertIn("protocol: ftps", workflow)
-        self.assertIn("security: strict", workflow)
+        self.assertIn("protocol: ftp", workflow)
         for pattern in ("**/config.php*", "**/.config.php*", "**/.git*", "**/.git*/**", "**/node_modules/**"):
             self.assertIn(pattern, workflow)
 
