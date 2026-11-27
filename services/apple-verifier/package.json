@@ -1,0 +1,16 @@
+{
+  "name": "blobular-private-apple-verifier",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test checks.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "@apple/app-store-server-library": "3.1.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}
