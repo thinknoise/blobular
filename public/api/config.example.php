@@ -16,7 +16,7 @@ return [
     // Keep the existing gate until migration 003, grants and verifier checks pass.
     'cloud_authorization_mode' => 'test-accounts', // then explicitly 'entitlements'
     'apple_environment' => 'Production',
-    'apple_product_ids' => '', // Comma-separated App Store Connect product IDs.
+    'apple_product_ids' => 'com.thinknoise.blobular.cloud.monthly', // Confirmed monthly StoreKit product.
     'apple_verifier_url' => '', // Private HTTPS origin, not the public PHP API.
     'apple_verifier_secret' => '', // At least 32 random characters; server only.
     's3_access_key_id' => '',

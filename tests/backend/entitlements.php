@@ -6,8 +6,11 @@ final class FixtureAppleVerifier implements AppleSubscriptionVerifier
 {
     public array $facts = [];
     public bool $fail = false;
+    public array $failIds = [];
+    public int $delayUs = 0;
     public function transaction(string $id, string $token): array {
-        if ($this->fail) { throw new EntitlementError(503, 'Fixture verifier unavailable.'); }
+        if ($this->fail || in_array($id,$this->failIds,true)) { throw new EntitlementError(503, 'Fixture verifier unavailable.'); }
+        if ($this->delayUs > 0) { usleep($this->delayUs); }
         return $this->facts;
     }
     public function notification(string $signed): array { return $this->transaction('', ''); }
@@ -37,7 +40,7 @@ if ($mysql) {
 for ($id=1; $id<=8; $id++) {
     $pdo->prepare('INSERT INTO ent_fixture (id,username) VALUES (?,?)')->execute([$id,"fixture$id@example.invalid"]);
 }
-putenv('BLOBULAR_APPLE_PRODUCT_IDS=com.example.fixture.monthly');
+putenv('BLOBULAR_APPLE_PRODUCT_IDS=com.thinknoise.blobular.cloud.monthly');
 putenv('BLOBULAR_APPLE_ENVIRONMENT=Production');
 putenv('BLOBULAR_CLOUD_AUTHORIZATION_MODE=entitlements');
 putenv('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS=1,6');
@@ -62,7 +65,7 @@ requireCloudAudioWriteAccess(2,$pdo,$config); $check(true,'complimentary grants 
 $check((int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_ent_log')->fetchColumn()===1,'complimentary grant is audited');
 $token=$service->accountToken(3);
 $check($token===$service->accountToken(3),'StoreKit account token is stable and server issued');
-$fact=['originalId'=>'100','transactionId'=>'101','productId'=>'com.example.fixture.monthly','environment'=>'Production',
+$fact=['originalId'=>'100','transactionId'=>'101','productId'=>'com.thinknoise.blobular.cloud.monthly','environment'=>'Production',
     'appAccountToken'=>$token,'status'=>'active','expiresAt'=>$now+3600,'signedAt'=>$now*1000,'willRenew'=>true,'revokedAt'=>null];
 $apple->facts=[$fact]; $service->restore(3,'101',$now);
 $check($service->status(3,false,$now)['active'],'verified Apple subscriber allowed');
@@ -100,6 +103,56 @@ $check($service->status(3,true,$now+1000)['active'],'Apple failure/revocation do
 $service->complimentary(3,'fixture3@example.invalid',false,'fixture-operator','remove fixture grant');
 $denied(fn()=>$service->requireSubscriber(3,$now+1000),503,'stale Apple cache with verification outage fails closed');
 $apple->fail=false;
+
+// Batch grants must verify all existing identities and roll back the entire audit.
+$batch=[['id'=>5,'email'=>'fixture5@example.invalid'],['id'=>6,'email'=>'wrong@example.invalid']];
+$eventsBefore=(int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_ent_log')->fetchColumn();
+$denied(fn()=>$service->complimentaryAccounts($batch,true,'fixture','launch'),409,'batch refuses mismatched second account');
+$check(!$service->status(5)['active'] && !$service->status(6)['active'],'identity failure grants neither launch account');
+$check((int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_ent_log')->fetchColumn()===$eventsBefore,'failed batch leaves no audit changes');
+$batch[1]['email']='fixture6@example.invalid';
+$service->complimentaryAccounts($batch,true,'fixture','launch');
+$check($service->status(5,false,$now+315360000)['active'] && $service->status(6,false,$now+315360000)['active'],'both verified launch accounts have permanent complimentary access');
+$check((int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_ent_log')->fetchColumn()===$eventsBefore+2,'both launch grants individually audited');
+$service->complimentaryAccounts($batch,true,'fixture','repeat launch');
+$check((int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_comp WHERE user_id IN (5,6)')->fetchColumn()===2,'repeating launch grants does not duplicate entitlements or accounts');
+
+$service->complimentaryAccounts($batch,false,'fixture','rollback setup');
+$eventsBefore=(int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_ent_log')->fetchColumn();
+$pdo->exec($mysql
+    ? "CREATE TRIGGER ent_reject_audit BEFORE INSERT ON ent_fixture_ent_log FOR EACH ROW BEGIN IF NEW.user_id=6 AND NEW.action='grant-complimentary' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='fixture audit failure'; END IF; END"
+    : "CREATE TRIGGER ent_reject_audit BEFORE INSERT ON ent_fixture_ent_log WHEN NEW.user_id=6 AND NEW.action='grant-complimentary' BEGIN SELECT RAISE(ABORT,'fixture audit failure'); END");
+try {
+    $service->complimentaryAccounts($batch,true,'fixture','must roll back');
+    throw new RuntimeException('Expected fixture audit failure');
+} catch (PDOException $error) {
+    $check(!$service->status(5)['active'] && !$service->status(6)['active'],'second audit failure rolls back both grants');
+    $check((int)$pdo->query('SELECT COUNT(*) FROM ent_fixture_ent_log')->fetchColumn()===$eventsBefore,'second audit failure rolls back first audit');
+} finally { $pdo->exec('DROP TRIGGER ent_reject_audit'); }
+$service->complimentaryAccounts($batch,true,'fixture','verified launch');
+
+
+// A failed refresh of an unrelated expired purchase must not cancel proven access.
+$token7=$service->accountToken(7);
+$older=array_replace($fact,['originalId'=>'700','transactionId'=>'701','appAccountToken'=>$token7,'status'=>'expired','expiresAt'=>$now-3600,'signedAt'=>($now-400)*1000]);
+$apple->facts=[$older]; $service->restore(7,'701',$now-301);
+$newer=array_replace($fact,['originalId'=>'800','transactionId'=>'801','appAccountToken'=>$token7]);
+$apple->facts=[$newer]; $service->restore(7,'801',$now);
+$apple->failIds=['701'];
+$check($service->status(7,true,$now)['active'],'old purchase outage cannot mask a fresh active subscription');
+$check($service->status(7,true,$now+301)['active'],'one failed purchase does not block another successful renewal refresh');
+$apple->failIds=['701','801'];
+$denied(fn()=>$service->requireSubscriber(7,$now+602),503,'all unverifiable expired leases fail closed');
+$apple->failIds=[];
+
+// A verification roundtrip may cross a paid-period boundary.
+$token8=$service->accountToken(8);
+$apple->facts=[array_replace($fact,['originalId'=>'900','transactionId'=>'901','appAccountToken'=>$token8,'signedAt'=>($now-400)*1000])];
+$service->restore(8,'901',$now-301);
+$apple->facts=[array_replace($fact,['originalId'=>'900','transactionId'=>'901','appAccountToken'=>$token8,'expiresAt'=>time()+1])];
+$apple->delayUs=1100000;
+$check(!$service->status(8)['active'],'paid access expires even if Apple verification crosses the boundary');
+$apple->delayUs=0;
 
 // Use the real Cloud service with a fake object store: no credentials or AWS calls.
 $store=new FixtureAudioStore(); $library=new CloudAudioLibrary($pdo,$config,$store);

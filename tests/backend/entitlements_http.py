@@ -80,6 +80,38 @@ class EntitlementHTTPTests(SoundHTTPTests):
         with sqlite3.connect(self.database) as db:
             self.assertEqual(db.execute('SELECT user_id,actor,reason FROM fixture_users_ent_log').fetchall(),[(1,'fixture','fixture grant')])
             self.assertEqual(db.execute('SELECT user_id,revoked_at FROM fixture_users_comp').fetchall(),[(1,None)])
+    def test_launch_grants_verify_both_existing_accounts_before_writing(self):
+        source=(Path(__file__).resolve().parents[2]/'scripts/manage-entitlements.php').read_text()
+        script=self.directory/'manage-launch.php'
+        script.write_text(source.replace("dirname(__DIR__) . '/public/api/", "__DIR__ . '/api/"))
+        import os
+        environment={**os.environ,'BLOBULAR_TEST_DATABASE':str(self.database)}
+        arguments=['php',str(script),'--action=grant','--launch-accounts','--actor=fixture','--reason=owner-approved launch']
+        with sqlite3.connect(self.database) as db:
+            # Disposable existing-account fixtures, not a production registration.
+            db.execute('INSERT INTO fixture_users (id,username,password_hash) VALUES (5,?,?)',('dirtytuba@gmail.com','unused fixture hash'))
+            db.execute('INSERT INTO fixture_users (id,username,password_hash) VALUES (6,?,?)',('wrong@example.invalid','unused fixture hash'))
+        try:
+            failed=subprocess.run([*arguments,'--apply'],env=environment,capture_output=True,text=True)
+            self.assertEqual(failed.returncode,1)
+            with sqlite3.connect(self.database) as db:
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM fixture_users_comp').fetchone()[0],0)
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM fixture_users_ent_log').fetchone()[0],0)
+                db.execute('UPDATE fixture_users SET username=? WHERE id=6',('blobular-api-test-2b7f0ec7d7ff@example.com',))
+            preview=subprocess.run(arguments,env=environment,capture_output=True,text=True,check=True)
+            self.assertEqual([a['id'] for a in json.loads(preview.stdout)['accounts']],[5,6])
+            with sqlite3.connect(self.database) as db:
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM fixture_users_comp').fetchone()[0],0)
+            for _ in range(2):
+                subprocess.run([*arguments,'--apply'],env=environment,capture_output=True,text=True,check=True)
+            with sqlite3.connect(self.database) as db:
+                self.assertEqual(db.execute('SELECT user_id,revoked_at FROM fixture_users_comp ORDER BY user_id').fetchall(),[(5,None),(6,None)])
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM fixture_users_ent_log').fetchone()[0],4)
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM fixture_users').fetchone()[0],4)
+        finally:
+            with sqlite3.connect(self.database) as db:
+                for suffix in ('comp','ent_log'):db.execute('DELETE FROM fixture_users_'+suffix+' WHERE user_id IN (5,6)')
+                db.execute('DELETE FROM fixture_users WHERE id IN (5,6)')
     def test_public_notifications_cannot_assert_entitlements(self):
         self.assertEqual(self.request('app-store-notifications.php','GET')[0],405)
         self.assertEqual(self.request('app-store-notifications.php','POST',{'active':True})[0],400)

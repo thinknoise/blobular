@@ -111,6 +111,17 @@ final class SubscriptionEntitlements
     }
     public function complimentary(int $user, string $expectedEmail, bool $grant, string $actor, string $reason, ?int $now = null): void
     {
+        $this->complimentaryAccounts([['id'=>$user,'email'=>$expectedEmail]], $grant, $actor, $reason, $now);
+    }
+    public function complimentaryAccounts(array $accounts, bool $grant, string $actor, string $reason, ?int $now = null): void
+    {
+        if (count($accounts) === 0 || count($accounts) > 100) { throw new EntitlementError(400, 'Accounts are required.'); }
+        foreach ($accounts as $account) {
+            if (!is_array($account) || !is_int($account['id'] ?? null) || $account['id'] < 1 || !is_string($account['email'] ?? null)) {
+                throw new EntitlementError(400, 'Account identities are required.');
+            }
+        }
+        usort($accounts, static fn(array $a, array $b): int => $a['id'] <=> $b['id']);
         if ($actor === '' || strlen($actor)>128 || $reason === '' || strlen($reason)>255
             || preg_match('/[\x00-\x1f\x7f]/', $actor.$reason)) {
             throw new EntitlementError(400, 'An audit actor and reason are required.');
@@ -118,18 +129,22 @@ final class SubscriptionEntitlements
         $now = $now ?? time();
         $this->pdo->beginTransaction();
         try {
-            $this->user($user, $expectedEmail);
-            $query = $this->pdo->prepare("SELECT revoked_at FROM `{$this->users}_comp` WHERE user_id=:id");
-            $query->execute([':id'=>$user]); $row = $query->fetch(PDO::FETCH_ASSOC);
-            if ($row === false && $grant) {
-                $query = $this->pdo->prepare("INSERT INTO `{$this->users}_comp` (user_id,granted_at,revoked_at) VALUES (:id,:now,NULL)");
-                $query->execute([':id'=>$user, ':now'=>$now]);
-            } elseif ($row !== false) {
-                $query = $this->pdo->prepare("UPDATE `{$this->users}_comp` SET granted_at=COALESCE(:granted,granted_at),revoked_at=:revoked WHERE user_id=:id");
-                $query->execute([':id'=>$user, ':granted'=>$grant ? $now : null, ':revoked'=>$grant ? null : $now]);
-            } else { throw new EntitlementError(409, 'No complimentary grant exists.'); }
-            $query = $this->pdo->prepare("INSERT INTO `{$this->users}_ent_log` (user_id,action,actor,reason,recorded_at) VALUES (:id,:action,:actor,:reason,:now)");
-            $query->execute([':id'=>$user, ':action'=>$grant?'grant-complimentary':'revoke-complimentary', ':actor'=>$actor, ':reason'=>$reason, ':now'=>$now]);
+            // Lock and verify every identity before changing any entitlement.
+            foreach ($accounts as $account) { $this->user($account['id'], $account['email']); }
+            foreach ($accounts as $account) {
+                $user = $account['id'];
+                $query = $this->pdo->prepare("SELECT revoked_at FROM `{$this->users}_comp` WHERE user_id=:id");
+                $query->execute([':id'=>$user]); $row = $query->fetch(PDO::FETCH_ASSOC);
+                if ($row === false && $grant) {
+                    $query = $this->pdo->prepare("INSERT INTO `{$this->users}_comp` (user_id,granted_at,revoked_at) VALUES (:id,:now,NULL)");
+                    $query->execute([':id'=>$user, ':now'=>$now]);
+                } elseif ($row !== false) {
+                    $query = $this->pdo->prepare("UPDATE `{$this->users}_comp` SET granted_at=COALESCE(:granted,granted_at),revoked_at=:revoked WHERE user_id=:id");
+                    $query->execute([':id'=>$user, ':granted'=>$grant ? $now : null, ':revoked'=>$grant ? null : $now]);
+                } else { throw new EntitlementError(409, 'No complimentary grant exists.'); }
+                $query = $this->pdo->prepare("INSERT INTO `{$this->users}_ent_log` (user_id,action,actor,reason,recorded_at) VALUES (:id,:action,:actor,:reason,:now)");
+                $query->execute([':id'=>$user, ':action'=>$grant?'grant-complimentary':'revoke-complimentary', ':actor'=>$actor, ':reason'=>$reason, ':now'=>$now]);
+            }
             $this->pdo->commit();
         } catch (Throwable $error) { if ($this->pdo->inTransaction()) { $this->pdo->rollBack(); } throw $error; }
     }
@@ -209,17 +224,24 @@ final class SubscriptionEntitlements
     }
     public function status(int $user, bool $refresh = true, ?int $now = null): array
     {
+        $liveClock = $now === null;
         $now = $now ?? time();
+        $refreshError = null;
         $query = $this->pdo->prepare("SELECT granted_at FROM `{$this->users}_comp` WHERE user_id=:id AND revoked_at IS NULL");
         $query->execute([':id'=>$user]); $comp = $query->fetchColumn() !== false;
         $query = $this->pdo->prepare("SELECT * FROM `{$this->users}_subs` WHERE user_id=:id AND environment=:env");
         $query->execute([':id'=>$user, ':env'=>$this->environment]); $rows = $query->fetchAll(PDO::FETCH_ASSOC);
         if ($refresh && !$comp) {
             foreach ($rows as $row) {
-                if ((int)$row['verified_until'] <= $now) { $this->restore($user, $row['transaction_id'], $now); }
+                if ((int)$row['verified_until'] <= $now) {
+                    try { $this->restore($user, $row['transaction_id'], $now); }
+                    catch (EntitlementError $error) { $refreshError = $error; }
+                }
             }
             $query->execute([':id'=>$user, ':env'=>$this->environment]); $rows = $query->fetchAll(PDO::FETCH_ASSOC);
         }
+        // Verification can cross an expiry boundary; authorize at the current time.
+        if ($liveClock) { $now = time(); }
         $sources = $comp ? ['complimentary'] : []; $expires = 0; $renew = false;
         foreach ($rows as $row) {
             if ($row['revoked_at'] === null && in_array($row['status'], ['active','grace'], true)
@@ -228,6 +250,8 @@ final class SubscriptionEntitlements
                 $expires=max($expires,(int)$row['expires_at']); $renew=$renew || (bool)$row['will_renew'];
             }
         }
+        // A failed old purchase cannot veto independent, freshly proven access.
+        if (count($sources) === 0 && $refreshError !== null) { throw $refreshError; }
         return ['active'=>count($sources)>0, 'sources'=>$sources, 'expiresAt'=>$comp?null:($expires?:null), 'willRenew'=>$renew];
     }
     public function requireSubscriber(int $user, ?int $now = null, bool $refresh = true): void
