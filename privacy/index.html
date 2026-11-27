@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Draft Privacy Policy for Blobular: Local audio, accounts, Cloud recordings, Apple purchases, retention and deletion." />
+    <link rel="canonical" href="https://modelglue.com/blobular/privacy/" />
+    <link rel="icon" type="image/svg+xml" href="/blobular/sousa.svg" />
+    <link rel="stylesheet" href="../src/index.css" />
+    <link rel="stylesheet" href="../src/App.css" />
+    <link rel="stylesheet" href="../src/features/support/SupportPage.css" />
+    <link rel="stylesheet" href="../src/features/support/LegalPage.css" />
+    <title>Blobular · Privacy Policy</title>
+  </head>
+  <body class="App support-page legal-page">
+    <a class="support-skip-link" href="#main">Skip to privacy policy</a>
+    <div class="support-shell">
+      <header class="support-header">
+        <a class="support-brand" href="/blobular/" aria-label="Blobular Web instrument">Blobular</a>
+        <nav aria-label="Blobular information">
+          <a href="/blobular/support/">Support</a>
+          <a href="/blobular/privacy/" aria-current="page">Privacy</a>
+          <a href="/blobular/terms/">Terms</a>
+        </nav>
+      </header>
+      <main id="main" tabindex="-1" class="legal-content">
+        <header class="legal-heading">
+          <p class="eyebrow">Blobular for iPhone &amp; Web</p>
+          <h1>Privacy Policy</h1>
+          <p>Draft updated <time datetime="2026-11-26">November 26, 2026</time></p>
+        </header>
+        <aside class="legal-draft support-library" aria-label="Draft status">
+          <h2>Draft for review</h2>
+          <p>This page is not yet effective. The legal operator’s identity, retention and account-deletion procedures, and subscription availability need confirmation before publication.</p>
+        </aside>
+        <section class="legal-section" aria-labelledby="scope">
+          <h2 id="scope">What this policy covers</h2>
+          <p>Blobular is an experimental audio instrument for iPhone, with a related Web instrument and optional account-based Cloud recordings. This policy explains the information used for these features and for support. Local audio and Cloud recordings are separate.</p>
+          <p>Saving through the authenticated Cloud service is currently limited to approved testing. The separate shared Web library is described below. The subscription section below describes data used if Apple subscription purchases are enabled; it does not announce that subscriptions are available.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="accounts">
+          <h2 id="accounts">Accounts and authentication</h2>
+          <p>When you create an account, the account service stores your email address, account identifier, account creation date, and a password hash. Your password is sent to the service when needed to create an account, sign in, or change your password; the account database stores its hash rather than the plaintext password.</p>
+          <p>The authenticated Cloud API uses time-limited sign-in sessions. The server keeps session-token hashes, account identifiers, and creation, expiry and revocation times to authenticate requests. The iPhone app keeps its session credential in the device’s Keychain; its session store does not save your password.</p>
+          <p>The Web instrument uses browser session storage for account information and, when you choose to be remembered, local storage for remembered account information. Clearing browser storage removes that browser’s remembered information; it does not delete your account or Cloud recordings.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="local">
+          <h2 id="local">Audio on your iPhone</h2>
+          <p>Blobular uses microphone access when you choose to record, and reads audio files you choose to import. The iPhone Local library stores audio and related information, such as filenames, audio format, import dates and waveform display data, in the app’s storage on your device.</p>
+          <p>Recording or importing into the iPhone Local library does not automatically upload audio to Blobular Cloud. A file downloaded from Cloud creates a separate Local copy. Deleting a Local copy does not delete its Cloud recording, and deleting a Cloud recording does not remove Local copies or your original imported file.</p>
+          <p>Device and file-provider backups depend on your device and provider settings. Keep a separate copy of important audio; the Local library is not a promise of a Blobular-managed backup.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="cloud">
+          <h2 id="cloud">Cloud audio and the Web library</h2>
+          <p>When you choose a Cloud upload in the iPhone app, audio is transferred to Amazon Web Services (AWS) S3. The account-based service also stores information needed to manage the recording: its account owner, title, filename, type, size, checksum, creation time, storage location and upload or deletion state. This supports listing, authorized transfers, integrity checks and deletion.</p>
+          <p>The authenticated Cloud API checks ownership before listing, downloading or deleting account recordings, and issues short-lived transfer links. Keep transfer links private: someone who has an unexpired link may be able to use it.</p>
+          <p>The Web instrument’s existing audio library uses a separate S3 integration, including a shared public audio collection. Using its upload or save controls transfers audio to AWS; it is not the iPhone Local library. Shared Web audio is visible to other visitors. Do not assume that an account-related folder or a “private” label in the legacy Web library provides the same server-enforced access controls as the authenticated Cloud API.</p>
+          <p>Deleting through the account-based Cloud service hides the recording from the library and requests removal of its audio objects from S3. A failed or interrupted removal may need to be retried. The service retains a deleted-record metadata entry; deletion is not a promise that every associated record, cached copy or backup is immediately erased.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="apple">
+          <h2 id="apple">Apple subscriptions</h2>
+          <p>If you buy or restore a Blobular Cloud subscription through the App Store, Apple processes the purchase under its own terms and privacy policy. The subscription backend verifies transaction information with Apple rather than trusting a purchase flag from the app.</p>
+          <p>The subscription system links a server-issued account identifier to Apple transaction and original-purchase identifiers. It stores the product, environment, subscription expiry, renewal and revocation status, verification times and transaction-event digests to determine access, prevent reuse across unrelated accounts and process updates. Administrative complimentary grants also have an account-linked audit record.</p>
+          <p>Blobular’s subscription backend does not request or store your payment-card details. Apple maintains its own purchase records. See <a href="https://www.apple.com/legal/privacy/">Apple’s privacy policy</a>.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="providers">
+          <h2 id="providers">Service providers and website requests</h2>
+          <p>The account database and PHP service are hosted separately from AWS audio storage. AWS processes audio transfers and, for the legacy Web integration, temporary identity credentials. Apple processes App Store purchases and subscription verification when those features are used.</p>
+          <p>These Web pages load typography from Google Fonts, which makes requests to Google from your browser. Requests to hosting, font and audio services convey network information such as your IP address and browser or app request details. See <a href="https://fonts.google.com/faq">Google Fonts information</a>. Hosting and provider log settings and retention periods still need confirmation for the final policy.</p>
+          <p>If you email support, the message, your email address and any files or diagnostic information you choose to include are handled to respond to your request. Avoid sending passwords, session credentials or sensitive audio.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="retention">
+          <h2 id="retention">Retention and your choices</h2>
+          <p>Local audio remains in app storage until you remove it or the device removes that app data. Cloud recordings remain separate from Local files. Ending subscriber access does not itself delete existing Cloud recordings; authenticated owners retain read, download and deletion access.</p>
+          <p>The current backend does not set a fixed automatic deletion period for account records, expired session records, subscription audit records or deleted-record metadata. Upload cleanup tools exist, but their availability does not establish a scheduled deletion guarantee. Backup, service-log and support-message retention periods must be confirmed before this policy becomes effective.</p>
+          <p>You can remove Local recordings and use Cloud recording deletion separately. You can also contact support about account information, correction, access or deletion. Signing out, deleting the app, or cancelling an Apple subscription does not by itself delete the server account.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="account-deletion">
+          <h2 id="account-deletion">Account deletion requests</h2>
+          <p>To request help deleting an account and its associated Cloud data, email <a href="mailto:wiley@thinknoise.com?subject=Blobular%20account%20deletion">wiley@thinknoise.com</a> from the account’s email address. Do not send your password. Account ownership needs to be verified before destructive action.</p>
+          <p>The deletion process, completion timeframe, backup handling and any information that must be retained have not yet been finalized. This draft does not promise immediate account deletion. An in-app way to initiate account deletion must also be addressed before an App Store release that supports account creation; this email contact alone does not establish that capability.</p>
+          <p>Manage any Apple subscription separately in <a href="https://apps.apple.com/account/subscriptions/">Apple’s subscription settings</a>. An account deletion request does not itself cancel Apple billing.</p>
+        </section>
+        <section class="legal-section" aria-labelledby="privacy-contact">
+          <h2 id="privacy-contact">Privacy questions and support</h2>
+          <p>Email <a href="mailto:wiley@thinknoise.com?subject=Blobular%20privacy">wiley@thinknoise.com</a> for privacy questions or visit <a href="/blobular/support/">Blobular Support</a>. The legal operator’s full identity and any required contact address will be added after confirmation.</p>
+        </section>
+      </main>
+      <footer class="support-footer">
+        <p>Blobular · Privacy Policy</p>
+        <a href="/blobular/support/">Support</a>
+        <a href="/blobular/terms/">Terms of Use</a>
+        <a href="https://modelglue.com/">Modelglue</a>
+      </footer>
+    </div>
+  </body>
+</html>
