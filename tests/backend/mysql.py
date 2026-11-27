@@ -33,6 +33,7 @@ def run(image):
         port = endpoint.rsplit(':', 1)[1]
         print(f'Testing {image}', flush=True)
         subprocess.run(['php', str(Path(__file__).with_suffix('.php')), port], check=True, timeout=45)
+        subprocess.run(['php', str(Path(__file__).with_name('entitlements.php')), port], check=True, timeout=45)
     finally:
         if started:
             subprocess.run(['docker', 'rm', '--force', '--volumes', name],

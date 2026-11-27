@@ -21,7 +21,7 @@ class CloudConfigTests(unittest.TestCase):
         self.work = tempfile.TemporaryDirectory(prefix='blobular-cloud-config-')
         self.addCleanup(self.work.cleanup)
         self.api = Path(self.work.name)
-        for name in ('_s3.php', '_sounds.php', '.htaccess'):
+        for name in ('_s3.php', '_sounds.php', '_entitlements.php', '.htaccess'):
             shutil.copyfile(ROOT/'public/api'/name, self.api/name)
         self.environment = {key:value for key,value in os.environ.items() if not key.startswith('BLOBULAR_')}
 

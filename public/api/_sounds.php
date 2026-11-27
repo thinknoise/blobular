@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/_s3.php';
+require_once __DIR__ . '/_entitlements.php';
 
 const CLOUD_AUDIO_URL_TTL = 300;
 const CLOUD_AUDIO_MAX_BYTES = 536870912; // One bounded single-PUT upload, 512 MiB.
@@ -12,8 +13,13 @@ final class AudioApiError extends RuntimeException
     public function __construct(int $status, string $message) { parent::__construct($message); $this->status = $status; }
 }
 
-function requireCloudAudioWriteAccess(int $owner): void
+function requireCloudAudioWriteAccess(int $owner, ?PDO $pdo = null, ?array $config = null): void
 {
+    if (cloudAuthorizationMode() === 'entitlements') {
+        if ($pdo === null || $config === null) { throw new EntitlementError(503, 'Entitlement verification is unavailable.'); }
+        (new SubscriptionEntitlements($pdo, $config))->requireSubscriber($owner);
+        return;
+    }
     $configured = trim(cloudSetting('BLOBULAR_CLOUD_TEST_ACCOUNT_IDS', 'cloud_test_account_ids'));
     $allowed = [];
     if ($configured !== '') {
@@ -71,10 +77,12 @@ final class CloudAudioLibrary
     private PDO $pdo;
     private string $table;
     private AudioObjectStore $storage;
+    private array $config;
 
     public function __construct(PDO $pdo, array $config, AudioObjectStore $storage)
     {
         $this->pdo = $pdo;
+        $this->config = $config;
         $this->table = $config['users_table'] . '_sounds';
         $this->storage = $storage;
     }
@@ -116,7 +124,7 @@ final class CloudAudioLibrary
 
     public function beginUpload(int $owner, array $input, ?int $now = null): array
     {
-        requireCloudAudioWriteAccess($owner);
+        requireCloudAudioWriteAccess($owner, $this->pdo, $this->config);
         $now = $now ?? time();
         $filename = audioText($input['filename'] ?? null, 'filename');
         $title = audioText($input['title'] ?? $filename, 'title');
@@ -156,10 +164,16 @@ final class CloudAudioLibrary
 
     public function complete(int $owner, string $id, ?int $now = null): array
     {
-        requireCloudAudioWriteAccess($owner);
+        requireCloudAudioWriteAccess($owner, $this->pdo, $this->config);
         $now = $now ?? time();
         $this->pdo->beginTransaction();
         try {
+            if (cloudAuthorizationMode() === 'entitlements') {
+                $lock = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+                $account = $this->pdo->prepare("SELECT id FROM `{$this->config['users_table']}` WHERE id=:id" . $lock);
+                $account->execute([':id'=>$owner]);
+                (new SubscriptionEntitlements($this->pdo, $this->config))->requireSubscriber($owner, null, false);
+            }
             $row = $this->owned($owner, $id, true);
             if ($row['state'] !== 'ready') {
                 if ($row['state'] !== 'uploading') { throw new AudioApiError(409, 'Recording is not awaiting upload.'); }
@@ -176,8 +190,14 @@ final class CloudAudioLibrary
                     throw $exception;
                 }
                 $this->verifyObject($row, $object);
+                if (cloudAuthorizationMode() === 'entitlements') {
+                    (new SubscriptionEntitlements($this->pdo, $this->config))->requireSubscriber($owner, null, false);
+                }
                 $this->storage->publish($row['staging_key'], $row['storage_key'], $object['etag']);
                 $this->verifyObject($row, $this->storage->inspect($row['storage_key']));
+                if (cloudAuthorizationMode() === 'entitlements') {
+                    (new SubscriptionEntitlements($this->pdo, $this->config))->requireSubscriber($owner, null, false);
+                }
                 $statement = $this->pdo->prepare("UPDATE `{$this->table}` SET state='ready' WHERE id=:id AND owner_user_id=:owner");
                 $statement->execute([':id' => $id, ':owner' => $owner]);
             }
@@ -262,7 +282,7 @@ function cloudAudioEndpoint(bool $collection): void
         $session = requireAuthSession($pdo, $config);
         $owner = (int) $session['id'];
         // Deny writes before storage configuration, signing, parsing or DB mutation.
-        if ($method === 'POST') { requireCloudAudioWriteAccess($owner); }
+        if ($method === 'POST') { requireCloudAudioWriteAccess($owner, $pdo, $config); }
         $library = new CloudAudioLibrary($pdo, $config, new S3AudioObjectStore(cloudStorageConfig()));
         if ($collection) {
             if ($method === 'GET') {
@@ -277,6 +297,8 @@ function cloudAudioEndpoint(bool $collection): void
         $library->delete($owner, $id);
         respond(200, ['ok' => true]);
     } catch (AudioApiError $exception) {
+        respond($exception->status, ['ok' => false, 'message' => $exception->getMessage()]);
+    } catch (EntitlementError $exception) {
         respond($exception->status, ['ok' => false, 'message' => $exception->getMessage()]);
     } catch (ObjectStoreFailure $exception) {
         respond(503, ['ok' => false, 'message' => 'Cloud storage unavailable. Retry later.']);

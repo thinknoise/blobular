@@ -122,6 +122,10 @@ class DeploymentTests(unittest.TestCase):
                     and p.name != "config.example.php"}
         actual = {p.relative_to(api) for p in api.rglob("*") if p.is_file()}
         self.assertEqual(actual, expected | {Path(".htaccess")})
+        for name in ("services", "scripts", "infra", "node_modules"):
+            self.assertFalse((ROOT / "dist" / name).exists(), name)
+        for name in ("_entitlements.php", "subscription.php", "app-store-notifications.php"):
+            self.assertTrue((api / name).is_file(), name)
         for name in ("index.html", "support/index.html", "audio/LongHorn.wav", "worklets/recorder.js"):
             self.assertTrue((ROOT / "dist" / name).is_file(), name)
 
