@@ -45,7 +45,15 @@ export default defineConfig(({ mode }) => {
         },
       },
     ],
-    build: { copyPublicDir: false },
+    build: {
+      copyPublicDir: false,
+      rollupOptions: {
+        input: {
+          app: path.resolve(__dirname, "index.html"),
+          support: path.resolve(__dirname, "support/index.html"),
+        },
+      },
+    },
     base: "/blobular/",
     server: apiProxy
       ? {
