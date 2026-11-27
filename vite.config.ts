@@ -51,6 +51,8 @@ export default defineConfig(({ mode }) => {
         input: {
           app: path.resolve(__dirname, "index.html"),
           support: path.resolve(__dirname, "support/index.html"),
+          privacy: path.resolve(__dirname, "privacy/index.html"),
+          terms: path.resolve(__dirname, "terms/index.html"),
         },
       },
     },

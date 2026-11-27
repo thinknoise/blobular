@@ -1,0 +1,38 @@
+.legal-content {
+  max-width: 52rem;
+  padding-block: 3.5rem 1rem;
+  overflow-wrap: anywhere;
+}
+
+.legal-heading {
+  margin-bottom: 2rem;
+}
+
+.legal-draft {
+  margin-bottom: 3rem;
+  border-color: rgba(230, 184, 102, 0.55);
+}
+
+.legal-draft h2 {
+  font-size: 1.5rem;
+}
+
+.legal-section {
+  margin-bottom: 3rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.legal-section h2 {
+  font-size: clamp(1.65rem, 3vw, 2rem);
+}
+
+.legal-page nav,
+.support-footer {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .legal-content {
+    padding-top: 2.5rem;
+  }
+}
