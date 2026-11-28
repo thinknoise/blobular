@@ -1,7 +1,8 @@
 # Blobular Cloud subscription backend
 
-No production migration, account grant, configuration change or deployment is
-performed by this PR. The existing test-account upload gate remains the default.
+Repository work does not itself migrate, grant access, configure production or deploy.
+See [production submission status](PRODUCTION_SUBMISSION.md) for current evidence;
+do not repeat completed migrations or grants. The existing test-account upload gate remains the default.
 The confirmed StoreKit product is `com.thinknoise.blobular.cloud.monthly`.
 Configure its $4.99/month auto-renewable offer in App Store Connect; no client
 price or entitlement flag is authoritative. No Web checkout is introduced.
@@ -11,7 +12,9 @@ price or entitlement flag is authoritative. No Web checkout is introduced.
 Owner-supplied account records identify **6** as
 `blobular-api-test-2b7f0ec7d7ff@example.com`, and **5** as
 `dirtytuba@gmail.com` (Dirty Tuba). The owner confirmed ID 5. No accounts are created
-and no production grants have been applied.
+and the owner reports migration 003 plus two subsequent production SQL scripts;
+active grant rows and audit results have not been independently observed. Do not rerun grants merely
+because this checkout lacks a database connection.
 
 PHP users store `password_hash`; `<users>_sessions` stores bearer token hashes.
 Login, session lifetime, password changes and account ownership are unchanged.
@@ -21,7 +24,10 @@ Read-only inspection of Native's `BlobularCloudClient.swift`,
 `CloudSessionStore.swift` and `docs/CLOUD.md` found email/password login returning
 `sessionToken`, `userId`, `expiresAt`, followed by bearer-authenticated PHP calls.
 Tokens live in the device-only, when-unlocked Keychain. S3 requests are separate.
-Native currently has no StoreKit subscription integration. No Native code changed.
+Native StoreKit PR #8 and archive/versioning PR #9 are merged and tested, as
+confirmed by the owner and GitHub merge records. StoreKit provides purchase,
+restore, transaction updates, durable retries and server-issued account binding.
+No Native code changes are part of this Web repository update.
 
 ## Effective entitlement and HTTP contract
 
@@ -108,9 +114,12 @@ mode. Invalid rollout modes fail closed.
    entitlements and individual audit records in **one transaction**, or neither if
    any identity/audit step fails. It never creates users or changes the upload
    allowlist/configuration. Repeating it cannot duplicate accounts/entitlements.
-   No production grant was executed from this worktree: no authorized production
-   database session is connected here, and production migration status is not
-   verified. Do not install migration 003 as a side effect of the grant command.
+   Migration 003 and two subsequent SQL scripts have already been executed in
+   production according to the owner. The commands above are an administrative
+   reference, not instructions to repeat that work. Use the read-only
+   `scripts/verify-launch-entitlements.sql` query to inspect current grants and
+   matching audits. Do not install migrations or reapply grants as a side effect
+   of verification.
 
    Individual grant/revoke remains available; these examples are also previews:
 
@@ -190,10 +199,9 @@ private Node service requires its own approved deployment, never FTP publication
 - Run real Sandbox signed purchase, renewal, restore, refund and expiry flows.
   Automated fixtures verify normalization/binding and actual SDK rejection of
   forged JWS; they do not establish live Apple integration without that setup.
-- In the separate Native repo, implement StoreKit 2 purchase/restore/update handling:
-  fetch server UUID before purchase, pass `.appAccountToken`, POST transaction ID,
-  finish only after server acceptance, reconcile unfinished updates on launch, and
-  handle sign-in/account changes. Keep Local and Cloud audio after expiry.
+- Native StoreKit integration is merged. Configure its approved, published Privacy
+  Policy and Terms URLs in both app build configurations before submission; the
+  merged implementation intentionally disables purchases while legal URLs are absent.
 - Monitor notification failures privately. Status/save refreshes reconcile missed
   notifications rather than extending stale access beyond the five-minute lease.
 
