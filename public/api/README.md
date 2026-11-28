@@ -234,3 +234,10 @@ python3 tests/backend/run.py
 python3 tests/backend/sounds_http.py
 php tests/backend/sounds.php
 ```
+
+## Account deletion requests
+
+`GET` / `POST account-deletion.php` uses the existing bearer session and migration
+003 audit table. POST additionally verifies the current password and explicit
+confirmation. It records a pending request only; no erasure or billing change is
+performed. See [operator/API procedure](../../docs/ACCOUNT_DELETION.md).

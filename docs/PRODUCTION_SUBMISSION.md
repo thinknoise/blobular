@@ -81,27 +81,25 @@ following genuine verification. A complimentary row alone does not broaden uploa
 
 ## Legal publication and Native links
 
-Privacy and Terms HTML/build entries already exist. Their technical descriptions
-now match the merged Native temporary-workspace/Local-save behavior. They remain
-explicit drafts with `noindex`; do not remove those markers without the owner facts
-and approval listed in [LEGAL_REVIEW.md](LEGAL_REVIEW.md).
-
-The owner must provide the operator name/contact address, actual retention and
-provider/backup practices, account-deletion process/timeframe, final offer/Apple
-standard-EULA selection and effective date. In-app account-deletion initiation is
-required if the shipping app supports account creation; a support email alone does
-not provide this capability. Verify the actual release flow rather than assuming
-that the existence of a backend create-user endpoint settles Native behavior.
-
-Once approved, finalize the text/date and authorize deployment through the existing
-manual **Deploy Blobular** workflow. After deployment, verify both final pages are
-public HTTPS pages, then set these generated Native Info.plist keys in Debug and Release:
+Privacy and Terms are finalized for Blobular 1.0 with the owner-approved publisher,
+contact, retention policy, $4.99/month/no-trial offer and November 27, 2026 effective
+date. Draft notices and `noindex` are removed. See [LEGAL_REVIEW.md](LEGAL_REVIEW.md).
+Native Settings adds Apple's management interface and an authenticated deletion-request
+flow. Both Debug and Release configure these final URLs:
 
 - `BlobularPrivacyPolicyURL=https://modelglue.com/blobular/privacy/`
 - `BlobularTermsOfUseURL=https://modelglue.com/blobular/terms/`
 
-Merged Native code intentionally disables Subscribe until both URLs are configured.
-Use the finalized paywall for the App Store review screenshot.
+The backend records confirmed, password-verified pending deletion requests using the
+existing audit table. No new migration or erasure mechanism is added. Wiley Evans
+processes requests through blobular@modelglue.com within the acknowledgement/completion
+periods documented in [ACCOUNT_DELETION.md](ACCOUNT_DELETION.md). A reviewed actual
+erasure procedure remains necessary before shipping; receipt does not mean deletion.
+
+Deploy only after separate authorization using the existing manual **Deploy Blobular**
+workflow. Verify both final pages and the authenticated `account-deletion.php` route
+are live before releasing the matching Native build. Use its finalized paywall for
+the App Store review screenshot. No deployment/submission occurs in this task.
 
 ## Deployment evidence and limits
 
@@ -110,6 +108,8 @@ The latest successful recorded Deploy Blobular workflow reviewed was run
 deploy. Public URL checks from this environment returned HTTP 465, which does not
 establish the origin pages' status. The operator must verify publication directly.
 No credentials, production data, deployment workflow or production settings changed.
+For the legal/account-settings increment, current validation is recorded in
+[ACCOUNT_DELETION.md](ACCOUNT_DELETION.md#validation-in-this-increment).
 
 ## Repository validation for this update
 

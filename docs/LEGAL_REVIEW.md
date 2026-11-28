@@ -1,85 +1,51 @@
-# Privacy and Terms publication review
+# Blobular 1.0 legal publication record
 
-Draft prepared November 26, 2026; technical facts refreshed November 27 after
-Web PR #25 and Native PRs #8/#9 merged. See [submission status](PRODUCTION_SUBMISSION.md). These pages are deliberately marked **Draft for review**, have no
-effective date and use `noindex`. Do not present them as final legal policies or
-submit them as finalized App Store disclosures until the issues below are resolved.
-No deployment, production inspection, account operation or API change was performed.
+Owner-approved facts, November 27, 2026:
 
-## Owner confirmations required
+- Publisher/operator: **Wiley Evans, operating as Thinknoise**.
+- Legal, privacy, support and account-deletion contact: **blobular@modelglue.com**.
+- Privacy Policy and Terms effective date: **November 27, 2026**. Draft notices and
+  `noindex` removed from both HTML pages.
+- Accounts and saved recordings retained until user deletion or account deletion
+  request processing, except necessary billing/audit retention. No fixed backup
+  retention, immediate erasure or provider-log deletion guarantees are made.
+- Subscription: **US $4.99/month**, auto-renewing, **no trial**; Apple's purchase
+  confirmation supplies localized price/currency. Apple billing is managed separately.
+- Wiley Evans manually processes account deletion requests: acknowledge within
+  **7 calendar days**, complete verified requests within **30 calendar days**, subject
+  to legally required retention or documented exceptions. Requests stay pending until
+  actual erasure and the user receives confirmation.
 
-- [ ] **Legal operator:** full person/company name and required contact address,
-  plus any applicable jurisdiction-specific disclosures. No company, street
-  address, governing law, arbitration clause or liability cap has been invented.
-- [x] **Contact:** owner confirmed `wiley@thinknoise.com` for privacy/support/account
-  deletion requests. The earlier support page uses the same address.
-- [ ] **Retention:** specify actual retention and reasons for accounts, expired or
-  revoked sessions, deleted-record metadata, subscription/audit records and support
-  messages. The code has no fixed purge policy for these. Do not turn upload cleanup
-  eligibility into a guarantee about cleanup scheduling.
-- [ ] **Backups and providers:** confirm hosting/mail provider identity and relevant
-  server, AWS, proxy and mail logging; backup retention, S3 versioning/lifecycle,
-  regions/international transfers, access and deletion handling. Source inspection
-  cannot establish those production operations. No live settings were inspected.
-- [ ] **Account deletion:** establish ownership verification, who processes requests,
-  how users initiate deletion, completion timeframe/confirmation, and which account,
-  session, audio, billing and audit records are erased or retained and why. Current
-  foreign keys prevent deleting a user without reconciling associated data.
-- [ ] **App Store deletion flow:** confirm the release's account-creation behavior
-  and implement the required in-app initiation route in a separate scoped task.
-  Apple generally does not permit an email-only support flow for ordinary apps
-  that support account creation. A policy page or mailto link does not implement it.
-- [ ] **Subscriptions:** confirm release availability, the final $4.99/month offer,
-  App Store Connect product/currency/territories, Apple standard-EULA selection,
-  entitlement rollout and Native StoreKit wiring. Web PR #25 and Native StoreKit PR #8 are merged; this alone does not
-  activate production purchases or broaden upload access. Draft billing statements
-  are conditional and use Apple's purchase confirmation as the price source.
-- [ ] **Final legal scope:** review ownership/service permissions, acceptable use,
-  any required age/children's disclosures and regional rights, and ensure final
-  App Store privacy answers match the shipping app and actual provider practices.
-  No claims of regulatory compliance, no tracking, no data sales, zero telemetry,
-  fixed response deadlines or complete immediate erasure have been inferred from
-  absence of source code.
-- [ ] **Publication:** confirm the final policy text and effective date, remove the
-  draft notices/`noindex`, update the pages' dates, and deploy only after approval.
+The policy distinguishes app Local files, temporary experiment audio, authenticated
+owned Cloud storage, and the legacy shared Web library. No automatic upload or
+confidentiality guarantee is inferred for shared Web audio. Apple standard EULA
+continues to supply the app software license; Terms cover the account/Cloud service.
 
-## Evidence for the draft
+## Account deletion implementation and operating boundary
 
-| Area | Inspected source | What it establishes |
-| --- | --- | --- |
-| Account creation | `public/api/create-user.php`, `_bootstrap.php` | Email/username, numeric ID, creation timestamp and bcrypt password hash; no account-delete endpoint among runtime handlers. |
-| Sessions | `public/api/_sessions.php`, `infra/migrations/001-cloud-foundation.sql` | Hashed bearer tokens, owner/creation/expiry/revocation; expiry denies access without necessarily deleting rows. |
-| Web remembered account | `src/features/auth/utils/modelglueAuthStore.ts` | Session storage and optional local-storage remembered identity; this Web code discards the Cloud bearer token. |
-| Legacy Web audio | `src/features/sounds/api/soundLibraryClient.ts`, `legacyS3SoundLibraryClient.ts`, `utils/soundMetadata.ts`, `src/shared/utils/aws/awsS3Helpers.ts`, `awsConfig.ts` | Direct AWS S3/Cognito integration, shared/public collection and user-related paths; UI visibility/folder labels are not evidence of authenticated-API authorization. No claim that all Web audio is confidential. |
-| Web save controls | `src/features/audioMenu/components/AudioPondMenu.tsx`, `AudioPond/RecordedItem.tsx`, `context/AudioPondProvider.tsx` | Explicit Web save/upload actions use that legacy integration, separate from iPhone Local storage. |
-| Authenticated Cloud | `public/api/_sounds.php`, `_s3.php`, migrations 001/002 | Owner-scoped listing/transfers/deletion; S3 objects, filenames/titles/size/checksum/state; short-lived transfer capabilities. |
-| Cloud deletion/retention | `_sounds.php` `delete()` / `cleanup()`, `scripts/cleanup-cloud-audio.php` | Hide before S3 removal; failures may require retry; deleted metadata is retained/revisited; tools do not prove a production cleanup schedule. |
-| Subscriptions | `_entitlements.php`, migration 003, `services/apple-verifier/verification.mjs`, `docs/SUBSCRIPTIONS.md` | Verified Apple transaction/account binding, expiry/renewal/revocation, event digests and administrative audit; subscription loss preserves owned list/download/delete. Actual Apple activation is separate. |
-| Native Local library | Native `Blobular/AudioLibrary.swift` | App-container audio, metadata and waveform files; imported source copied; local removal removes that library directory. |
-| Native Cloud | Native `Blobular/BlobularCloudClient.swift`, `CloudSessionStore.swift`, `docs/CLOUD.md` | Keychain session, no persisted password/transfer URLs in session store, explicit Cloud actions, Local/Cloud deletion separation. Native PR #8 adds StoreKit purchase/restore/updates, server-authorized Local saves and temporary free-account workspaces; no automatic audio sync. |
-| Website font | `src/index.css` | External `fonts.googleapis.com` CSS request. No change to the established font in this PR. |
-| Support | `support/index.html` and owner confirmation | Existing support email and visual design. |
+Native Settings now initiates a request in-app with password verification and final
+confirmation. The backend reuses existing bearer sessions, account locking and the
+migration 003 audit table. It records a pending request, not erasure; repeated requests
+return the existing receipt. See [ACCOUNT_DELETION.md](ACCOUNT_DELETION.md) for the
+API and manual operator procedure. No unreviewed account-erasure mechanism is added.
 
-These describe inspected code and do not establish host logs, backups or the exact
-version currently running in every production component. Native is read only.
+Before shipping, Wiley must have a reviewed procedure capable of actually erasing
+accounts and associated Cloud data within the stated time, while retaining only
+necessary billing/audit evidence. Ownership foreign keys and immutable Apple purchase
+bindings must be reconciled safely. This is an operational release dependency, not
+permission to run destructive SQL, disable foreign keys or mark pending work complete.
 
-## Official references checked
+## Publication checks
 
-- [Apple standard EULA](https://www.apple.com/legal/internet-services/itunes/dev/stdeula/)
-  supplies the app software license; no competing custom software license is drafted.
-- [Apple subscription cancellation](https://support.apple.com/en-us/118428)
-  and [subscription settings](https://apps.apple.com/account/subscriptions/).
-- [Apple account deletion guidance](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion)
-  requires in-app initiation for account-creating apps and explains billing separation.
-- [Apple privacy policy](https://www.apple.com/legal/privacy/) and
-  [Google Fonts FAQ](https://fonts.google.com/faq) are linked for third-party services.
+- Existing Vite entries produce public `/blobular/privacy/` and `/blobular/terms/`
+  without application JS, authentication or API calls; support links use the new contact.
+- Native Debug/Release configuration uses these final HTTPS URLs. The Web and Native
+  PRs must be coordinated so users can reach the finalized pages and request endpoint.
+- Deployment and App Store submission remain separately authorized actions. Review
+  App Store privacy answers against the actual shipping app/provider practices.
+- No production settings/data or upload restrictions change in this work.
 
-## Delivery
-
-Vite has explicit static HTML entries for `/blobular/privacy/` and `/blobular/terms/`.
-They share the support styles and require no login, application JS, session or API
-request. Support links to both; each legal page links to support and the other page.
-A small additional stylesheet only handles legal text width/spacing/navigation wrap.
-The deployment workflow, PHP API and configuration remain unchanged. The existing
-manual Deploy Blobular workflow will include these pages and their hashed CSS
-assets from `dist` after this PR is merged and a deployment is separately authorized.
+Sources: existing Web/Native implementation, owner confirmations above,
+[Apple standard EULA](https://www.apple.com/legal/internet-services/itunes/dev/stdeula/),
+[Apple account deletion guidance](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion),
+[Apple subscription cancellation](https://support.apple.com/en-us/118428).

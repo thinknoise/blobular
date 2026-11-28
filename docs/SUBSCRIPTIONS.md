@@ -199,9 +199,9 @@ private Node service requires its own approved deployment, never FTP publication
 - Run real Sandbox signed purchase, renewal, restore, refund and expiry flows.
   Automated fixtures verify normalization/binding and actual SDK rejection of
   forged JWS; they do not establish live Apple integration without that setup.
-- Native StoreKit integration is merged. Configure its approved, published Privacy
-  Policy and Terms URLs in both app build configurations before submission; the
-  merged implementation intentionally disables purchases while legal URLs are absent.
+- Native StoreKit integration is merged. The matching Native Settings PR configures
+  the finalized Privacy Policy and Terms URLs in both build configurations. Deploy
+  the Web pages and deletion-request endpoint before releasing that build.
 - Monitor notification failures privately. Status/save refreshes reconcile missed
   notifications rather than extending stale access beyond the five-minute lease.
 
@@ -228,3 +228,10 @@ python3 tests/backend/deployment.py
 MySQL tests use cached Docker images with disposable localhost databases. HTTP
 tests generate fixture configs and never copy a real config.php. No deployment
 hook executes migrations/grants or starts the private service.
+
+## Account deletion initiation
+
+The authenticated `account-deletion.php` endpoint records pending requests using
+the existing migration 003 audit table. It never cancels Apple billing or changes
+upload restrictions. See [ACCOUNT_DELETION.md](ACCOUNT_DELETION.md) for ownership,
+password, idempotency and manual-processing safeguards.
