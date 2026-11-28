@@ -1,7 +1,7 @@
 # Privacy and Terms publication review
 
-Draft prepared November 26, 2026 from Web main `36a01b9` and read-only inspection
-of Native main. These pages are deliberately marked **Draft for review**, have no
+Draft prepared November 26, 2026; technical facts refreshed November 27 after
+Web PR #25 and Native PRs #8/#9 merged. See [submission status](PRODUCTION_SUBMISSION.md). These pages are deliberately marked **Draft for review**, have no
 effective date and use `noindex`. Do not present them as final legal policies or
 submit them as finalized App Store disclosures until the issues below are resolved.
 No deployment, production inspection, account operation or API change was performed.
@@ -31,8 +31,8 @@ No deployment, production inspection, account operation or API change was perfor
   that support account creation. A policy page or mailto link does not implement it.
 - [ ] **Subscriptions:** confirm release availability, the final $4.99/month offer,
   App Store Connect product/currency/territories, Apple standard-EULA selection,
-  entitlement rollout and Native StoreKit wiring. PR #23 is merged but did not
-  activate purchases or broaden production upload access. Draft billing statements
+  entitlement rollout and Native StoreKit wiring. Web PR #25 and Native StoreKit PR #8 are merged; this alone does not
+  activate production purchases or broaden upload access. Draft billing statements
   are conditional and use Apple's purchase confirmation as the price source.
 - [ ] **Final legal scope:** review ownership/service permissions, acceptable use,
   any required age/children's disclosures and regional rights, and ensure final
@@ -56,7 +56,7 @@ No deployment, production inspection, account operation or API change was perfor
 | Cloud deletion/retention | `_sounds.php` `delete()` / `cleanup()`, `scripts/cleanup-cloud-audio.php` | Hide before S3 removal; failures may require retry; deleted metadata is retained/revisited; tools do not prove a production cleanup schedule. |
 | Subscriptions | `_entitlements.php`, migration 003, `services/apple-verifier/verification.mjs`, `docs/SUBSCRIPTIONS.md` | Verified Apple transaction/account binding, expiry/renewal/revocation, event digests and administrative audit; subscription loss preserves owned list/download/delete. Actual Apple activation is separate. |
 | Native Local library | Native `Blobular/AudioLibrary.swift` | App-container audio, metadata and waveform files; imported source copied; local removal removes that library directory. |
-| Native Cloud | Native `Blobular/BlobularCloudClient.swift`, `CloudSessionStore.swift`, `docs/CLOUD.md` | Keychain session, no persisted password/transfer URLs in session store, explicit Cloud actions, Local/Cloud deletion separation. Current docs say no automatic sync or StoreKit subscription flow. |
+| Native Cloud | Native `Blobular/BlobularCloudClient.swift`, `CloudSessionStore.swift`, `docs/CLOUD.md` | Keychain session, no persisted password/transfer URLs in session store, explicit Cloud actions, Local/Cloud deletion separation. Native PR #8 adds StoreKit purchase/restore/updates, server-authorized Local saves and temporary free-account workspaces; no automatic audio sync. |
 | Website font | `src/index.css` | External `fonts.googleapis.com` CSS request. No change to the established font in this PR. |
 | Support | `support/index.html` and owner confirmation | Existing support email and visual design. |
 
